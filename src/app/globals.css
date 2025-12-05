@@ -1,42 +1,176 @@
+@import "tailwindcss";
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --bg: 247 247 250;           /* фон страниц */
+  --fg: 17 24 39;              /* основной текст */
+  --card: 255 255 255;         /* карточки */
+  --ring: 0 0 0 / 0.06;        /* обводка */
+  --accent-from: 124 58 237;   /* violet-600 */
+  --accent-to: 37 99 235;      /* blue-600 */
+  --muted: 107 114 128;        /* gray-500 */
+  --radius: 20px;
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+html,
+body,
+:root {
+  height: 100%;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+:root {
+  color-scheme: light;
+}
+
+/* Мягкая тень для карточек как на welcome */
+.shadow-card {
+  box-shadow:
+    0 10px 30px rgba(124, 58, 237, 0.08),
+    0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+/*Анимация градиент  */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
   }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-animated {
+  background: linear-gradient(132deg, #000000, #00ff00, #0000ff, #e60073, #ff0000, #ffffff);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
+}
+
+/* ====== liquid gradient (мягко переливается) ====== */
+@keyframes liquidShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Вариант A — Soft-Cool: те же твои цвета, но пастельные */
+.bg-liquid-softcool {
+  /* осветлённые версии твоих цветов + белый */
+  background: linear-gradient(
+    120deg,
+    #f6e9ff 0%,   /* <-- из purple (232,121,249) + белый */
+    #e8f1ff 25%,  /* <-- из blue (96,165,250) + белый */
+    #e9fffb 50%,  /* <-- из green (94,234,212) + белый */
+    #f3ecff 75%,  /* лёгкий lilac */
+    #fff5f5 100%  /* почти белый */
+  );
+  background-size: 220% 220%;
+  animation: liquidShift 22s ease-in-out infinite;
+  filter: saturate(0.85) brightness(1.02); /* мягче */
+}
+
+/* Вариант B — Warm-Pastel: тёплый градиент */
+.bg-liquid-warm {
+  background: linear-gradient(
+    120deg,
+    #ffe7d1 0%,   /* peach-100 */
+    #ffd6e1 25%,  /* pink-100 */
+    #f5d0fe 50%,  /* lilac-200 */
+    #fde7b0 75%,  /* warm-amber-100 */
+    #fff8f2 100%  /* теплый белый */
+  );
+  background-size: 220% 220%;
+  animation: liquidShift 24s ease-in-out infinite;
+  filter: saturate(0.9) brightness(1.03);
+}
+
+/* полупрозрачная версия, если хочешь ещё мягче */
+.bg-liquid-soft { opacity: .85; }
+
+/* ===== Smooth fade-in background animation ===== */
+@keyframes fadeInSoft {
+  from {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.bg-fade-in {
+  animation: fadeInSoft 0.8s ease-out both;
+}
+
+/* === Glassmorphism Utility === */
+.glass-card {
+  background: rgba(255, 255, 255, 0.25);         /* лёгкая прозрачность */
+  backdrop-filter: blur(18px) saturate(150%);    /* размытие и яркость */
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);   /* светлая рамка */
+  box-shadow:
+    0 8px 32px rgba(31, 38, 135, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;   /* внутреннее свечение */
+}
+
+/* Необязательно, но добавляет лёгкое сияние */
+.glass-glow {
+  box-shadow: 0 4px 60px rgba(255, 255, 255, 0.15);
+}
+
+/* ===== GLASSMORPHISM (strong) ===== */
+.glass-strong {
+  position: relative;
+  background: rgba(255, 255, 255, 0.45);              /* ↑ прозрачность заметнее */
+  backdrop-filter: blur(24px) saturate(160%);         /* ↑ blur и насыщенность */
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.55);        /* ярче граница */
+  box-shadow:
+    0 12px 40px rgba(31, 38, 135, 0.18),
+    0 22px 80px rgba(0, 0, 0, 0.12);
+}
+
+/* мягкий блик по диагонали — добавляет «жидкости» */
+.glass-strong::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.65) 0%,
+    rgba(255,255,255,0.28) 40%,
+    rgba(255,255,255,0.0) 65%
+  );
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* «волосяная» светлая окантовка (hairline) */
+.glass-hairline {
+  position: relative;
+}
+.glass-hairline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;                                       /* толщина «волоска» */
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.9),
+    rgba(255,255,255,0.25)
+  );
+  /* маска делает рамку внутри прозрачной */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
 }
