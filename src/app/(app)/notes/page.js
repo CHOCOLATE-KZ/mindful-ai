@@ -4,37 +4,68 @@ import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
 import Button from "@/components/ui/Button";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export default function NotesPage() {
   const [mood, setMood] = useState("");
   const [sleep, setSleep] = useState("");
   const [comment, setComment] = useState("");
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem("notes");
-    if (saved) setItems(JSON.parse(saved));
+    let mounted = true;
+    (async () => {
+      const supabase = supabaseBrowser();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("notes")
+        .select("id, date, mood, sleep, comment")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false })
+        .limit(200);
+
+      if (!error && mounted) setItems(data || []);
+      setLoading(false);
+    })();
+
+    return () => { mounted = false; };
   }, []);
-  useEffect(() => {
-    localStorage.setItem("notes", JSON.stringify(items));
-  }, [items]);
 
-  function addNote(e) {
+  async function addNote(e) {
     e.preventDefault();
-    if (!mood && !sleep && !comment) return;
-    const note = {
-      id: Date.now(),
-      date: new Date().toISOString().slice(0, 10),
+    const supabase = supabaseBrowser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return alert("Пожалуйста, войдите в аккаунт");
+
+    const payload = {
+      user_id: user.id,
       mood: mood ? Number(mood) : null,
       sleep: sleep ? Number(sleep) : null,
-      comment: comment || "",
+      comment: comment || null,
     };
-    setItems([note, ...items]);
+
+    const { data, error } = await supabase.from("notes").insert(payload).select("id, date, mood, sleep, comment");
+    if (error) return alert(error.message);
+
+    setItems((s) => [data[0], ...s]);
     setMood(""); setSleep(""); setComment("");
   }
-  function removeNote(id) {
-    setItems(items.filter((n) => n.id !== id));
+
+  async function removeNote(id) {
+    const supabase = supabaseBrowser();
+    const { error } = await supabase.from("notes").delete().eq("id", id);
+    if (error) return alert(error.message);
+    setItems((s) => s.filter((n) => n.id !== id));
   }
+
+  if (loading) return <p className="text-center py-10">Загрузка...</p>;
 
   return (
     <div className="grid gap-6 md:grid-cols-2">

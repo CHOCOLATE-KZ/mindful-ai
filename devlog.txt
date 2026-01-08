@@ -1,0 +1,11 @@
+﻿
+> diplomaproject@0.1.0 dev
+> next dev --webpack
+
+   тЦ▓ Next.js 16.0.1 (webpack)
+   - Local:        http://localhost:3001
+   - Network:      http://26.178.110.140:3001
+   - Environments: .env.local
+
+ тЬУ Starting...
+ тЬУ Ready in 1524ms
