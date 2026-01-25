@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
 import Button from "@/components/ui/Button";
-import Link from "next/link";
 import AuthFrame from "@/components/AuthFrame";
 import LiquidGlassCard from "@/components/LiquidGlassCard";
 import { supabaseBrowser } from "@/lib/supabase/browser";
@@ -34,8 +35,24 @@ export default function SignInPage() {
       return;
     }
 
-    const next = searchParams.get("next") || "/notes";
-    router.replace(next);
+    const next = searchParams.get("next") || "/chat";
+    router.replace(next && next.startsWith("/") ? next : "/chat");
+  }
+
+  async function signInWithGoogle() {
+    setMsg("");
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+  }
+
+  async function signInWithApple() {
+    setMsg("");
+    await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
   }
 
   return (
@@ -48,6 +65,7 @@ export default function SignInPage() {
             <Label>Email</Label>
             <Input name="email" type="email" required placeholder="you@example.com" />
           </div>
+
           <div className="grid gap-1">
             <Label>Пароль</Label>
             <Input name="password" type="password" required placeholder="••••••••" />
@@ -60,8 +78,17 @@ export default function SignInPage() {
           </Button>
         </form>
 
+        <div className="mt-4 grid gap-2">
+          <Button type="button" className="w-full" variant="secondary" onClick={signInWithGoogle}>
+            Continue with Google
+          </Button>
+          <Button type="button" className="w-full" variant="secondary" onClick={signInWithApple}>
+            Continue with Apple
+          </Button>
+        </div>
+
         <p className="mt-4 text-sm text-gray-700/80">
-          Нет аккаунта? <Link href="/auth/sign-up" className="underline">Зарегистрируйтесь</Link>
+          Нет аккаунта? <Link href="/auth/sign-up" className="underline">Регистрация</Link>
         </p>
       </LiquidGlassCard>
     </AuthFrame>

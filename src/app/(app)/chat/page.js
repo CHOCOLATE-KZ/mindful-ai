@@ -1,19 +1,43 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { Send, Mic, Sparkles, MoreVertical } from "lucide-react";
+
+import ChatHeader from "./_components/ChatHeader";
+import NextbotFrame from "./_components/NextbotFrame";
+import ChatMessages from "./_components/ChatMessages";
+import ChatComposer from "./_components/ChatComposer";
+
+import { useOutsideClick } from "./_hooks/useOutsideClick";
+import { useNextbotSrc } from "./_hooks/useNextbotSrc";
+import { useVoiceInput } from "./_hooks/useVoiceInput";
 
 export default function ChatPage() {
   const supabase = supabaseBrowser();
 
-  const [messages, setMessages] = useState([]); // { role: "user"|"assistant", content, created_at }
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const endRef = useRef(null);
+  const [mode, setMode] = useState("native"); // native | nextbot
 
-  // 1) грузим историю
+  // menu
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useOutsideClick(menuRef, () => setMenuOpen(false), menuOpen);
+
+  // nextbot src
+  const NEXTBOT_IFRAME_SRC = useNextbotSrc();
+
+  // voice
+  const voice = useVoiceInput({ lang: "ru-RU", autoStopMs: 8000 });
+
+  // подтягиваем voiceText в input (live preview)
+  useEffect(() => {
+    if (voice.listening) setInput(voice.voiceText);
+  }, [voice.voiceText, voice.listening]);
+
+  // load history
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
@@ -27,9 +51,47 @@ export default function ChatPage() {
     })();
   }, [supabase]);
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  const getUserId = useCallback(async () => {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  }, [supabase]);
+
+  const clearChatHistory = useCallback(async () => {
+    const uid = await getUserId();
+    if (!uid) return;
+
+    const ok = confirm("Очистить историю чата? Это действие нельзя отменить.");
+    if (!ok) return;
+
+    const { error } = await supabase.from("ai_messages").delete().eq("user_id", uid);
+    if (error) {
+      console.error(error);
+      alert("Не удалось очистить чат");
+      return;
+    }
+    setMessages([]);
+    setMenuOpen(false);
+  }, [getUserId, supabase]);
+
+  const exportMyData = useCallback(async () => {
+    const res = await fetch("/api/export", { method: "GET", credentials: "include" });
+    if (!res.ok) {
+      alert("Не удалось экспортировать данные");
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mindfulai-export-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+
+    setMenuOpen(false);
+  }, []);
 
   async function send(e) {
     e?.preventDefault?.();
@@ -37,8 +99,6 @@ export default function ChatPage() {
 
     const text = input.trim();
     setInput("");
-
-    // оптимистично добавим user сообщение
     setMessages((m) => [...m, { role: "user", content: text, created_at: new Date().toISOString() }]);
     setLoading(true);
 
@@ -53,10 +113,7 @@ export default function ChatPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Chat error");
 
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", content: data.reply, created_at: new Date().toISOString() },
-      ]);
+      setMessages((m) => [...m, { role: "assistant", content: data.reply, created_at: new Date().toISOString() }]);
     } catch (err) {
       console.error(err);
       setMessages((m) => [
@@ -68,125 +125,34 @@ export default function ChatPage() {
     }
   }
 
-  return (
-    
-    <div className="min-h-dvh bg-gradient-to-b from-[#E8E0FF] via-[#EAF2FF] to-[#FFDCC8]">
-      {/* Header */}
-      <div className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-black" />
-            </div>
-            <div>
-              <h1 className="text-gray-900 font-medium">MindfulAI Assistant</h1>
-              <p className="text-sm text-gray-500">Always here to listen</p>
-            </div>
+ return (
+    <div className="min-h-dvh flex flex-col
+  bg-gradient-to-b from-[#E8E0FF] via-[#EAF2FF] to-[#FFDCC8]
+  dark:from-[#0B0B12] dark:via-[#0B1220] dark:to-[#120B10]">
+      <ChatHeader
+        mode={mode}
+        setMode={setMode}
+        menuOpen={menuOpen}
+        setMenuOpen={setMenuOpen}
+        menuRef={menuRef}
+        exportMyData={exportMyData}
+        clearChatHistory={clearChatHistory}
+      />
+
+      {mode === "nextbot" ? (
+        <NextbotFrame src={NEXTBOT_IFRAME_SRC} />
+      ) : (
+        <>
+          {/* важно: flex-1 + overflow + pb под фиксированный инпут */}
+          <div className="flex-1 overflow-y-auto pb-28">
+            <ChatMessages messages={messages} loading={loading} />
           </div>
 
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <MoreVertical className="h-5 w-5 text-gray-600" />
-          </button>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="space-y-4">
-          {messages.map((m, idx) => {
-            const isAI = m.role === "assistant";
-            return (
-              <div key={idx} className={`flex gap-3 ${isAI ? "justify-start" : "justify-end"}`}>
-                {isAI && (
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="h-5 w-5 text-black" />
-                  </div>
-                )}
-
-                <div
-                  className={`max-w-[75%] lg:max-w-[60%] rounded-3xl px-5 py-3 shadow-lg ${
-                    isAI
-                      ? "bg-white/90 backdrop-blur-sm border border-white/50 text-gray-800"
-                      : "bg-gradient-to-br from-purple-500 to-blue-500 black"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
-                  <p className={`text-xs mt-2 ${isAI ? "text-gray-500" : "text-xs mt-2 text-grey/70"}`}>
-                    {m.created_at
-                      ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                      : ""}
-                  </p>
-                </div>
-
-                {!isAI && (
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#FFDCC8] to-[#FFB088] flex items-center justify-center flex-shrink-0 text-black font-medium">
-                    U
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {loading && (
-            <div className="flex gap-3 justify-start">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="h-5 w-5 text-black" />
-              </div>
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl px-5 py-3 shadow-lg border border-black/50">
-                Думаю…
-              </div>
-            </div>
-          )}
-
-          <div ref={endRef} />
-        </div>
-      </div>
-
-      {/* Input */}
-      <div className="sticky bottom-0 border-t bg-white/80 backdrop-blur-sm shadow-lg">
-        <form onSubmit={send} className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 relative">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Share your thoughts..."
-                className="w-full min-h-[48px] max-h-32 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 pr-12 outline-none focus:border-purple-300 focus:ring-2 focus:ring-purple-200"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    send(e);
-                  }
-                }}
-              />
-            </div>
-
-            <button
-              type="button"
-              className="h-12 w-12 rounded-full grid place-items-center hover:bg-black/5 transition-colors"
-              title="Mic (later)"
-            >
-              <Mic className="h-5 w-5 text-gray-500" />
-            </button>
-
-            <button
-              type="submit"
-              disabled={!input.trim() || loading}
-              className="h-12 w-12 rounded-full grid place-items-center
-                        bg-gradient-to-br from-purple-500 to-blue-500 text-white
-                        shadow-lg hover:opacity-90 transition-opacity
-                        disabled:opacity-40 "
-              title="Send"
-            >
-              <Send className="h-5 w-5 stroke-black" />
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-400 mt-2 text-center">
-            💙 This is a supportive space. Take your time and share what feels right.
-          </p>
-        </form>
-      </div>
+          {/* composer теперь fixed */}
+          <ChatComposer input={input} setInput={setInput} onSend={send} loading={loading} voice={voice} />
+        </>
+      )}
     </div>
   );
+
 }

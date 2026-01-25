@@ -46,8 +46,8 @@ export default function SignUpPage() {
       return;
     }
 
-    const next = searchParams.get("next") || "/notes";
-    router.replace(next);
+    const next = searchParams.get("next") || "/profile";
+    router.replace(next && next.startsWith("/") ? next : "/profile");
   }
 
   return (
@@ -58,7 +58,7 @@ export default function SignUpPage() {
         <form className="mt-5 space-y-4" onSubmit={onSubmit}>
           <div className="grid gap-1">
             <Label>Имя</Label>
-            <Input name="name" type="text" placeholder="Ильяс" />
+            <Input name="name" type="text" placeholder="Ваше Имя" />
           </div>
           <div className="grid gap-1">
             <Label>Email</Label>
