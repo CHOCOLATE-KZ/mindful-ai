@@ -10,7 +10,7 @@ export default function FaqSection() {
     },
     {
       q: "Can I delete my data?",
-      a: "Yes. You can delete notes and clear chat history. Export features can be added later if needed.",
+      a: "Yes. You can delete notes and clear chat history. Export features in your profile settings!",
     },
   ];
 
@@ -21,11 +21,13 @@ export default function FaqSection() {
         {faqs.map((f, idx) => (
           <details
             key={idx}
-            className="group rounded-2xl border border-black/10 bg-white p-5 shadow-sm"
+            className="group rounded-2xl border border-black/10 bg-white p-5 shadow-sm transition duration-300 hover:bg-gray-50 hover:shadow-md"
           >
             <summary className="cursor-pointer list-none text-black font-medium flex items-center justify-between">
               {f.q}
-              <span className="text-black/40 group-open:rotate-45 transition">+</span>
+              <span className="text-black/40 text-2xl transition-transform duration-300 transform group-hover:scale-125 group-hover:text-blue-500 group-open:rotate-45">
+                +
+              </span>
             </summary>
             <p className="mt-3 text-black/60">{f.a}</p>
           </details>

@@ -214,7 +214,7 @@ export default function ChatDemo() {
         {/* messages area (scroll) */}
         <div
           ref={scrollRef}
-          className="flex-1 min-h-0 overflow-y-auto pr-2 space-y-4"
+          className="flex-1 min-h-0 overflow-hidden pr-2 space-y-4" 
         >
           {messages.map((m) => {
             const isUser = m.role === "user";

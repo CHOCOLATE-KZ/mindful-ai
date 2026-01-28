@@ -1,6 +1,12 @@
 import Footer from "../../../components/landing/Footer";
+import { useAppSettings } from "@/components/AppShell";
+const { settings } = useAppSettings();
+const lang = settings?.language || "ru";
 
 export default function AboutPage() {
+  const { settings } = useAppSettings();
+  const lang = settings?.language || "ru";
+
   return (
     <div className="min-h-screen bg-white">
       <main className="mx-auto max-w-4xl px-6 py-16">

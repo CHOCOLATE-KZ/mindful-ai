@@ -13,3 +13,6 @@ CREATE TABLE IF NOT EXISTS notes (
 
 CREATE INDEX IF NOT EXISTS notes_user_idx ON notes(user_id);
 CREATE INDEX IF NOT EXISTS notes_date_idx ON notes(date);
+
+
+

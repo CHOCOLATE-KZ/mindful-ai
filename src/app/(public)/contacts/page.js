@@ -6,11 +6,18 @@ import LiquidGlassCard from "@/components/LiquidGlassCard";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
+import { useAppSettings } from "@/components/AppShell";
+
+const { settings } = useAppSettings();
+const lang = settings?.language || "ru";
+
 
 export default function ContactsPage() {
   const formRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
+  const { user, settings } = useAppSettings();
+  const lang = settings?.language || "ru";  
 
   async function handleSubmit(e) {
     e.preventDefault();

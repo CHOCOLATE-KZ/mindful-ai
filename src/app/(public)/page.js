@@ -14,8 +14,6 @@ export default function HomePage() {
       <DemoSection />
       <HowItWorksSection />
       <FinalCtaSection />
-
-      {/* FAQ в конце перед футером (как ты просил) */}
       <FaqSection />
 
       <Footer />
