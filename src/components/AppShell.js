@@ -59,9 +59,13 @@ export default function AppShell({ children }) {
 
       if (!u) return;
 
-      await supabase
+      const { error } = await supabase
         .from("user_settings")
         .upsert({ user_id: u.id, ...patch }, { onConflict: "user_id" });
+      if (error) {
+        console.error("Failed to update settings:", error.message);
+        load();
+      }
     },
     [supabase]
   );

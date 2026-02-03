@@ -1,23 +1,17 @@
-import { createClient } from '@/lib/supabase/server';
+import { NextResponse } from "next/server";
+import { supabaseServer } from "@/lib/supabase/server";
 
 export async function GET(req) {
   try {
-    const supabase = createClient();
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Not Found" }, { status: 404 });
+    }
 
-    // get session via server client
+    const supabase = await supabaseServer();
     const { data } = await supabase.auth.getSession();
 
-    // echo request cookies (raw) for debugging
-    const cookieHeader = req.headers.get('cookie') || null;
-
-    return new Response(JSON.stringify({ session: data.session || null, cookieHeader }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ session: data.session || null }, { status: 200 });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }

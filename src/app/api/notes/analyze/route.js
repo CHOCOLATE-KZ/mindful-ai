@@ -9,11 +9,9 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 
 export async function POST(request) {
   try {
-    // Log incoming request for debugging (avoid leaking sensitive data)
     let rawBody = null;
     try {
       rawBody = await request.text();
-      console.info('analyze: raw request body:', rawBody);
     } catch (e) {
       console.warn('analyze: failed to read raw body', e && e.message);
     }

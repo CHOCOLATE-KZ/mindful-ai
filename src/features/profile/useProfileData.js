@@ -86,7 +86,8 @@ export function useProfileData(supabase, initial = {}) {
 
   async function updateSettings(patch) {
     if (!user) return;
-    const next = { ...(settings || {}), ...patch, user_id: user.id, updated_at: new Date().toISOString() };
+    const prev = settings || {};
+    const next = { ...prev, ...patch, user_id: user.id, updated_at: new Date().toISOString() };
     setSettings(next);
 
     if (patch.theme) {
@@ -95,7 +96,11 @@ export function useProfileData(supabase, initial = {}) {
       else root.classList.remove("dark");
     }
 
-    await supabase.from("user_settings").upsert(next);
+    const { error } = await supabase.from("user_settings").upsert(next);
+    if (error) {
+      setSettings(prev);
+      setMsg(error.message || "Failed to update settings");
+    }
   }
 
   async function saveProfile() {

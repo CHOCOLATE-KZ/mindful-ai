@@ -12,6 +12,7 @@ import AppearanceCard from "./_components/AppearanceCard";
 import NotificationsCard from "./_components/NotificationsCard";
 import AiPersonalizationCard from "./_components/AiPersonalizationCard";
 import PrivacyDataCard from "./_components/PrivacyDataCard";
+import ProfileAIReportCard from "./_components/ProfileAIReportCard";
 
 import EditProfileModal from "./_components/_modals/EditProfileModal";
 import PrivacySettingsModal from "./_components/_modals/PrivacySettingsModal";
@@ -99,6 +100,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
       </div>
 
       <div className="mt-8 space-y-6">
+        <ProfileAIReportCard settings={mergedSettings} t={t} />
         <NotificationsCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
         <AiPersonalizationCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
         <PrivacyDataCard
