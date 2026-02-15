@@ -45,9 +45,6 @@ export default function AppShell({ children }) {
     return () => sub?.subscription?.unsubscribe?.();
   }, [supabase, load]);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", settings.theme === "dark");
-  }, [settings.theme]);
 
   const updateSettings = useCallback(
     async (patch) => {

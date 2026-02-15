@@ -41,15 +41,48 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
 
   const updateAllSettings = useCallback(
     async (patch) => {
-      await actions.updateSettings(patch);
+      try {
+        await (actions?.updateSettings?.(patch) ?? Promise.resolve());
 
-      const gl = {};
-      if (patch.theme) gl.theme = patch.theme;
-      if (patch.language) gl.language = patch.language;
-      if (Object.keys(gl).length) await app.updateSettings(gl);
+        const gl = {};
+        if (patch?.theme) gl.theme = patch.theme;
+        if (patch?.language) gl.language = patch.language;
+
+        if (Object.keys(gl).length && app?.updateSettings) {
+          await app.updateSettings(gl);
+        }
+      } catch (e) {
+        console.error("updateAllSettings error:", e);
+      }
     },
     [actions, app]
   );
+
+  // safety defaults
+  const safeUi = ui || {
+    editOpen: false,
+    privacyOpen: false,
+    securityOpen: false,
+    setEditOpen: () => {},
+    setPrivacyOpen: () => {},
+    setSecurityOpen: () => {},
+    nameDraft: "",
+    setNameDraft: () => {},
+    passwordDraft: "",
+    setPasswordDraft: () => {},
+  };
+
+  const safeActions = actions || {
+    signOut: () => {},
+    updateSettings: async () => {},
+    exportMyData: async () => {},
+    saveProfile: async () => {},
+    onAvatarSelected: async () => {},
+    changePassword: async () => {},
+  };
+
+  const safeProfile = profile || { id: user?.id, name: "", avatar_url: "" };
+  const safeStats = stats || {};
 
   if (loading && !user) {
     return (
@@ -72,7 +105,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
         </div>
 
         <button
-          onClick={actions.signOut}
+          onClick={safeActions.signOut}
           className="cursor-pointer rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium hover:bg-black/[0.03] dark:bg-white/10 dark:border-white/10 dark:text-white dark:hover:bg-white/15"
         >
           {t("signout")}
@@ -82,15 +115,15 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
       <div className="mt-8">
         <ProfileHeroCard
           user={user}
-          profile={profile}
-          stats={stats}
-          onEdit={() => ui.setEditOpen(true)}
-          onSecurity={() => ui.setSecurityOpen(true)}
+          profile={safeProfile}
+          stats={safeStats}
+          onEdit={() => safeUi.setEditOpen(true)}
+          onSecurity={() => safeUi.setSecurityOpen(true)}
         />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <SummaryCard stats={stats} t={t} />
+        <SummaryCard stats={safeStats} t={t} />
         <AppearanceCard
           theme={mergedSettings.theme}
           language={mergedSettings.language}
@@ -104,38 +137,38 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
         <NotificationsCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
         <AiPersonalizationCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
         <PrivacyDataCard
-          onOpenPrivacy={() => ui.setPrivacyOpen(true)}
-          onExport={() => actions.exportMyData()}
+          onOpenPrivacy={() => safeUi.setPrivacyOpen(true)}
+          onExport={() => safeActions.exportMyData()}
           t={t}
         />
       </div>
 
       <EditProfileModal
-        open={ui.editOpen}
-        onClose={() => ui.setEditOpen(false)}
+        open={safeUi.editOpen}
+        onClose={() => safeUi.setEditOpen(false)}
         user={user}
-        profile={profile}
-        nameDraft={ui.nameDraft}
-        setNameDraft={ui.setNameDraft}
-        onSave={actions.saveProfile}
-        onAvatarSelected={actions.onAvatarSelected}
+        profile={safeProfile}
+        nameDraft={safeUi.nameDraft}
+        setNameDraft={safeUi.setNameDraft}
+        onSave={safeActions.saveProfile}
+        onAvatarSelected={safeActions.onAvatarSelected}
         t={t}
       />
 
       <PrivacySettingsModal
-        open={ui.privacyOpen}
-        onClose={() => ui.setPrivacyOpen(false)}
+        open={safeUi.privacyOpen}
+        onClose={() => safeUi.setPrivacyOpen(false)}
         settings={mergedSettings}
         onChange={updateAllSettings}
         t={t}
       />
 
       <SecurityModal
-        open={ui.securityOpen}
-        onClose={() => ui.setSecurityOpen(false)}
-        passwordDraft={ui.passwordDraft}
-        setPasswordDraft={ui.setPasswordDraft}
-        onChangePassword={actions.changePassword}
+        open={safeUi.securityOpen}
+        onClose={() => safeUi.setSecurityOpen(false)}
+        passwordDraft={safeUi.passwordDraft}
+        setPasswordDraft={safeUi.setPasswordDraft}
+        onChangePassword={safeActions.changePassword}
         t={t}
       />
     </div>

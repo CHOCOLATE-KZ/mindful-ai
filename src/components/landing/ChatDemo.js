@@ -1,39 +1,33 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
-/**
- * Improvements:
- * - Fixed card height to prevent page jumping
- * - Scrollable messages area
- * - Fade + slide-in messages
- * - Clickable chips: plays the clicked message as next user turn
- */
 export default function ChatDemo() {
   const script = useMemo(
     () => [
       {
-        user: "I’ve been feeling overwhelmed lately.",
-        bot: "That sounds heavy. Want to try a 30-second breathing reset together?",
+        user: "В последнее время я чувствую себя перегруженным.",
+        bot: "Похоже, это действительно тяжело. Хочешь попробовать 30-секундную дыхательную паузу вместе?",
         chips: [
-          "I’ve been feeling overwhelmed lately.",
-          "I want a quick calming technique",
-          "I feel anxious today",
+          "В последнее время я чувствую себя перегруженным.",
+          "Мне нужна быстрая техника успокоения",
+          "Сегодня я чувствую тревогу",
         ],
       },
       {
-        user: "I want a quick calming technique",
-        bot: "Try this: inhale 4 seconds, hold 2, exhale 6. Repeat 4 times. How does your body feel after one round?",
+        user: "Мне нужна быстрая техника успокоения",
+        bot: "Попробуй так: вдох 4 секунды, пауза 2 секунды, выдох 6 секунд. Повтори 4 раза. Как чувствует себя тело после одного круга?",
         chips: [
-          "I want a quick calming technique",
-          "Help me fall asleep",
-          "I can’t stop overthinking",
+          "Мне нужна быстрая техника успокоения",
+          "Помоги заснуть",
+          "Я не могу перестать думать",
         ],
       },
       {
-        user: "I can’t stop overthinking",
-        bot: "Let’s name the thought, then test it: What’s the main worry in one sentence? And what evidence supports/doesn’t support it?",
-        chips: ["I can’t stop overthinking", "I feel stressed", "I feel sad"],
+        user: "Я не могу перестать думать",
+        bot: "Давай назовём мысль и проверим её: в чём главная тревога одним предложением? И какие есть доказательства «за» и «против»?",
+        chips: ["Я не могу перестать думать", "Я чувствую стресс", "Мне грустно"],
       },
     ],
     []
@@ -45,7 +39,7 @@ export default function ChatDemo() {
     {
       id: "m0",
       role: "assistant",
-      text: "Hi! I’m MindfulAI, your 24/7 supportive assistant. How are you feeling today?",
+      text: "Привет! Я MindfulAI — твой поддерживающий помощник 24/7. Как ты себя чувствуешь сегодня?",
     },
   ]);
 
@@ -54,15 +48,16 @@ export default function ChatDemo() {
 
   const timersRef = useRef([]);
   const isRunningRef = useRef(false);
-  const lockRef = useRef(false); // prevents overlapping animations
+  const lockRef = useRef(false);
   const scrollRef = useRef(null);
+
+  const router = useRouter();
 
   function clearTimers() {
     timersRef.current.forEach((t) => clearTimeout(t));
     timersRef.current = [];
   }
 
-  // auto scroll to bottom (without resizing card)
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -87,9 +82,8 @@ export default function ChatDemo() {
     setTyping(false);
     setInput("");
 
-    // type into input
-    const baseDelay = 24;
-    const startDelay = 500;
+    const baseDelay = 45;
+    const startDelay = 100;
 
     timersRef.current.push(
       setTimeout(() => {
@@ -100,29 +94,23 @@ export default function ChatDemo() {
           if (i < userText.length) {
             timersRef.current.push(setTimeout(typeNext, baseDelay));
           } else {
-            // "send"
             timersRef.current.push(
               setTimeout(() => {
                 pushMessage("user", userText);
                 setInput("");
 
-                // assistant typing
                 setTyping(true);
 
-                // assistant reply
                 timersRef.current.push(
                   setTimeout(() => {
                     setTyping(false);
                     pushMessage("assistant", botText);
 
-                    // move to next scripted step after a pause
                     timersRef.current.push(
                       setTimeout(() => {
                         lockRef.current = false;
                         if (nextStep) {
                           setStep((s) => (s + 1) % script.length);
-                        } else {
-                          // keep step if chip-driven (optional)
                         }
                       }, 1800)
                     );
@@ -137,22 +125,18 @@ export default function ChatDemo() {
     );
   }
 
-  // start + loop scripted demo
   useEffect(() => {
     if (isRunningRef.current) return;
     isRunningRef.current = true;
     runTurn(current.user, current.bot, true);
 
     return () => clearTimers();
-    setActive(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // whenever step changes, run next scripted turn
   useEffect(() => {
     if (!isRunningRef.current) return;
 
-    // keep first greeting + last messages to keep UI clean
     setMessages((prev) => {
       const first = prev[0];
       const tail = prev.slice(-5);
@@ -164,36 +148,30 @@ export default function ChatDemo() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  // chip click -> play that as user message and choose a relevant bot reply
   function onChipClick(text) {
-    // choose reply:
-    // if chip matches current.user -> use current.bot
-    // otherwise pick a reasonable canned response
     const fallbackMap = {
-      "Help me fall asleep":
-        "Let’s try a gentle wind-down: dim lights, put your phone away for 5 minutes, and do 4 slow breaths. What time do you want to be asleep by?",
-      "I feel anxious today":
-        "I hear you. If you’re up for it, rate the anxiety from 1–10, and tell me where you feel it in your body (chest, stomach, shoulders).",
-      "I feel stressed":
-        "That makes sense. What’s the biggest stressor right now: work/school, relationships, health, or uncertainty?",
-      "I feel sad":
-        "I’m sorry you’re feeling this way. Do you want to talk about what happened today, or would you prefer a small coping step first?",
+      "Помоги заснуть":
+        "Давай попробуем мягко подготовиться ко сну: приглуши свет, отложи телефон на 5 минут и сделай 4 медленных вдоха. Во сколько ты хочешь уснуть?",
+      "Сегодня я чувствую тревогу":
+        "Я слышу тебя. Если готов, оцени тревогу по шкале от 1 до 10 и скажи, где ты ощущаешь её в теле (грудь, живот, плечи).",
+      "Я чувствую стресс":
+        "Это понятно. Что сейчас больше всего напрягает: работа/учёба, отношения, здоровье или неопределённость?",
+      "Мне грустно":
+        "Мне жаль, что ты так себя чувствуешь. Хочешь рассказать, что произошло сегодня, или сначала сделать небольшой поддерживающий шаг?",
     };
 
     const botText =
       text === current.user
         ? current.bot
         : fallbackMap[text] ||
-          "Thanks for sharing. Can you tell me a bit more about what’s been going on and what you need most right now?";
+          "Спасибо, что поделился. Расскажи, пожалуйста, что сейчас происходит и какая поддержка тебе нужна больше всего.";
 
-    // IMPORTANT: chip should trigger immediately and also reset loop timing
     lockRef.current = false;
     runTurn(text, botText, true);
   }
 
   return (
     <div className="rounded-3xl border border-black/10 bg-white p-6 shadow-xl h-[620px] overflow-hidden flex flex-col">
-      {/* header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
@@ -201,20 +179,41 @@ export default function ChatDemo() {
           </div>
           <div>
             <div className="font-semibold text-black leading-tight">MindfulAI</div>
-            <div className="text-sm text-black/50">Calm • Private • Supportive</div>
+            <div className="text-sm text-black/50">Спокойно • Приватно • С поддержкой</div>
           </div>
         </div>
-        <span className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700">
-          Demo
-        </span>
+        <div className="relative group">
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700 animate-pulse cursor-default">
+            Демо
+          </span>
+
+          <div
+            className="
+              pointer-events-none absolute right-0 top-10 z-20 w-72
+              rounded-2xl border border-black/10 bg-white p-3 shadow-xl
+              opacity-0 translate-y-1 transition
+              group-hover:opacity-100 group-hover:translate-y-0
+            "
+          >
+            <div className="text-sm font-semibold text-black">Демо-диалог</div>
+            <div className="mt-1 text-xs leading-relaxed text-black/60">
+              Это пример сценария общения (не реальный чат).
+              <div className="mt-2 space-y-1">
+                <div>• Сообщения воспроизводятся автоматически</div>
+                <div>• Быстрые варианты — подсказки для выбора</div>
+                <div>• Попробуйте пообщаться с ИИ в разделе "Чат"</div>
+              </div>
+            </div>
+
+            <div className="absolute -top-1 right-6 h-2 w-2 rotate-45 border-l border-t border-black/10 bg-white" />
+          </div>
+        </div>
       </div>
 
-      {/* FIXED HEIGHT WRAPPER (prevents page jump) */}
       <div className="mt-5 flex-1 min-h-0 flex flex-col">
-        {/* messages area (scroll) */}
         <div
           ref={scrollRef}
-          className="flex-1 min-h-0 overflow-hidden pr-2 space-y-4" 
+          className="flex-1 min-h-0 overflow-hidden pr-2 space-y-4"
         >
           {messages.map((m) => {
             const isUser = m.role === "user";
@@ -244,7 +243,7 @@ export default function ChatDemo() {
 
                 {isUser && (
                   <div className="h-9 w-9 rounded-full bg-orange-200 grid place-items-center font-semibold text-black shrink-0">
-                    U
+                    Я
                   </div>
                 )}
               </div>
@@ -263,7 +262,6 @@ export default function ChatDemo() {
           )}
         </div>
 
-        {/* chips */}
         <div className="mt-4 flex flex-wrap gap-2 shrink-0">
           {currentChips.map((c) => (
             <button
@@ -277,18 +275,18 @@ export default function ChatDemo() {
           ))}
         </div>
 
-        {/* input */}
         <div className="mt-4 flex items-center gap-3 shrink-0">
           <div className="flex-1 rounded-2xl border border-black/10 bg-white px-4 py-3 text-black/60 overflow-hidden whitespace-nowrap text-ellipsis">
-            {input.length ? input : <span className="text-black/40">Type here…</span>}
+            {input.length ? input : <span className="text-black/40">Введите текст…</span>}
             <span className="ml-1 inline-block h-[1.05em] w-[2px] animate-pulse bg-black/30 align-[-2px]" />
           </div>
           <button
             type="button"
+            onClick={() => router.push("/chat")}
             className="h-12 rounded-2xl bg-blue-600 px-5 font-semibold text-white shadow-sm transition hover:opacity-95"
-            aria-label="Send"
+            aria-label="Перейти в чат"
           >
-            Send
+            Попробовать
           </button>
         </div>
       </div>

@@ -2,28 +2,39 @@
 
 export default function PrivacyDataCard({ onOpenPrivacy, onExport, t }) {
   return (
-    <div className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.06)] dark:bg-black/30 dark:border-white/10">
-      <h3 className="text-base font-semibold text-black dark:text-white">{t("privacy")}</h3>
+    <div className="relative overflow-hidden rounded-[28px] border border-black/10 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.06)]">
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-blue-600" />
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-black/10 bg-white/60 dark:bg-white/5 dark:border-white/10">
-        <button
+      <h3 className="text-base font-semibold text-black">{t("privacy")}</h3>
+
+      <div className="mt-4 overflow-hidden rounded-2xl border border-black/10 bg-white">
+        <RowButton
           onClick={onOpenPrivacy}
-          className="w-full px-4 py-4 text-left hover:bg-black/[0.03] dark:hover:bg-white/5"
-        >
-          <div className="font-medium text-black dark:text-white">{t("privacySettings")}</div>
-          <div className="text-sm text-black/60 dark:text-white/60">{t("privacyHint")}</div>
-        </button>
+          title={t("privacySettings")}
+          hint={t("privacyHint")}
+        />
 
-        <div className="h-px bg-black/10 dark:bg-white/10" />
+        <div className="h-px bg-black/10" />
 
-        <button
+        <RowButton
           onClick={onExport}
-          className="w-full px-4 py-4 text-left hover:bg-black/[0.03] dark:hover:bg-white/5"
-        >
-          <div className="font-medium text-black dark:text-white">{t("export")}</div>
-          <div className="text-sm text-black/60 dark:text-white/60">{t("exportHint")}</div>
-        </button>
+          title={t("export")}
+          hint={t("exportHint")}
+        />
       </div>
     </div>
+  );
+}
+
+function RowButton({ onClick, title, hint }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full px-4 py-4 text-left transition hover:bg-black/[0.03]"
+    >
+      <div className="font-medium text-black">{title}</div>
+      <div className="text-sm text-black/60">{hint}</div>
+    </button>
   );
 }

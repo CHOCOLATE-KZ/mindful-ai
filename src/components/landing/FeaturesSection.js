@@ -7,22 +7,22 @@ import { motion } from "framer-motion";
 export default function FeaturesSection() {
   const features = [
     {
-      title: "Privacy-first security",
-      subtitle: "Your data stays safe and private.",
+      title: "Безопасность с приоритетом приватности",
+      subtitle: "Ваши данные остаются защищёнными и конфиденциальными.",
       Icon: ShieldCheck,
       blob: "from-blue-200/70 via-blue-100/40 to-white",
       iconBg: "bg-blue-600",
     },
     {
-      title: "Powerful memory",
-      subtitle: "Remembers what matters to you.",
+      title: "Умная память",
+      subtitle: "Запоминает то, что действительно важно для вас.",
       Icon: Brain,
       blob: "from-purple-200/70 via-purple-100/40 to-white",
       iconBg: "bg-purple-600",
     },
     {
-      title: "Personalized coaching",
-      subtitle: "Support tailored to your goals.",
+      title: "Персональная поддержка",
+      subtitle: "Помощь, адаптированная под ваши цели.",
       Icon: Sparkles,
       blob: "from-orange-200/70 via-orange-100/40 to-white",
       iconBg: "bg-orange-500",
@@ -34,19 +34,20 @@ export default function FeaturesSection() {
       <div className="mx-auto max-w-4xl text-center">
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl">
-            When you have <span className="text-blue-600">MindfulAI</span> on your side
+            Когда <span className="text-blue-600">MindfulAI</span> на вашей стороне
           </h2>
         </Reveal>
 
         <Reveal delay={0.08}>
           <p className="mx-auto mt-4 max-w-3xl text-base text-black/60 sm:text-lg">
-            Discover a safe way to get mental health support with strong privacy, memory,
-            and evidence-based guidance.
+            Откройте для себя безопасный способ получить поддержку в сфере ментального
+            здоровья — с надёжной приватностью, памятью и рекомендациями,
+            основанными на доказательных подходах.
           </p>
         </Reveal>
       </div>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-3">
+      <div className="mt-10 grid gap-6 lg:grid-cols-3 items-stretch">
         {features.map((f, idx) => (
           <Reveal key={f.title} delay={0.12 + idx * 0.08}>
             <FeatureCard {...f} />
@@ -60,8 +61,8 @@ export default function FeaturesSection() {
 function FeatureCard({ title, subtitle, Icon, blob, iconBg }) {
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl border border-black/10 bg-white p-8 shadow-lg
-                 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+      className="group relative h-full overflow-hidden rounded-2xl border border-black/10 bg-white p-8 shadow-lg
+             transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
     >
       {/* мягкое свечение */}
       <div
@@ -110,8 +111,8 @@ function IconPulse({ Icon, delay = 0, size = 5 }) {
       }}
       className="absolute"
       style={{
-        width: `${size * 8}px`,
-        height: `${size * 8}px`,
+        width: `${size * 15}px`,
+        height: `${size * 15}px`,
       }}
     >
       <Icon className="w-full h-full text-black/20" />

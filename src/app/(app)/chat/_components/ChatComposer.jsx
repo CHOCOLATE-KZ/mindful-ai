@@ -1,20 +1,30 @@
 "use client";
+
 import { Mic, Send } from "lucide-react";
 
 export default function ChatComposer({ input, setInput, onSend, loading, voice }) {
-  const { listening, isSecure, toggleVoice } = voice;
+  const { listening, isSecure, toggleVoice, mounted } = voice;
+
+  const micDisabled = !mounted ? true : !isSecure;
+  const micTitle = !mounted
+    ? "Voice input"
+    : !isSecure
+      ? "Голос работает только на HTTPS или localhost"
+      : "Voice input";
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/10 bg-white/80 backdrop-blur-sm shadow-lg dark:border-white/10 dark:bg-black/40">
-        <form onSubmit={onSend} className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 relative">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/10 bg-white/85 backdrop-blur-xl">
+        <form onSubmit={onSend} className="mx-auto max-w-4xl px-4 py-4">
+          {/* панель */}
+          <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/10 px-3 py-3">
+            <div className="flex items-end gap-2">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Share your thoughts..."
-                className="w-full min-h-[48px] max-h-32 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 pr-12 outline-none focus:border-purple-300 focus:ring-2 focus:ring-purple-200"
+                placeholder="Напишите, что чувствуете…"
+                className="w-full min-h-[44px] max-h-36 resize-none rounded-xl border border-black/10 bg-white px-3 py-2 text-[15px] leading-6 outline-none
+                           focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -22,40 +32,52 @@ export default function ChatComposer({ input, setInput, onSend, loading, voice }
                   }
                 }}
               />
+
+              <button
+                type="button"
+                onClick={toggleVoice}
+                disabled={micDisabled}
+                className={[
+                  "h-10 w-10 rounded-full grid place-items-center transition",
+                  micDisabled
+                    ? "opacity-40 cursor-not-allowed"
+                    : listening
+                      ? "bg-rose-50 text-rose-600 ring-1 ring-rose-200"
+                      : "hover:bg-black/[0.05] text-slate-700",
+                ].join(" ")}
+                title={micTitle}
+                aria-label="Voice"
+              >
+                <Mic className="h-5 w-5" />
+              </button>
+
+              <button
+                type="submit"
+                disabled={!input.trim() || loading}
+                className="h-10 w-10 rounded-full grid place-items-center bg-blue-600 text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-40"
+                title="Send"
+                aria-label="Send"
+              >
+                <Send className="h-5 w-5" />
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={toggleVoice}
-              disabled={!isSecure}
-              className={`cursor-pointer h-12 w-12 rounded-full grid place-items-center transition
-                ${!isSecure ? "opacity-40 cursor-not-allowed" : listening ? "bg-red-100 text-red-600 animate-pulse" : "hover:bg-black/5"}`}
-              title={!isSecure ? "Голос работает только на HTTPS или localhost" : "Voice input"}
-            >
-              <Mic className="h-5 w-5" />
-            </button>
-
-            <button
-              type="submit"
-              disabled={!input.trim() || loading}
-              className="cursor-pointer h-12 w-12 rounded-full grid place-items-center bg-gradient-to-br from-purple-500 to-blue-500 text-white shadow-lg hover:opacity-90 transition-opacity disabled:opacity-40"
-              title="Send"
-            >
-              <Send className="h-5 w-5" />
-            </button>
+            <div className="mt-2 flex items-center justify-between px-1">
+              <p className="text-[11px] text-slate-500">
+                **Это поддерживающее пространство.** Можно отвечать коротко или подробно.
+              </p>
+              {loading && <span className="text-[11px] text-slate-500">Отправка…</span>}
+            </div>
           </div>
 
-          <p className="text-xs text-gray-400 mt-2 text-center">
-            💙 This is a supportive space. Take your time and share what feels right.
-          </p>
+          {/* предупреждение вынесем внутрь формы, чтобы не “прыгало” */}
+          {mounted && !isSecure && (
+            <p className="mt-2 text-xs text-amber-700">
+              🎤 Голосовой ввод работает только на <b>HTTPS</b> (или localhost).
+            </p>
+          )}
         </form>
       </div>
-
-      {!isSecure && (
-        <p className="text-xs text-amber-700 mt-2 text-center">
-          🎤 Голосовой ввод работает только на <b>HTTPS</b> (или localhost). Откройте сайт по домену с SSL.
-        </p>
-      )}
     </>
   );
 }

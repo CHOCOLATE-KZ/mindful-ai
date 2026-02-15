@@ -7,37 +7,75 @@ const TAGS = ["Тревога", "Депрессия", "Сон", "Стресс", 
 
 export default function NewsPage() {
   const [q, setQ] = useState("");
+  const [debouncedQ, setDebouncedQ] = useState("");
   const [tag, setTag] = useState("");
+  const [sort, setSort] = useState("latest");
+  const [page, setPage] = useState(1);
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [err, setErr] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
+  // debounce
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 350);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  // reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQ, tag, sort]);
 
   const url = useMemo(() => {
     const sp = new URLSearchParams();
-    if (q.trim()) sp.set("q", q.trim());
+    if (debouncedQ) sp.set("q", debouncedQ);
     if (tag) sp.set("tag", tag);
+    sp.set("sort", sort);
     sp.set("limit", "20");
+    sp.set("page", String(page));
     return `/api/news?${sp.toString()}`;
-  }, [q, tag]);
+  }, [debouncedQ, tag, sort, page]);
 
   useEffect(() => {
-    let dead = false;
+    const controller = new AbortController();
+    const isFirst = page === 1;
+
     (async () => {
-      setLoading(true);
+      if (isFirst) setLoading(true);
+      else setLoadingMore(true);
+
       setErr("");
+
       try {
-        const res = await fetch(url, { cache: "no-store" });
+        const res = await fetch(url, { cache: "no-store", signal: controller.signal });
         const data = await res.json().catch(() => ({ items: [], error: "Bad JSON" }));
         if (data?.error) setErr(data.error);
-        if (!dead) setItems(Array.isArray(data.items) ? data.items : []);
+
+        const got = Array.isArray(data.items) ? data.items : [];
+        setTotalCount(Number(data.totalCount || 0));
+        setHasMore(Boolean(data.hasMore));
+
+        if (isFirst) setItems(got);
+        else setItems((prev) => [...prev, ...got]);
       } catch (e) {
-        if (!dead) setErr(e.message);
+        if (e?.name !== "AbortError") setErr(e?.message || String(e));
       } finally {
-        if (!dead) setLoading(false);
+        if (isFirst) setLoading(false);
+        else setLoadingMore(false);
       }
     })();
-    return () => (dead = true);
-  }, [url]);
+
+    return () => controller.abort();
+  }, [url, page]);
+
+  const loadMore = () => {
+    if (!hasMore || loading || loadingMore) return;
+    setPage((p) => p + 1);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-slate-900/80 dark:to-indigo-950/40">
@@ -49,22 +87,58 @@ export default function NewsPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Hero Section */}
-        <div className="mb-16">
+        <div className="mb-10">
           <div className="inline-block">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2 h-2 bg-blue-500 rounded-full" />
-              <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 tracking-widest uppercase">Психология</span>
+              <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 tracking-widest uppercase">
+                Психология
+              </span>
             </div>
           </div>
+
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-black dark:text-white mb-6">
             Психо-новости
           </h1>
+
           <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
             Подборка интересных статей и материалов по психологии. Изучайте, учитесь и развивайтесь вместе с нами.
           </p>
+
           <p className="mt-2 text-sm text-black/60 dark:text-white/60">
-            Источники: <a href="https://rus.baq.kz" className="font-medium text-indigo-600 hover:text-indigo-700 underline underline-offset-2 decoration-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300">rus.baq.kz</a>
+            Источники:{" "}
+            <a
+              href="https://rus.baq.kz"
+              className="font-medium text-indigo-600 hover:text-indigo-700 underline underline-offset-2 decoration-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300"
+            >
+              несколько источников
+            </a>
           </p>
+
+          {/* sort + counter */}
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-slate-600 dark:text-slate-300">
+              {totalCount ? (
+                <>
+                  Найдено: <span className="font-semibold">{totalCount}</span>
+                </>
+              ) : (
+                <span className="text-slate-500 dark:text-slate-400">Поиск и фильтры</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-500 dark:text-slate-400">Сортировка</span>
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="h-10 rounded-xl border border-slate-200 bg-white/70 backdrop-blur-sm px-3 text-sm text-slate-800 shadow-lg shadow-blue-500/5 outline-none transition duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800/50 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400/20"
+              >
+                <option value="latest">Сначала новые</option>
+                <option value="oldest">Сначала старые</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Search + Tags */}
@@ -90,12 +164,13 @@ export default function NewsPage() {
               <span className="mr-2">⭐</span> Все материалы
             </TagChip>
             {TAGS.map((t) => (
-              <TagChip key={t} active={tag === t} onClick={() => setTag(t)}>{t}</TagChip>
+              <TagChip key={t} active={tag === t} onClick={() => setTag(t)}>
+                {t}
+              </TagChip>
             ))}
           </div>
         </div>
 
-        {/* Error Message */}
         {err && (
           <div className="mb-8 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 backdrop-blur-sm">
             <p className="text-sm font-medium text-rose-700 dark:text-rose-400">⚠️ {err}</p>
@@ -109,7 +184,7 @@ export default function NewsPage() {
               <div key={i} className="h-80 rounded-3xl bg-gradient-to-br from-slate-200 to-slate-100 dark:from-slate-700 dark:to-slate-800 animate-pulse" />
             ))
           ) : items.length ? (
-            items.map((n, idx) => (
+            items.map((n) => (
               <a
                 key={n.id}
                 href={n.url}
@@ -117,12 +192,8 @@ export default function NewsPage() {
                 rel="noreferrer"
                 className="group relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-700/80 bg-white/60 dark:bg-slate-800/40 backdrop-blur-xl shadow-lg shadow-blue-500/5 hover:shadow-2xl hover:shadow-blue-500/15 transition duration-300 hover:-translate-y-2 dark:hover:bg-slate-800/60"
               >
-                {/* Gradient overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 to-indigo-600/0 group-hover:from-blue-600/5 group-hover:to-indigo-600/5 transition duration-300" />
-
-                {/* Card content */}
                 <div className="relative p-6 sm:p-7 h-full flex flex-col">
-                  {/* Source & Date */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-blue-500" />
@@ -135,19 +206,16 @@ export default function NewsPage() {
                     </span>
                   </div>
 
-                  {/* Title */}
                   <h2 className="text-xl sm:text-lg font-bold leading-tight text-slate-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition duration-200">
                     {n.title}
                   </h2>
 
-                  {/* Summary */}
                   {n.summary && (
                     <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 line-clamp-3 mb-4 flex-grow">
                       {n.summary}
                     </p>
                   )}
 
-                  {/* Tags */}
                   {(n.tags || []).length > 0 && (
                     <div className="mt-auto pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
                       <div className="flex flex-wrap gap-2">
@@ -162,28 +230,33 @@ export default function NewsPage() {
                       </div>
                     </div>
                   )}
-
-                  {/* Link arrow */}
-                  <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-blue-500/10 dark:bg-blue-600/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
-                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.658 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                  </div>
                 </div>
               </a>
             ))
           ) : (
             <div className="col-span-full flex flex-col items-center justify-center py-20">
-              <div className="w-16 h-16 rounded-full bg-slate-200/50 dark:bg-slate-700/50 flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
               <p className="text-lg font-semibold text-slate-600 dark:text-slate-300 mb-2">Материалов не найдено</p>
-              <p className="text-slate-500 dark:text-slate-400">Попробуйте изменить поисковый запрос или выбрать другую категорию</p>
+              <p className="text-slate-500 dark:text-slate-400">Попробуйте изменить запрос или выбрать другую категорию</p>
             </div>
           )}
         </div>
+
+        {/* Load more */}
+        {!loading && items.length > 0 && (
+          <div className="mt-10 flex justify-center">
+            {hasMore ? (
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={loadingMore}
+                className="rounded-2xl px-6 py-3 font-semibold border border-slate-200 bg-white/70 backdrop-blur-sm text-slate-800 shadow-lg shadow-blue-500/5 transition hover:bg-white disabled:opacity-60 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800/50 dark:text-white"
+              >
+                {loadingMore ? "Загрузка..." : "Показать ещё"}
+              </button>
+            ) : (
+              <div className="text-sm text-slate-500 dark:text-slate-400">Это всё ✅</div>
+            )}
+          </div>
+        )}
       </main>
 
       <Footer />

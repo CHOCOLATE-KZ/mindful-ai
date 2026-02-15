@@ -1,2 +1,6 @@
 npm run dev
 в diplomaproject 
+
+!
+Открыть LM Studio запустить gpt-oss-20b
+Открыть Supabase

@@ -1,43 +1,37 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 import ChatHeader from "./_components/ChatHeader";
-import NextbotFrame from "./_components/NextbotFrame";
 import ChatMessages from "./_components/ChatMessages";
 import ChatComposer from "./_components/ChatComposer";
 
 import { useOutsideClick } from "./_hooks/useOutsideClick";
-import { useNextbotSrc } from "./_hooks/useNextbotSrc";
 import { useVoiceInput } from "./_hooks/useVoiceInput";
 
 export default function ChatPage() {
-  const supabase = supabaseBrowser();
+  const supabase = useMemo(() => supabaseBrowser(), []);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [mode, setMode] = useState("native"); // native | nextbot
+  // ✅ реф на скролл-контейнер
+  const scrollRef = useRef(null);
 
   // menu
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   useOutsideClick(menuRef, () => setMenuOpen(false), menuOpen);
 
-  // nextbot src
-  const NEXTBOT_IFRAME_SRC = useNextbotSrc();
-
   // voice
   const voice = useVoiceInput({ lang: "ru-RU", autoStopMs: 8000 });
 
-  // подтягиваем voiceText в input (live preview)
   useEffect(() => {
     if (voice.listening) setInput(voice.voiceText);
   }, [voice.voiceText, voice.listening]);
 
-  // load history
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
@@ -113,25 +107,36 @@ export default function ChatPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Chat error");
 
-      setMessages((m) => [...m, { role: "assistant", content: data.reply, created_at: new Date().toISOString() }]);
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: data.reply, created_at: new Date().toISOString() },
+      ]);
     } catch (err) {
       console.error(err);
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: "Извини, что-то пошло не так. Попробуй ещё раз.", created_at: new Date().toISOString() },
+        {
+          role: "assistant",
+          content: "Извини, что-то пошло не так. Попробуй ещё раз.",
+          created_at: new Date().toISOString(),
+        },
       ]);
     } finally {
       setLoading(false);
     }
   }
 
- return (
-    <div className="min-h-dvh flex flex-col
-  bg-gradient-to-b from-[#E8E0FF] via-[#EAF2FF] to-[#FFDCC8]
-  dark:from-[#0B0B12] dark:via-[#0B1220] dark:to-[#120B10]">
+  return (
+    <div className="min-h-dvh flex flex-col bg-white text-slate-900">
+      {/* фон */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-slate-100" />
+        <div className="absolute -top-56 -right-56 h-[620px] w-[620px] rounded-full bg-blue-600/10 blur-3xl" />
+        <div className="absolute top-1/3 -left-56 h-[620px] w-[620px] rounded-full bg-sky-500/10 blur-3xl" />
+        <div className="absolute bottom-[-260px] left-1/2 h-[680px] w-[680px] -translate-x-1/2 rounded-full bg-indigo-500/10 blur-3xl" />
+      </div>
+
       <ChatHeader
-        mode={mode}
-        setMode={setMode}
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
         menuRef={menuRef}
@@ -139,20 +144,12 @@ export default function ChatPage() {
         clearChatHistory={clearChatHistory}
       />
 
-      {mode === "nextbot" ? (
-        <NextbotFrame src={NEXTBOT_IFRAME_SRC} />
-      ) : (
-        <>
-          {/* важно: flex-1 + overflow + pb под фиксированный инпут */}
-          <div className="flex-1 overflow-y-auto pb-28">
-            <ChatMessages messages={messages} loading={loading} />
-          </div>
+      {/* ✅ ref сюда + чуть больше pb, чтобы низ не лип */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto pb-36">
+        <ChatMessages messages={messages} loading={loading} scrollRef={scrollRef} />
+      </div>
 
-          {/* composer теперь fixed */}
-          <ChatComposer input={input} setInput={setInput} onSend={send} loading={loading} voice={voice} />
-        </>
-      )}
+      <ChatComposer input={input} setInput={setInput} onSend={send} loading={loading} voice={voice} />
     </div>
   );
-
 }

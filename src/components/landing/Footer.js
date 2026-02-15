@@ -17,8 +17,8 @@ export default function Footer() {
             <div className="h-10 w-10 rounded-full bg-white/15 grid place-items-center font-bold transition-transform duration-300 hover:scale-110">
               ✿
             </div>
-            <div className="text-2xl font-semibold transition-colors duration-300 hover:text-blue-200">
-              mindfulai
+            <div className="text-2xl font-semibold transition-colors duration-300 hover:text-blue-200 cursor-pointer">
+              MindfulAI
             </div>
           </div>
 
