@@ -103,7 +103,7 @@ export default function TestRunner({ testKey: rawTestKey }) {
         <div className="rounded-2xl border border-green-300 bg-gradient-to-br from-green-50 to-emerald-50 p-6 text-center">
           <h2 className="text-3xl font-bold text-green-700">✅ Тест завершён!</h2>
           <p className="text-green-600 text-sm mt-3">
-            Ваши ответы сохранены! Вы можете просмотреть аналитику и статистику в разделе "Аналитика".
+            Ваши ответы сохранены! Вы можете просмотреть аналитику и статистику в разделе &laquo;Аналитика&raquo;.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link

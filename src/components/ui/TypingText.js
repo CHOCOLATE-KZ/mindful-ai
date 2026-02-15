@@ -26,7 +26,7 @@ export default function TypingText({
 
     // when finished deleting
     if (deleting && subIndex === 0) {
-      setDeleting(false);
+      setDeleting(false); // eslint-disable-line react-hooks/set-state-in-effect
       if (!loop && index === texts.length - 1) return;
       setIndex((i) => (i + 1) % texts.length);
       return;

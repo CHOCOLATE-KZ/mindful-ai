@@ -5,7 +5,7 @@
  * Принимает структурированные данные заметок и возвращает анализ
  */
 
-import { supabaseAdmin } from '@/lib/supabase/admin';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export async function POST(request) {
   try {
@@ -36,6 +36,7 @@ export async function POST(request) {
     }
 
     // 🔹 Валидация пользователя (defensive)
+    const supabaseAdmin = getSupabaseAdmin();
     let user = null;
     try {
       if (!supabaseAdmin) throw new Error('supabaseAdmin client not initialized');
