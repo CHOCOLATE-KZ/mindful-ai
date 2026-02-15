@@ -172,7 +172,7 @@ function getLmStudioConfig() {
   return { base, model };
 }
 
-function useLmStudio() {
+function isLmStudioEnabled() {
   return Boolean(process.env.LMSTUDIO_BASE_URL || process.env.LMSTUDIO_MODEL);
 }
 
@@ -345,7 +345,7 @@ export async function POST(req) {
 
   let reply = "";
   try {
-    if (useLmStudio()) {
+    if (isLmStudioEnabled()) {
       const lm = await callLmStudio(messages);
       if (lm.error) {
         return Response.json({ error: lm.error }, { status: 502 });

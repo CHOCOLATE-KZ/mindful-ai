@@ -36,7 +36,7 @@ export default function AppShell({ children }) {
   }, [supabase]);
 
   useEffect(() => {
-    load();
+    load(); // eslint-disable-line react-hooks/set-state-in-effect
 
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
       load();
@@ -67,7 +67,7 @@ export default function AppShell({ children }) {
         load();
       }
     },
-    [supabase]
+    [supabase, load]
   );
 
   const value = useMemo(

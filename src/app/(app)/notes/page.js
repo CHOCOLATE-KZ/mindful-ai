@@ -51,7 +51,7 @@ export default function NotesPage() {
     })();
 
     return () => { mounted = false; };
-  }, []);
+  }, [supabase]);
 
   // 🔹 Добавление / редактирование заметки
   async function saveNote(e) {

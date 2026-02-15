@@ -29,7 +29,7 @@ function extractKeywords(texts, limit = 8) {
     .map(([word, count]) => ({ word, count }));
 }
 
-function useLmStudio() {
+function isLmStudioEnabled() {
   return Boolean(process.env.LMSTUDIO_BASE_URL || process.env.LMSTUDIO_MODEL);
 }
 
@@ -152,7 +152,7 @@ export async function POST(req) {
     })),
   };
 
-  if (!useLmStudio()) {
+  if (!isLmStudioEnabled()) {
     return Response.json({ error: "LM Studio is not configured" }, { status: 503 });
   }
 

@@ -10,7 +10,7 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
   const [text, setText] = useState("");
 
   useEffect(() => {
-    if (listening) setText(transcript);
+    if (listening) setText(transcript); // eslint-disable-line react-hooks/set-state-in-effect
   }, [transcript, listening]);
 
   useEffect(() => {
