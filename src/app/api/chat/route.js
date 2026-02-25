@@ -11,7 +11,7 @@ const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
 async function buildUserContext(supabase, userId) {
   const [{ data: profile }, { data: settings }, { data: lastNote }] = await Promise.all([
     supabase.from("profiles").select("name").eq("id", userId).maybeSingle(),
-    supabase.from("user_settings").select("language, data_sharing_ai").eq("user_id", userId).maybeSingle(),
+    supabase.from("user_settings").select("language, data_sharing_ai, ai_personalization").eq("user_id", userId).maybeSingle(),
     supabase.from("notes").select("date, mood, sleep").eq("user_id", userId).order("date", { ascending: false }).limit(1),
   ]);
 
@@ -26,6 +26,11 @@ async function buildUserContext(supabase, userId) {
     parts.push(
       `Последняя заметка: дата=${note?.date || "?"}, настроение=${note?.mood ?? "?"}/10, сон=${note?.sleep ?? "?"} мин`
     );
+  }
+
+  // Если включена персонализация ИИ, добавляем дополнительный контекст
+  if (settings?.ai_personalization && settings?.data_sharing_ai !== false) {
+    parts.push(`Персонализация: ИИ учитывает ваши привычки и паттерны для более релевантных рекомендаций`);
   }
 
   return parts.length ? parts.join(". ") : "";

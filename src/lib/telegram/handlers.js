@@ -4,6 +4,7 @@
 import { linkTelegramAccount, getUserIdByTelegramId, isValidUser } from './userManager.js';
 import { supabaseAdmin } from '../supabase/admin.js';
 import { askAIWithHistory, buildUserContext } from '../lmStudioClient.js';
+import { getBot } from './botConfig.js';
 
 /**
  * Обработчик команды /start
@@ -166,7 +167,37 @@ export async function handleNotes(ctx) {
 }
 
 /**
- * Обработчик команды /today
+ * Отправить уведомление пользователю в Telegram (если он согласился на push)
+ */
+export async function sendTelegramNotification(telegramId, message) {
+  try {
+    // Получаем userId
+    const userId = await getUserIdByTelegramId(telegramId);
+    if (!userId) return;
+
+    // Проверяем включены ли push уведомления
+    const { data: settings } = await supabaseAdmin
+      .from('user_settings')
+      .select('push_notifications')
+      .eq('user_id', userId)
+      .single();
+
+    if (!settings?.push_notifications) {
+      console.log(`Push notifications disabled for user ${userId}`);
+      return;
+    }
+
+    // Получаем бота и отправляем сообщение
+    const bot = getBot();
+    await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'Markdown' });
+    console.log(`📤 Notification sent to ${telegramId}`);
+  } catch (error) {
+    console.error('Failed to send telegram notification:', error);
+  }
+}
+
+/**
+ * Улучшенный обработчик команды /today - интерактивное добавление заметки
  */
 export async function handleToday(ctx) {
   try {
@@ -193,18 +224,112 @@ export async function handleToday(ctx) {
     if (existing) {
       return ctx.reply(
         '✅ Вы уже добавили заметку за сегодня!\n\n' +
-        'Откройте сайт для редактирования.'
+        'Откройте сайт для редактирования или /today снова для новой записи.'
       );
     }
 
+    // Начинаем интерактивное добавление
+    ctx.session = ctx.session || {};
+    ctx.session.addingNote = {
+      userId,
+      telegramId: ctx.from.id,
+      date: today.toISOString(),
+      mood: null,
+      sleep: null,
+      comment: null,
+      step: 'mood'
+    };
+
     return ctx.reply(
-      '📝 Добавить заметку за сегодня:\n\n' +
-      'Откройте сайт и создайте новую заметку.\n' +
-      'Ваши данные синхронизируются автоматически!'
+      '📝 *Добавление заметки за сегодня*\n\n' +
+      '1️⃣ Как ваше настроение? (от 1 до 10)\n' +
+      '  1-3: плохо 😞\n' +
+      '  4-6: нейтрально 😐\n' +
+      '  7-10: хорошо 😊\n\n' +
+      'Отправьте число:',
+      { parse_mode: 'Markdown' }
     );
   } catch (error) {
     console.error('Ошибка в handleToday:', error);
-    ctx.reply('❌ Ошибка при проверке заметок.');
+    ctx.reply('❌ Ошибка при добавлении заметки.');
+  }
+}
+
+/**
+ * Обработчик числового ввода для заметки (настроение, сон)
+ */
+export async function handleNoteInput(ctx) {
+  const input = ctx.message.text?.trim();
+  const userId = ctx.from.id;
+
+  try {
+    if (!ctx.session?.addingNote) {
+      return; // Не в процессе добавления заметки
+    }
+
+    const note = ctx.session.addingNote;
+
+    if (note.step === 'mood') {
+      const mood = parseInt(input, 10);
+      if (isNaN(mood) || mood < 1 || mood > 10) {
+        return ctx.reply('❌ Пожалуйста, введите число от 1 до 10');
+      }
+
+      note.mood = mood;
+      note.step = 'sleep';
+
+      return ctx.reply(
+        '2️⃣ Сколько часов вы спали? (например: 7.5 или 8)\n\n' +
+        'Отправьте число часов:'
+      );
+    }
+
+    if (note.step === 'sleep') {
+      const sleep = parseFloat(input);
+      if (isNaN(sleep) || sleep < 0 || sleep > 24) {
+        return ctx.reply('❌ Пожалуйста, введите число часов (0-24)');
+      }
+
+      note.sleep = Math.round(sleep * 60); // Переводим в минуты
+      note.step = 'comment';
+
+      return ctx.reply(
+        '3️⃣ Добавьте заметку (опционально)\n\n' +
+        'Напишите что угодно или отправьте "-" для пропуска:'
+      );
+    }
+
+    if (note.step === 'comment') {
+      note.comment = input === '-' ? null : input;
+      note.step = 'done';
+
+      // Сохраняем заметку в БД
+      const { error } = await supabaseAdmin.from('notes').insert({
+        user_id: note.userId,
+        date: note.date,
+        mood: note.mood,
+        sleep: note.sleep,
+        comment: note.comment,
+      });
+
+      if (error) throw error;
+
+      // Очищаем сессию
+      delete ctx.session.addingNote;
+
+      return ctx.reply(
+        `✅ *Заметка сохранена!*\n\n` +
+        `😊 Настроение: ${note.mood}/10\n` +
+        `😴 Сон: ${note.sleep / 60}ч\n` +
+        `${note.comment ? `📝 "${note.comment}"` : ''}\n\n` +
+        'Данные синхронизированы с вашим профилем на сайте!',
+        { parse_mode: 'Markdown' }
+      );
+    }
+  } catch (error) {
+    console.error('Ошибка в handleNoteInput:', error);
+    ctx.reply('❌ Ошибка при сохранении заметки.');
+    delete ctx.session?.addingNote;
   }
 }
 

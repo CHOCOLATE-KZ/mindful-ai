@@ -24,11 +24,23 @@ import {
   handleNotes,
   handleToday,
   handleStats,
-  handleMessage
+  handleMessage,
+  handleNoteInput
 } from './lib/telegram/handlers.js';
 
 // Получаем бота
 const bot = getBot();
+
+// Добавляем middleware для сессии (простое хранилище в памяти)
+const sessions = new Map();
+bot.use((ctx, next) => {
+  const userId = ctx.from.id;
+  if (!sessions.has(userId)) {
+    sessions.set(userId, {});
+  }
+  ctx.session = sessions.get(userId);
+  return next();
+});
 
 // Регистрируем обработчики команд
 bot.start(handleStart);
@@ -37,7 +49,14 @@ bot.command('link', handleLink);
 bot.command('notes', handleNotes);
 bot.command('today', handleToday);
 bot.command('stats', handleStats);
-bot.on('message', handleMessage);
+
+// Обработчик для сообщений (сначала проверяем если это ввод для заметки)
+bot.on('message', async (ctx, next) => {
+  if (ctx.session?.addingNote) {
+    return handleNoteInput(ctx);
+  }
+  return handleMessage(ctx);
+});
 
 console.log('🤖 Telegram бот запущен в режиме polling...');
 console.log('📱 Откройте Telegram и отправьте /start в бота: @' + (process.env.TELEGRAM_BOT_USERNAME || 'IITUpsychologyAIbot'));
