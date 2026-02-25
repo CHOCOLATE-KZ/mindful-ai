@@ -313,7 +313,7 @@ export async function handleNoteInput(ctx) {
 
       delete ctx.session.addingNote;
 
-      return ctx.reply(
+      await ctx.reply(
         `✅ *Заметка сохранена!*\n\n` +
         `😊 Настроение: ${note.mood}/10\n` +
         `😴 Сон: ${(note.sleep / 60).toFixed(1)}ч\n` +
@@ -321,6 +321,8 @@ export async function handleNoteInput(ctx) {
         'Данные синхронизированы с вашим профилем!',
         { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
       );
+
+      return showMainMenu(ctx);
     }
   } catch (error) {
     console.error('Ошибка в handleNoteInput:', error);
@@ -537,13 +539,15 @@ export async function handleReminderInput(ctx) {
 
       delete ctx.session.settingReminder;
 
-      return ctx.reply(
+      await ctx.reply(
         `✅ *Напоминание установлено!*\n\n` +
         `⏰ Время: ${reminder.time}\n` +
         `📅 Дни: ${reminder.days}\n\n` +
         `Вы будете получать напоминание добавлять заметку в эти дни.`,
         { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
       );
+
+      return showMainMenu(ctx);
     }
   } catch (error) {
     console.error('Ошибка в handleReminderInput:', error);
