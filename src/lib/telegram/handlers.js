@@ -43,22 +43,166 @@ export async function handleCallbackQuery(ctx) {
   try {
     await ctx.answerCbQuery(); // Убираем "loading" индикатор на кнопке
     
-    switch (action) {
-      case 'btn_today':
-        return handleToday(ctx);
-      case 'btn_notes':
-        return handleNotes(ctx);
-      case 'btn_analyze':
-        return handleAnalyze(ctx);
-      case 'btn_stats':
-        return handleStats(ctx);
-      case 'btn_remind':
-        return handleRemind(ctx);
-      case 'btn_help':
-        return handleHelp(ctx);
-      default:
-        return ctx.reply('❌ Неизвестная действие');
+    // Главное меню
+    if (action === 'btn_today') return handleToday(ctx);
+    if (action === 'btn_notes') return handleNotes(ctx);
+    if (action === 'btn_analyze') return handleAnalyze(ctx);
+    if (action === 'btn_stats') return handleStats(ctx);
+    if (action === 'btn_remind') return handleRemind(ctx);
+    if (action === 'btn_help') return handleHelp(ctx);
+    
+    // Настроение (1-10)
+    if (action.startsWith('mood_')) {
+      const mood = parseInt(action.replace('mood_', ''), 10);
+      if (!ctx.session?.addingNote) {
+        return ctx.reply('⚠️ Сессия истекла. Начните заново: /today');
+      }
+      
+      ctx.session.addingNote.mood = mood;
+      ctx.session.addingNote.step = 'sleep';
+      
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: '4ч', callback_data: 'sleep_4' },
+            { text: '5ч', callback_data: 'sleep_5' },
+            { text: '6ч', callback_data: 'sleep_6' },
+            { text: '7ч', callback_data: 'sleep_7' }
+          ],
+          [
+            { text: '8ч', callback_data: 'sleep_8' },
+            { text: '9ч', callback_data: 'sleep_9' },
+            { text: '10ч', callback_data: 'sleep_10' },
+            { text: '11ч', callback_data: 'sleep_11' }
+          ]
+        ]
+      };
+      
+      return ctx.reply('2️⃣ Сколько часов вы спали?', { reply_markup: keyboard });
     }
+    
+    // Сон (4-11 часов)
+    if (action.startsWith('sleep_')) {
+      const hours = parseInt(action.replace('sleep_', ''), 10);
+      if (!ctx.session?.addingNote) {
+        return ctx.reply('⚠️ Сессия истекла. Начните заново: /today');
+      }
+      
+      ctx.session.addingNote.sleep = hours * 60; // в минутах
+      ctx.session.addingNote.step = 'comment';
+      
+      const keyboard = {
+        inline_keyboard: [
+          [{ text: '⏭️ Пропустить комментарий', callback_data: 'skip_comment' }]
+        ]
+      };
+      
+      return ctx.reply(
+        '3️⃣ Добавьте заметку (опционально)\n\n' +
+        'Напишите что угодно или нажмите "Пропустить":',
+        { reply_markup: keyboard }
+      );
+    }
+    
+    // Пропустить комментарий
+    if (action === 'skip_comment') {
+      if (!ctx.session?.addingNote) {
+        return ctx.reply('⚠️ Сессия истекла. Начните заново: /today');
+      }
+      
+      const note = ctx.session.addingNote;
+      
+      const { error } = await supabaseAdmin.from('notes').insert({
+        user_id: note.userId,
+        date: note.date,
+        mood: note.mood,
+        sleep: note.sleep,
+        comment: null,
+      });
+      
+      if (error) throw error;
+      
+      delete ctx.session.addingNote;
+      
+      return ctx.reply(
+        `✅ *Заметка сохранена!*\n\n` +
+        `😊 Настроение: ${note.mood}/10\n` +
+        `😴 Сон: ${(note.sleep / 60).toFixed(1)}ч\n\n` +
+        'Данные синхронизированы с вашим профилем!',
+        { parse_mode: 'Markdown' }
+      );
+    }
+    
+    // Время напоминания
+    if (action.startsWith('remind_time_')) {
+      const time = action.replace('remind_time_', '');
+      if (!ctx.session?.settingReminder) {
+        return ctx.reply('⚠️ Сессия истекла. Начните заново: /remind');
+      }
+      
+      ctx.session.settingReminder.time = time;
+      ctx.session.settingReminder.step = 'days';
+      
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: '📅 Каждый день', callback_data: 'remind_days_daily' }
+          ],
+          [
+            { text: '💼 Будни (Пн-Пт)', callback_data: 'remind_days_weekdays' },
+            { text: '🏝️ Выходные (Сб-Вс)', callback_data: 'remind_days_weekends' }
+          ]
+        ]
+      };
+      
+      return ctx.reply(
+        '📅 В какие дни получать напоминание?',
+        { reply_markup: keyboard }
+      );
+    }
+    
+    // Дни напоминания
+    if (action.startsWith('remind_days_')) {
+      if (!ctx.session?.settingReminder) {
+        return ctx.reply('⚠️ Сессия истекла. Начните заново: /remind');
+      }
+      
+      const reminder = ctx.session.settingReminder;
+      let daysText = '';
+      
+      if (action === 'remind_days_daily') {
+        daysText = 'Каждый день';
+      } else if (action === 'remind_days_weekdays') {
+        daysText = 'Будни (Пн-Пт)';
+      } else if (action === 'remind_days_weekends') {
+        daysText = 'Выходные (Сб-Вс)';
+      }
+      
+      try {
+        await supabaseAdmin.from('reminders').insert({
+          user_id: reminder.userId,
+          telegram_id: reminder.telegramId,
+          time: reminder.time,
+          days: daysText,
+          enabled: true,
+          created_at: new Date().toISOString(),
+        });
+      } catch (dbErr) {
+        console.warn('Reminders table not yet created:', dbErr);
+      }
+      
+      delete ctx.session.settingReminder;
+      
+      return ctx.reply(
+        `✅ *Напоминание установлено!*\n\n` +
+        `⏰ Время: ${reminder.time}\n` +
+        `📅 Дни: ${daysText}\n\n` +
+        `Вы будете получать напоминание добавлять заметку в эти дни.`,
+        { parse_mode: 'Markdown' }
+      );
+    }
+    
+    return ctx.reply('❌ Неизвестное действие');
   } catch (error) {
     console.error('Ошибка в handleCallbackQuery:', error);
     ctx.reply('❌ Ошибка при обработке запроса');
@@ -235,12 +379,30 @@ export async function handleToday(ctx) {
       step: 'mood'
     };
 
+    const keyboard = {
+      inline_keyboard: [
+        [
+          { text: '1 😢', callback_data: 'mood_1' },
+          { text: '2', callback_data: 'mood_2' },
+          { text: '3', callback_data: 'mood_3' },
+          { text: '4', callback_data: 'mood_4' },
+          { text: '5', callback_data: 'mood_5' }
+        ],
+        [
+          { text: '6', callback_data: 'mood_6' },
+          { text: '7', callback_data: 'mood_7' },
+          { text: '8', callback_data: 'mood_8' },
+          { text: '9', callback_data: 'mood_9' },
+          { text: '10 😊', callback_data: 'mood_10' }
+        ]
+      ]
+    };
+
     return ctx.reply(
       '📝 *Добавление заметки за сегодня*\n\n' +
       '1️⃣ Как ваше настроение? (от 1 до 10)\n' +
-      '  1-3: плохо 😞 | 4-6: нейтрально 😐 | 7-10: хорошо 😊\n\n' +
-      'Отправьте число:',
-      { parse_mode: 'Markdown' }
+      '  1-3: плохо 😞 | 4-6: нейтрально 😐 | 7-10: хорошо 😊',
+      { parse_mode: 'Markdown', reply_markup: keyboard }
     );
   } catch (error) {
     console.error('Ошибка в handleToday:', error);
@@ -251,6 +413,9 @@ export async function handleToday(ctx) {
 /**
  * Обработчик ввода для заметки
  */
+/**
+ * Обработчик ввода для заметки (если пользователь вводит текст вместо кнопок)
+ */
 export async function handleNoteInput(ctx) {
   const input = ctx.message.text?.trim();
 
@@ -259,32 +424,62 @@ export async function handleNoteInput(ctx) {
 
     const note = ctx.session.addingNote;
 
+    // Поддержка текстового ввода настроения (если пользователь не нажал кнопку)
     if (note.step === 'mood') {
       const mood = parseInt(input, 10);
       if (isNaN(mood) || mood < 1 || mood > 10) {
-        return ctx.reply('❌ Пожалуйста, введите число от 1 до 10');
+        return ctx.reply('❌ Пожалуйста, выберите кнопку или введите число от 1 до 10');
       }
 
       note.mood = mood;
       note.step = 'sleep';
 
-      return ctx.reply('2️⃣ Сколько часов вы спали? (например: 7.5)\n\nОтправьте число часов:');
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: '4ч', callback_data: 'sleep_4' },
+            { text: '5ч', callback_data: 'sleep_5' },
+            { text: '6ч', callback_data: 'sleep_6' },
+            { text: '7ч', callback_data: 'sleep_7' }
+          ],
+          [
+            { text: '8ч', callback_data: 'sleep_8' },
+            { text: '9ч', callback_data: 'sleep_9' },
+            { text: '10ч', callback_data: 'sleep_10' },
+            { text: '11ч', callback_data: 'sleep_11' }
+          ]
+        ]
+      };
+
+      return ctx.reply('2️⃣ Сколько часов вы спали?', { reply_markup: keyboard });
     }
 
+    // Поддержка текстового ввода сна (если пользователь не нажал кнопку)
     if (note.step === 'sleep') {
       const sleep = parseFloat(input);
       if (isNaN(sleep) || sleep < 0 || sleep > 24) {
-        return ctx.reply('❌ Пожалуйста, введите число часов (0-24)');
+        return ctx.reply('❌ Пожалуйста, выберите кнопку или введите число часов (0-24)');
       }
 
       note.sleep = Math.round(sleep * 60);
       note.step = 'comment';
 
-      return ctx.reply('3️⃣ Добавьте заметку (опционально)\n\nНапишите что угодно или отправьте "-" для пропуска:');
+      const keyboard = {
+        inline_keyboard: [
+          [{ text: '⏭️ Пропустить комментарий', callback_data: 'skip_comment' }]
+        ]
+      };
+
+      return ctx.reply(
+        '3️⃣ Добавьте заметку (опционально)\n\n' +
+        'Напишите что угодно или нажмите "Пропустить":',
+        { reply_markup: keyboard }
+      );
     }
 
+    // Ввод комментария (текстом)
     if (note.step === 'comment') {
-      note.comment = input === '-' ? null : input;
+      note.comment = input;
 
       const { error } = await supabaseAdmin.from('notes').insert({
         user_id: note.userId,
@@ -441,12 +636,30 @@ export async function handleRemind(ctx) {
       step: 'time'
     };
 
+    const keyboard = {
+      inline_keyboard: [
+        [
+          { text: '07:00', callback_data: 'remind_time_07:00' },
+          { text: '08:00', callback_data: 'remind_time_08:00' },
+          { text: '09:00', callback_data: 'remind_time_09:00' }
+        ],
+        [
+          { text: '12:00', callback_data: 'remind_time_12:00' },
+          { text: '15:00', callback_data: 'remind_time_15:00' },
+          { text: '18:00', callback_data: 'remind_time_18:00' }
+        ],
+        [
+          { text: '20:00', callback_data: 'remind_time_20:00' },
+          { text: '21:00', callback_data: 'remind_time_21:00' },
+          { text: '22:00', callback_data: 'remind_time_22:00' }
+        ]
+      ]
+    };
+
     return ctx.reply(
       '⏰ *Установить напоминание*\n\n' +
-      'В какое время вы хотите получать напоминание?\n\n' +
-      'Примеры: 09:00, 20:30, 19:00\n\n' +
-      'Отправьте время (HH:MM):',
-      { parse_mode: 'Markdown' }
+      'Выберите время для напоминания:',
+      { parse_mode: 'Markdown', reply_markup: keyboard }
     );
   } catch (error) {
     console.error('Ошибка в handleRemind:', error);
@@ -474,10 +687,21 @@ export async function handleReminderInput(ctx) {
       reminder.time = input;
       reminder.step = 'days';
 
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: '📅 Каждый день', callback_data: 'remind_days_daily' }
+          ],
+          [
+            { text: '💼 Будни (Пн-Пт)', callback_data: 'remind_days_weekdays' },
+            { text: '🌴 Выходные (Сб-Вс)', callback_data: 'remind_days_weekends' }
+          ]
+        ]
+      };
+
       return ctx.reply(
-        '📅 В какие дни получать напоминание?\n\n' +
-        'Примеры: каждый день, пн-пт (будни), вс-сб\n\n' +
-        'Отправьте дни:'
+        '📅 В какие дни получать напоминание?',
+        { reply_markup: keyboard }
       );
     }
 
