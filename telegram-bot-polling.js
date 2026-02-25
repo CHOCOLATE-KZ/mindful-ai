@@ -31,7 +31,13 @@ console.log('🤖 Инициализируем Telegram бот...');
       handleNotes,
       handleToday,
       handleStats,
-      handleMessage
+      handleAnalyze,
+      handleRemind,
+      handleMessage,
+      handleNoteInput,
+      handleReminderInput,
+      handleCallbackQuery,
+      showMainMenu
     } = await import('./src/lib/telegram/handlers.js');
 
     console.log('✅ Модули загружены успешно');
@@ -39,6 +45,19 @@ console.log('🤖 Инициализируем Telegram бот...');
     // Получаем бота
     console.log('🤖 Создаем экземпляр бота...');
     const bot = getBot();
+
+    // Добавляем middleware для сессии (простое хранилище в памяти)
+    const sessions = new Map();
+    bot.use((ctx, next) => {
+      const userId = ctx.from?.id;
+      if (userId) {
+        if (!sessions.has(userId)) {
+          sessions.set(userId, {});
+        }
+        ctx.session = sessions.get(userId);
+      }
+      return next();
+    });
 
     // Регистрируем обработчики команд
     console.log('📝 Регистрируем команды...');
@@ -48,7 +67,22 @@ console.log('🤖 Инициализируем Telegram бот...');
     bot.command('notes', handleNotes);
     bot.command('today', handleToday);
     bot.command('stats', handleStats);
-    bot.on('message', handleMessage);
+    bot.command('analyze', handleAnalyze);
+    bot.command('remind', handleRemind);
+    
+    // Обработчик для callback кнопок (inline keyboard)
+    bot.on('callback_query', handleCallbackQuery);
+    
+    // Обработчик для сообщений (проверяем если это ввод для заметки или напоминания)
+    bot.on('message', async (ctx) => {
+      if (ctx.session?.addingNote) {
+        return handleNoteInput(ctx);
+      }
+      if (ctx.session?.settingReminder) {
+        return handleReminderInput(ctx);
+      }
+      return handleMessage(ctx);
+    });
 
     console.log('\n✅ ========================================');
     console.log('🤖 Telegram бот запущен в режиме polling!');
