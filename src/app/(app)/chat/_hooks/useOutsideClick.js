@@ -10,7 +10,7 @@ export function useOutsideClick(ref, onOutside, enabled = true) {
       if (!ref.current.contains(e.target)) onOutside?.();
     }
 
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
+    document.addEventListener("pointerdown", onDocClick);
+    return () => document.removeEventListener("pointerdown", onDocClick);
   }, [ref, onOutside, enabled]);
 }

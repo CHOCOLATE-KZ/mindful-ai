@@ -15,7 +15,7 @@ export default async function ProfilePage() {
     supabase.from("profiles").select("id, name, avatar_url").eq("id", user.id).maybeSingle(),
     supabase
       .from("user_settings")
-      .select("user_id, theme, language, anonymous_analytics, activity_tracking, ai_personalization, push_notifications")
+      .select("*")
       .eq("user_id", user.id)
       .maybeSingle(),
   ]);

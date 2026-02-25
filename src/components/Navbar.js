@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -91,9 +92,16 @@ export default function Navbar() {
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link
           href="/"
-          className="font-bold text-xl tracking-tight text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
+          className="flex items-center gap-2 font-bold text-xl tracking-tight text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
         >
-          MindfulAI
+          <Image
+            src="/gradient-logo.png"
+            alt="MindfulAI logo"
+            width={28}
+            height={28}
+            priority
+          />
+          <span>MindfulAI</span>
         </Link>
 
         <ul className="hidden md:flex items-center gap-5 text-sm font-medium">

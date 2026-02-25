@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 import ChatHeader from "./_components/ChatHeader";
@@ -16,6 +17,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [atBottom, setAtBottom] = useState(true);
 
   // ✅ реф на скролл-контейнер
   const scrollRef = useRef(null);
@@ -32,23 +34,52 @@ export default function ChatPage() {
     if (voice.listening) setInput(voice.voiceText);
   }, [voice.voiceText, voice.listening]);
 
+  // отслеживаем позицию скролла
   useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from("ai_messages")
-        .select("role, content, created_at")
-        .order("created_at", { ascending: true })
-        .limit(50);
+    const el = scrollRef?.current;
+    if (!el) return;
 
-      if (!error) setMessages(data || []);
-      else console.error("history error:", error);
-    })();
-  }, [supabase]);
+    const onScroll = () => {
+      const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+      setAtBottom(gap < 80);
+    };
+
+    onScroll();
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   const getUserId = useCallback(async () => {
     const { data } = await supabase.auth.getUser();
     return data?.user?.id || null;
   }, [supabase]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const uid = await getUserId();
+      if (!uid) {
+        if (active) setMessages([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("ai_messages")
+        .select("role, content, created_at")
+        .eq("user_id", uid)
+        .order("created_at", { ascending: true })
+        .limit(50);
+
+      if (!active) return;
+
+      if (!error) setMessages(data || []);
+      else console.error("history error:", error);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [supabase, getUserId]);
 
   const clearChatHistory = useCallback(async () => {
     const uid = await getUserId();
@@ -146,10 +177,27 @@ export default function ChatPage() {
 
       {/* ✅ ref сюда + чуть больше pb, чтобы низ не лип */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto pb-36">
-        <ChatMessages messages={messages} loading={loading} scrollRef={scrollRef} />
+        <ChatMessages messages={messages} loading={loading} atBottom={atBottom} />
       </div>
 
       <ChatComposer input={input} setInput={setInput} onSend={send} loading={loading} voice={voice} />
+
+      <button
+        type="button"
+        onClick={() => {
+          const el = scrollRef.current;
+          if (el) el.scrollTo({ top: atBottom ? 0 : el.scrollHeight, behavior: "smooth" });
+        }}
+        className="fixed right-6 bottom-28 z-45 h-11 w-11 rounded-full bg-white/90 backdrop-blur shadow-md ring-1 ring-black/10 grid place-items-center hover:bg-white transition"
+        aria-label={atBottom ? "Scroll to top" : "Scroll to bottom"}
+        title={atBottom ? "Наверх" : "Вниз"}
+      >
+        {atBottom ? (
+          <ArrowUp className="h-5 w-5 text-slate-700" />
+        ) : (
+          <ArrowDown className="h-5 w-5 text-slate-700" />
+        )}
+      </button>
     </div>
   );
 }

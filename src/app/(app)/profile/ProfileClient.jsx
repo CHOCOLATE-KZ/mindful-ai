@@ -13,6 +13,7 @@ import NotificationsCard from "./_components/NotificationsCard";
 import AiPersonalizationCard from "./_components/AiPersonalizationCard";
 import PrivacyDataCard from "./_components/PrivacyDataCard";
 import ProfileAIReportCard from "./_components/ProfileAIReportCard";
+import TelegramLinkCard from "./_components/TelegramLinkCard";
 
 import EditProfileModal from "./_components/_modals/EditProfileModal";
 import PrivacySettingsModal from "./_components/_modals/PrivacySettingsModal";
@@ -136,6 +137,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
         <ProfileAIReportCard settings={mergedSettings} t={t} />
         <NotificationsCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
         <AiPersonalizationCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
+        <TelegramLinkCard />
         <PrivacyDataCard
           onOpenPrivacy={() => safeUi.setPrivacyOpen(true)}
           onExport={() => safeActions.exportMyData()}

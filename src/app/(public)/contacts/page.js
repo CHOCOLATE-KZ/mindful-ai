@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import Footer from "@/components/landing/Footer";
 import LiquidGlassCard from "@/components/LiquidGlassCard";
-import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
 
@@ -56,20 +55,29 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-white">
-      <main className="mx-auto max-w-5xl px-6 py-16">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-cyan-50 text-slate-900">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-sky-200/50 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-indigo-200/40 blur-3xl" />
+        <div className="absolute right-0 top-24 h-64 w-64 rounded-full bg-cyan-200/50 blur-3xl" />
+      </div>
+
+      <main className="relative mx-auto max-w-5xl px-6 py-16">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-black dark:text-black">
+          <p className="text-xs uppercase tracking-[0.25em] text-sky-600/80">
+            MindfulAI
+          </p>
+          <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
             Контакты
           </h1>
-          <p className="mt-3 text-black/60 dark:text-black/60">
+          <p className="mt-4 text-base text-slate-600 sm:text-lg">
             Напишите нам — мы ответим на вашу почту.
           </p>
         </div>
 
         <div className="mt-10 flex justify-center">
-          <LiquidGlassCard className="w-full max-w-2xl">
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+          <LiquidGlassCard className="w-full max-w-2xl border border-white/60 bg-white/70 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.12)] backdrop-blur-xl sm:p-10">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
               {/* Honeypot (скрытое поле против ботов) */}
               <input
                 name="company"
@@ -78,24 +86,35 @@ export default function ContactsPage() {
                 className="hidden"
               />
 
-              <div className="grid gap-1">
-                <Label>Имя</Label>
-                <Input name="name" required placeholder="Ваше имя" />
+              <div className="grid gap-2">
+                <Label className="text-sm text-slate-700">Имя</Label>
+                <Input
+                  name="name"
+                  required
+                  placeholder="Ваше имя"
+                  className="border-slate-200/80 bg-white text-slate-900 placeholder:text-slate-400"
+                />
               </div>
 
-              <div className="grid gap-1">
-                <Label>Email</Label>
-                <Input name="email" type="email" required placeholder="you@example.com" />
+              <div className="grid gap-2">
+                <Label className="text-sm text-slate-700">Email</Label>
+                <Input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  className="border-slate-200/80 bg-white text-slate-900 placeholder:text-slate-400"
+                />
               </div>
 
-              <div className="grid gap-1">
-                <Label>Сообщение</Label>
+              <div className="grid gap-2">
+                <Label className="text-sm text-slate-700">Сообщение</Label>
                 <textarea
                   name="message"
                   required
                   rows={6}
                   placeholder="Опишите ваш вопрос"
-                  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-purple-200 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-slate-900 outline-none transition focus:ring-2 focus:ring-sky-300/70"
                 />
               </div>
 
@@ -109,12 +128,12 @@ export default function ContactsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="cursor-pointer inline-flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-white font-semibold shadow-lg hover:opacity-90 disabled:opacity-50"
+                className="group inline-flex h-12 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-600 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(56,189,248,0.25)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(37,99,235,0.25)] disabled:translate-y-0 disabled:opacity-60"
               >
                 {loading ? "Отправляем..." : "Отправить"}
               </button>
 
-              <p className="pt-1 text-center text-xs text-black/40 dark:text-white/40">
+              <p className="pt-1 text-center text-xs text-slate-500">
                 Мы не передаём ваши данные третьим лицам.
               </p>
             </form>

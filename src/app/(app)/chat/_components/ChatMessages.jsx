@@ -1,44 +1,17 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Sparkles, ArrowDown, ArrowUp } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-export default function ChatMessages({ messages, loading, scrollRef }) {
+export default function ChatMessages({ messages, loading, atBottom }) {
   const endRef = useRef(null);
-  const [atBottom, setAtBottom] = useState(true);
 
   // авто-скролл при новых сообщениях (как у тебя было)
   useEffect(() => {
+    if (!atBottom) return;
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, loading]);
-
-  // следим, внизу ли пользователь
-  useEffect(() => {
-    const el = scrollRef?.current;
-    if (!el) return;
-
-    const onScroll = () => {
-      const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
-      setAtBottom(gap < 80); // 80px допуск
-    };
-
-    onScroll();
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [scrollRef]);
-
-  const scrollToBottom = () => {
-    const el = scrollRef?.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  };
-
-  const scrollToTop = () => {
-    const el = scrollRef?.current;
-    if (!el) return;
-    el.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, [messages, loading, atBottom]);
 
   const markdownComponents = useMemo(
     () => ({
@@ -68,7 +41,12 @@ export default function ChatMessages({ messages, loading, scrollRef }) {
             <div key={idx} className={`flex gap-3 ${isAI ? "justify-start" : "justify-end"}`}>
               {isAI && (
                 <div className="h-10 w-10 rounded-full bg-blue-600/10 ring-1 ring-blue-600/20 flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="h-5 w-5 text-blue-700" />
+                  <Image
+                    src="/gradient-logo.png"
+                    alt="MindfulAI"
+                    width={24}
+                    height={24}
+                  />
                 </div>
               )}
 
@@ -104,7 +82,12 @@ export default function ChatMessages({ messages, loading, scrollRef }) {
         {loading && (
           <div className="flex gap-3 justify-start">
             <div className="h-10 w-10 rounded-full bg-blue-600/10 ring-1 ring-blue-600/20 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="h-5 w-5 text-blue-700" />
+              <Image
+                src="/gradient-logo.png"
+                alt="MindfulAI"
+                width={24}
+                height={24}
+              />
             </div>
             <div className="bg-white/90 rounded-3xl px-5 py-3 shadow-sm ring-1 ring-black/5 text-slate-700">
               Думаю…
@@ -114,17 +97,6 @@ export default function ChatMessages({ messages, loading, scrollRef }) {
 
         <div ref={endRef} />
       </div>
-
-      {/* ✅ КНОПКА: если не внизу — показываем "вниз", если внизу — "вверх" */}
-      <button
-        type="button"
-        onClick={atBottom ? scrollToTop : scrollToBottom}
-        className="fixed right-6 bottom-28 z-40 h-11 w-11 rounded-full bg-white/90 backdrop-blur shadow-md ring-1 ring-black/10 grid place-items-center hover:bg-white transition"
-        aria-label={atBottom ? "Scroll to top" : "Scroll to bottom"}
-        title={atBottom ? "Наверх" : "Вниз"}
-      >
-        {atBottom ? <ArrowUp className="h-5 w-5 text-slate-700" /> : <ArrowDown className="h-5 w-5 text-slate-700" />}
-      </button>
     </div>
   );
 }

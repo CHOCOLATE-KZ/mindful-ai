@@ -3,14 +3,16 @@
 import { Mic, Send } from "lucide-react";
 
 export default function ChatComposer({ input, setInput, onSend, loading, voice }) {
-  const { listening, isSecure, toggleVoice, mounted } = voice;
+  const { listening, isSecure, toggleVoice, mounted, browserSupportsSpeechRecognition } = voice;
 
-  const micDisabled = !mounted ? true : !isSecure;
+  const micDisabled = !mounted || !browserSupportsSpeechRecognition || !isSecure;
   const micTitle = !mounted
     ? "Voice input"
-    : !isSecure
-      ? "Голос работает только на HTTPS или localhost"
-      : "Voice input";
+    : !browserSupportsSpeechRecognition
+      ? "Голосовой ввод не поддерживается в этом браузере"
+      : !isSecure
+        ? "Голос работает только на HTTPS или localhost"
+        : "Voice input";
 
   return (
     <>
@@ -64,7 +66,7 @@ export default function ChatComposer({ input, setInput, onSend, loading, voice }
 
             <div className="mt-2 flex items-center justify-between px-1">
               <p className="text-[11px] text-slate-500">
-                **Это поддерживающее пространство.** Можно отвечать коротко или подробно.
+                <strong>Это поддерживающее пространство.</strong> Можно отвечать коротко или подробно.
               </p>
               {loading && <span className="text-[11px] text-slate-500">Отправка…</span>}
             </div>

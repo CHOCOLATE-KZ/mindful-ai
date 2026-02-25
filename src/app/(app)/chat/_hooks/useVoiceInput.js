@@ -7,7 +7,12 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   const isSecure = useMemo(() => (typeof window === "undefined" ? true : window.isSecureContext), []);
+  const [mounted, setMounted] = useState(false);
   const [text, setText] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (listening) setText(transcript);
@@ -39,5 +44,13 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
     await SpeechRecognition.startListening({ continuous: false, language: lang });
   }
 
-  return { voiceText: text, setVoiceText: setText, listening, isSecure, toggleVoice: toggle };
+  return {
+    voiceText: text,
+    setVoiceText: setText,
+    listening,
+    isSecure,
+    mounted,
+    browserSupportsSpeechRecognition,
+    toggleVoice: toggle,
+  };
 }

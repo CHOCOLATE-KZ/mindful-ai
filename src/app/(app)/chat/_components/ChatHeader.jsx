@@ -1,6 +1,7 @@
 "use client";
 
-import { MoreVertical, Download, Trash2, Shield, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { MoreVertical, Download, Trash2, Shield } from "lucide-react";
 
 export default function ChatHeader({ menuOpen, setMenuOpen, menuRef, exportMyData, clearChatHistory }) {
   return (
@@ -11,7 +12,12 @@ export default function ChatHeader({ menuOpen, setMenuOpen, menuRef, exportMyDat
       <div className="mx-auto max-w-4xl px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <div className="h-11 w-11 rounded-full bg-blue-600 grid place-items-center shadow-sm ring-1 ring-black/5">
-            <Sparkles className="h-5 w-5 text-white" />
+            <Image
+              src="/gradient-logo.png"
+              alt="MindfulAI"
+              width={26}
+              height={26}
+            />
           </div>
 
           <div className="min-w-0">

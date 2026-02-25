@@ -1,5 +1,8 @@
 import { supabaseServer } from "@/lib/supabase/server";
 
+const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
+const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
+
 function avg(list) {
   if (!list.length) return null;
   return list.reduce((a, b) => a + b, 0) / list.length;
@@ -29,25 +32,12 @@ function extractKeywords(texts, limit = 8) {
     .map(([word, count]) => ({ word, count }));
 }
 
-function useLmStudio() {
-  return Boolean(process.env.LMSTUDIO_BASE_URL || process.env.LMSTUDIO_MODEL);
-}
-
-function getLmStudioConfig() {
-  const base = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
-  const model = (process.env.LMSTUDIO_MODEL || "").trim();
-  return { base, model };
-}
-
 async function callLmStudio(messages) {
-  const { base, model } = getLmStudioConfig();
-  if (!model) return { error: "LMSTUDIO_MODEL is not set" };
-
-  const resp = await fetch(`${base}/v1/chat/completions`, {
+  const resp = await fetch(`${LMSTUDIO_BASE_URL}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model,
+      model: LMSTUDIO_MODEL,
       messages,
       temperature: 0.6,
       max_tokens: 500,
@@ -151,10 +141,6 @@ export async function POST(req) {
       created_at: m.created_at,
     })),
   };
-
-  if (!useLmStudio()) {
-    return Response.json({ error: "LM Studio is not configured" }, { status: 503 });
-  }
 
   const systemPrompt =
     "You are MindfulAI, a supportive assistant for emotional well-being. " +

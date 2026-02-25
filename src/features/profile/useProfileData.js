@@ -16,73 +16,37 @@ export function useProfileData(supabase, initial = {}) {
   const [nameDraft, setNameDraft] = useState(initial?.initialProfile?.name || "");
   const [passwordDraft, setPasswordDraft] = useState("");
 
-  const stats = useMemo(() => {
-    return {
-      activeDays: 2,
-      dayStreak: 0,
-      achievements: 0,
-      overallMood: 2.0,
-      avgSleepHours: 7.5,
-      goalsCompletedPct: 0,
-    };
-  }, []);
+  const [stats, setStats] = useState({
+    activeDays: 0,
+    dayStreak: 0,
+    achievements: 0,
+    overallMood: 0,
+    avgSleepHours: 0,
+    goalsCompletedPct: 0,
+  });
 
   useEffect(() => {
     let mounted = true;
 
-    // если initialUser уже есть — не тормозим
-    if (initial?.initialUser) return;
-
+    // если initialUser уже есть — загружаем stats
     (async () => {
-      setLoading(true);
-      setMsg("");
-
-      const { data: auth } = await supabase.auth.getUser();
-      const u = auth?.user;
-
-      if (!mounted) return;
-
-      if (!u) {
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
-      setUser(u);
-
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("id, name, avatar_url")
-        .eq("id", u.id)
-        .maybeSingle();
-
-      const { data: s } = await supabase
-        .from("user_settings")
-        .select("user_id, theme, language, anonymous_analytics, activity_tracking, ai_personalization, push_notifications")
-        .eq("user_id", u.id)
-        .maybeSingle();
-
-      setProfile(p || { id: u.id, name: u.user_metadata?.name || "User", avatar_url: null });
-      setSettings(
-        s || {
-          user_id: u.id,
-          theme: "light",
-          language: "ru",
-          anonymous_analytics: true,
-          activity_tracking: false,
-          ai_personalization: false,
-          push_notifications: false,
+      try {
+        const res = await fetch("/api/profile/stats");
+        if (!mounted) return;
+        
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
         }
-      );
-
-      setNameDraft(p?.name || u.user_metadata?.name || "");
-      setLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch stats:", err);
+      }
     })();
 
     return () => {
       mounted = false;
     };
-  }, [supabase, initial?.initialUser]);
+  }, [user]);
 
   async function updateSettings(patch) {
     if (!user) return;
@@ -122,10 +86,6 @@ export function useProfileData(supabase, initial = {}) {
     setEditOpen(false);
   }
 
-  async function onAvatarSelected() {
-    setMsg("Загрузка аватара будет подключена позже.");
-  }
-
   async function changePassword() {
     const pwd = (passwordDraft || "").trim();
     if (pwd.length < 6) {
@@ -147,7 +107,35 @@ export function useProfileData(supabase, initial = {}) {
   }
 
   async function exportMyData() {
-    // у тебя уже работало — можно оставить как есть (если надо, позже расширим)
+    try {
+      setMsg("");
+      const res = await fetch("/api/profile/export");
+
+      if (!res.ok) {
+        const data = await res.json();
+        setMsg(data.error || "Failed to export data");
+        return;
+      }
+
+      // Get filename from headers
+      const disposition = res.headers.get("content-disposition");
+      const filename = disposition ? disposition.split("filename=")[1].replace(/"/g, "") : "export.json";
+
+      // Download file
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setMsg("Data exported successfully ✅");
+    } catch (err) {
+      setMsg(err.message || "Error exporting data");
+    }
   }
 
   return {
@@ -158,6 +146,6 @@ export function useProfileData(supabase, initial = {}) {
     stats,
     msg,
     ui: { editOpen, setEditOpen, privacyOpen, setPrivacyOpen, securityOpen, setSecurityOpen, nameDraft, setNameDraft, passwordDraft, setPasswordDraft },
-    actions: { updateSettings, saveProfile, onAvatarSelected, changePassword, exportMyData, signOut },
+    actions: { updateSettings, saveProfile, changePassword, exportMyData, signOut },
   };
 }

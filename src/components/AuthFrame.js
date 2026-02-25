@@ -1,8 +1,6 @@
 export default function AuthFrame({ children }) {
   return (
-    <main className="min-h-dvh grid place-items-center px-4 relative overflow-hidden">
-      {/* фон за контентом */}
-      <div className="absolute inset-0 -z-10 bg-liquid-warm bg-liquid-soft"></div>
+    <main className="min-h-dvh grid place-items-center px-4 relative overflow-hidden bg-slate-50">
       {children}
     </main>
   );
