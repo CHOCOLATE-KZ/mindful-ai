@@ -3,7 +3,7 @@
 
 import { linkTelegramAccount, getUserIdByTelegramId, isValidUser } from './userManager.js';
 import { supabaseAdmin } from '../supabase/admin.js';
-import { askAIWithHistory, buildUserContext } from '../lmStudioClient.js';
+import { askAI, askAIWithHistory, buildUserContext } from '../lmStudioClient.js';
 import { getBot } from './botConfig.js';
 
 /**
@@ -350,35 +350,30 @@ export async function handleAnalyze(ctx) {
       .join('\n');
 
     const analysisPrompt =
-      `Проанализируй эти заметки пользователя и дай краткий анализ (3-4 предложения):\n\n${summaryText}\n\n` +
-      'Отметь тренды, паттерны и дай 1-2 простых рекомендации.';
+      `Пользователь просит проанализировать его дневник эмоций и сна. Вот последние 10 записей:\n\n${summaryText}\n\n` +
+      'Дай краткий анализ (3-4 предложения): какие тренды видны в настроении и сне, ' +
+      'есть ли паттерны или проблемы. Дай 1-2 простые практические рекомендации для улучшения.';
 
-    const { data: history } = await supabaseAdmin
-      .from('ai_messages')
-      .select('role, content')
-      .eq('user_id', userId)
-      .eq('source', 'telegram')
-      .order('created_at', { ascending: false })
-      .limit(5);
+    // НЕ используем историю для /analyze - это специальная команда, не чат
+    const aiResponse = await askAI(analysisPrompt, '');
 
-    const messageHistory = history ? history.reverse() : [];
-
-    const aiResponse = await askAIWithHistory(analysisPrompt, messageHistory, '');
-
-    await supabaseAdmin.from('ai_messages').insert([
-      {
-        user_id: userId,
-        role: 'user',
-        content: '/analyze - запрос анализа',
-        source: 'telegram',
-      },
-      {
-        user_id: userId,
-        role: 'assistant',
-        content: aiResponse,
-        source: 'telegram',
-      },
-    ]);
+    // Только сохраняем результат, если он валидный (не дефолтная ошибка)
+    if (aiResponse && !aiResponse.includes('Извините, не могу ответить')) {
+      await supabaseAdmin.from('ai_messages').insert([
+        {
+          user_id: userId,
+          role: 'user',
+          content: 'Запрос анализа дневника',
+          source: 'telegram',
+        },
+        {
+          user_id: userId,
+          role: 'assistant',
+          content: aiResponse,
+          source: 'telegram',
+        },
+      ]);
+    }
 
     return ctx.reply(
       `📊 *AI Анализ ваших данных*\n\n${aiResponse}\n\n` +
