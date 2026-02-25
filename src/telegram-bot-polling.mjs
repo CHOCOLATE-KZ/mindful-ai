@@ -24,8 +24,13 @@ import {
   handleNotes,
   handleToday,
   handleStats,
+  handleAnalyze,
+  handleRemind,
   handleMessage,
-  handleNoteInput
+  handleNoteInput,
+  handleReminderInput,
+  handleCallbackQuery,
+  showMainMenu
 } from './lib/telegram/handlers.js';
 
 // Получаем бота
@@ -49,11 +54,19 @@ bot.command('link', handleLink);
 bot.command('notes', handleNotes);
 bot.command('today', handleToday);
 bot.command('stats', handleStats);
+bot.command('analyze', handleAnalyze);
+bot.command('remind', handleRemind);
 
-// Обработчик для сообщений (сначала проверяем если это ввод для заметки)
+// Обработчик для callback кнопок (inline keyboard)
+bot.on('callback_query', handleCallbackQuery);
+
+// Обработчик для сообщений (сначала проверяем если это ввод для заметки или напоминания)
 bot.on('message', async (ctx, next) => {
   if (ctx.session?.addingNote) {
     return handleNoteInput(ctx);
+  }
+  if (ctx.session?.settingReminder) {
+    return handleReminderInput(ctx);
   }
   return handleMessage(ctx);
 });
