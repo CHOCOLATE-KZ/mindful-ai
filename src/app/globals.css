@@ -73,6 +73,63 @@ html, body {
 }
 
 /* =========================
+   CUSTOM SCROLLBAR (BLUE)
+   ========================= */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-button {
+  display: none; /* Hide arrow buttons */
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.5); /* gray-200 */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2563eb; /* blue-600 */
+  border-radius: 10px;
+  border: 2px solid rgba(229, 231, 235, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1d4ed8; /* blue-700 */
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #1e40af; /* blue-800 */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2563eb rgba(229, 231, 235, 0.5);
+}
+
+/* Dark mode adjustments */
+html.dark ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #3b82f6; /* blue-500 - ярче для dark mode */
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2563eb; /* blue-600 */
+}
+
+html.dark * {
+  scrollbar-color: #3b82f6 rgba(255, 255, 255, 0.05);
+}
+
+/* =========================
    UTILITIES (your custom)
    ========================= */
 
