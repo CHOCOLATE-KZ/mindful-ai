@@ -10,6 +10,9 @@ import {
   Wind,
   Anchor,
   ScanFace,
+  AlertCircle,
+  Flame,
+  HeartHandshake,
 } from "lucide-react";
 
 // Маппинг иконок по ключам
@@ -20,6 +23,9 @@ const ICON_MAP = {
   Wind,
   Anchor,
   ScanFace,
+  AlertCircle,
+  Flame,
+  HeartHandshake,
 };
 
 // Импортим JSON файлы - на build time это будет скомпилировано
@@ -27,6 +33,10 @@ const ICON_MAP = {
 import uncertaintyTolerance from "@/data/tests/uncertainty_tolerance.json";
 import manipulationTest from "@/data/tests/manipulation_test.json";
 import moneyAttitude from "@/data/tests/money_attitude.json";
+import anxietyGad7 from "@/data/tests/anxiety_gad7.json";
+import stressTest from "@/data/tests/stress_test.json";
+import burnoutTest from "@/data/tests/burnout_test.json";
+import emotionalIntelligence from "@/data/tests/emotional_intelligence.json";
 
 import boxBreathing from "@/data/exercises/box_breathing.json";
 import exerciseFive43221 from "@/data/exercises/5_4_3_2_1.json";
@@ -50,6 +60,10 @@ export const TESTS_FROM_JSON = [
   uncertaintyTolerance,
   manipulationTest,
   moneyAttitude,
+  anxietyGad7,
+  stressTest,
+  burnoutTest,
+  emotionalIntelligence,
 ].map(enrichWithIcon);
 
 /**

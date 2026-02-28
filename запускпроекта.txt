@@ -1,4 +1,5 @@
 npm run dev
+npm run telegram:poll
 в diplomaproject 
 
 !

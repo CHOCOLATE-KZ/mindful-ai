@@ -37,6 +37,11 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/psychology" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+                    База знаний по психологии
+                  </Link>
+                </li>
+                <li>
                   <Link href="/faq" className="hover:underline hover:text-blue-200 transition-colors duration-300">
                     Часто задаваемые вопросы
                   </Link>

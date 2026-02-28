@@ -3,8 +3,9 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { extractAnchors } from "@/lib/utils/extractAnchors";
 
-export default function ChatMessages({ messages, loading, atBottom }) {
+export default function ChatMessages({ messages, loading, atBottom, onAnchorSelect }) {
   const endRef = useRef(null);
 
   // авто-скролл при новых сообщениях (как у тебя было)
@@ -31,11 +32,14 @@ export default function ChatMessages({ messages, loading, atBottom }) {
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <>
       {/* ✅ чтобы последние сообщения не липли к composer */}
       <div className="space-y-4 pb-10">
         {messages.map((m, idx) => {
           const isAI = m.role === "assistant";
+          const anchors = isAI
+            ? (Array.isArray(m.anchors) && m.anchors.length ? m.anchors : extractAnchors(m.content))
+            : [];
 
           return (
             <div key={idx} className={`flex gap-3 ${isAI ? "justify-start" : "justify-end"}`}>
@@ -50,24 +54,45 @@ export default function ChatMessages({ messages, loading, atBottom }) {
                 </div>
               )}
 
-              <div
-                className={`max-w-[78%] lg:max-w-[62%] rounded-3xl px-5 py-3 shadow-sm ring-1 ${
-                  isAI
-                    ? "bg-white/90 ring-black/5 text-slate-900"
-                    : "bg-blue-600 text-white ring-blue-700/20"
-                }`}
-              >
-                <div className={`prose prose-sm max-w-none ${isAI ? "prose-slate" : "prose-invert"}`}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                    {m.content}
-                  </ReactMarkdown>
+              <div className="max-w-[78%] lg:max-w-[62%]">
+                <div
+                  className={`rounded-3xl px-5 py-3 shadow-sm ring-1 ${
+                    isAI
+                      ? "bg-white/90 ring-black/5 text-slate-900"
+                      : "bg-blue-600 text-white ring-blue-700/20"
+                  }`}
+                >
+                  <div className={`prose prose-sm max-w-none ${isAI ? "prose-slate" : "prose-invert"}`}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                      {m.content}
+                    </ReactMarkdown>
+                  </div>
+
+                  <p className={`text-xs mt-2 ${isAI ? "text-slate-500" : "text-white/70"}`}>
+                    {m.created_at
+                      ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                      : ""}
+                  </p>
                 </div>
 
-                <p className={`text-xs mt-2 ${isAI ? "text-slate-500" : "text-white/70"}`}>
-                  {m.created_at
-                    ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                    : ""}
-                </p>
+                {isAI && anchors.length > 0 && (
+                  <div className="mt-2 rounded-2xl border border-black/10 bg-white/70 px-4 py-3 shadow-sm">
+                    <p className="text-xs uppercase tracking-wide text-slate-500">Якоря разговора</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {anchors.map((anchor) => (
+                        <button
+                          key={anchor}
+                          type="button"
+                          onClick={() => onAnchorSelect?.(anchor)}
+                          className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-700 hover:bg-blue-100 transition"
+                          title="Обсудить тему"
+                        >
+                          {anchor}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {!isAI && (
@@ -97,6 +122,6 @@ export default function ChatMessages({ messages, loading, atBottom }) {
 
         <div ref={endRef} />
       </div>
-    </div>
+    </>
   );
 }

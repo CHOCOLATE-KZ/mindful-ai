@@ -3,6 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+import { useAppSettings } from "@/components/AppShell";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import Loader from "@/components/Loader";
 import {
   BarChart,
@@ -97,6 +99,9 @@ const TEST_NAMES = {
 
 export default function AnalyticsPage() {
   const supabase = useMemo(() => supabaseBrowser(), []);
+  const { settings } = useAppSettings();
+  const lang = settings?.language || "ru";
+  const t = useTranslation("analytics", lang);
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -217,23 +222,23 @@ export default function AnalyticsPage() {
       4
     );
 
-    let profile = "Not enough data";
+    let profile = t("notEnoughData");
     if (withMood.length >= 5) {
-      if (avgMood >= 7 && moodStd <= 1.5) profile = "Stable positive state";
-      else if (avgMood <= 4) profile = "Difficult period (low tone)";
-      else if (moodStd >= 2.5) profile = "Emotional swings";
-      else if (avgMood >= 5.5) profile = "Neutral stable state";
-      else profile = "Unstable mood";
+      if (avgMood >= 7 && moodStd <= 1.5) profile = t("stablePositive");
+      else if (avgMood <= 4) profile = t("difficultPeriod");
+      else if (moodStd >= 2.5) profile = t("emotionalSwings");
+      else if (avgMood >= 5.5) profile = t("neutralStable");
+      else profile = t("unstableMood");
     }
 
     const moodDelta = (avgMoodLast7 != null && avgMoodPrev7 != null) ? (avgMoodLast7 - avgMoodPrev7) : null;
     const sleepDelta = (avgSleepLast7 != null && avgSleepPrev7 != null) ? (avgSleepLast7 - avgSleepPrev7) : null;
 
-    let stressSignal = "Not enough data";
+    let stressSignal = t("notEnoughData");
     if (moodDelta != null) {
-      if (moodDelta <= -1) stressSignal = "Stress likely increasing (mood dropped)";
-      else if (moodDelta >= 1) stressSignal = "State improving (mood increased)";
-      else stressSignal = "State is stable (no sharp changes)";
+      if (moodDelta <= -1) stressSignal = t("stressLikelyIncreasing");
+      else if (moodDelta >= 1) stressSignal = t("stateImproving");
+      else stressSignal = t("stateStable");
     }
 
     return {
@@ -264,16 +269,16 @@ export default function AnalyticsPage() {
     return (
       <div className="mx-auto max-w-6xl p-6 space-y-4">
         <div className="rounded-2xl border border-yellow-300 bg-yellow-50 p-6">
-          <h2 className="text-lg font-semibold text-yellow-800">🔐 Требуется вход</h2>
+          <h2 className="text-lg font-semibold text-yellow-800">{t("authRequired")}</h2>
           <p className="text-yellow-700 text-sm mt-2">
-            Пожалуйста, войдите в аккаунт для просмотра аналитики.
+            {t("authRequiredHint")}
           </p>
         </div>
         <Link
           href="/auth/sign-in"
           className="inline-block px-4 py-2 rounded-xl bg-blue-500 text-white font-semibold hover:bg-blue-600 transition"
         >
-          Войти
+          {t("signIn")}
         </Link>
       </div>
     );
@@ -283,40 +288,40 @@ export default function AnalyticsPage() {
     <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
       {/* Заголовок */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold">Analytics and Emotional Profile</h1>
-        <p className="text-gray-600">Mood tracker, topics, emotional profile, and your week</p>
+        <h1 className="text-4xl font-bold">{t("title")}</h1>
+        <p className="text-gray-600">{t("subtitle")}</p>
       </div>
 
       <AnalyticsAIReport />
 
       {notesStats.totalNotes === 0 ? (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-6 text-center">
-          <p className="text-amber-800 font-semibold">No mood entries yet</p>
-          <p className="text-amber-700 text-sm mt-2">Add your first journal entry to see analytics.</p>
+          <p className="text-amber-800 font-semibold">{t("noEntriesYet")}</p>
+          <p className="text-amber-700 text-sm mt-2">{t("noEntriesHint")}</p>
           <Link
             href="/notes"
             className="inline-block mt-3 px-4 py-2 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-600 transition"
           >
-            Go to journal {'>'}
+            {t("goToJournal")} {'>'}
           </Link>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="rounded-2xl border border-black/10 bg-gradient-to-br from-violet-50 to-white p-6">
-              <p className="text-sm text-gray-600 font-semibold">Emotional profile</p>
+              <p className="text-sm text-gray-600 font-semibold">{t("emotionalProfile")}</p>
               <p className="text-xl font-bold text-violet-700 mt-2">{notesStats.profile}</p>
-              <p className="text-xs text-gray-500 mt-2">Based on mood and sleep entries</p>
+              <p className="text-xs text-gray-500 mt-2">{t("basedOnEntries")}</p>
             </div>
             <div className="rounded-2xl border border-black/10 bg-gradient-to-br from-blue-50 to-white p-6">
-              <p className="text-sm text-gray-600 font-semibold">Average mood</p>
+              <p className="text-sm text-gray-600 font-semibold">{t("avgMood")}</p>
               <p className="text-2xl font-bold text-blue-700 mt-2">
                 {notesStats.avgMood != null ? notesStats.avgMood.toFixed(1) : "?"}/10
               </p>
-              <p className="text-xs text-gray-500 mt-2">Total entries: {notesStats.totalNotes}</p>
+              <p className="text-xs text-gray-500 mt-2">{t("totalEntries")}: {notesStats.totalNotes}</p>
             </div>
             <div className="rounded-2xl border border-black/10 bg-gradient-to-br from-emerald-50 to-white p-6">
-              <p className="text-sm text-gray-600 font-semibold">Average sleep</p>
+              <p className="text-sm text-gray-600 font-semibold">{t("avgSleep")}</p>
               <p className="text-2xl font-bold text-emerald-700 mt-2">
                 {notesStats.avgSleep != null ? `${Math.round(notesStats.avgSleep / 60)}h` : "?"}
               </p>
@@ -325,34 +330,34 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl p-6">
-            <h3 className="text-xl font-semibold mb-4">My week</h3>
+            <h3 className="text-xl font-semibold mb-4">{t("myWeek")}</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-xl bg-gray-50 p-4">
-                <p className="text-sm text-gray-600">Mood (7 days)</p>
+                <p className="text-sm text-gray-600">{t("mood7days")}</p>
                 <p className="text-lg font-semibold">
                   {notesStats.avgMoodLast7 != null ? notesStats.avgMoodLast7.toFixed(1) : "?"}
                   {notesStats.moodDelta != null && (
                     <span className={`ml-2 text-xs ${notesStats.moodDelta >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                      {notesStats.moodDelta >= 0 ? "?" : "?"} {Math.abs(notesStats.moodDelta).toFixed(1)}
+                      {notesStats.moodDelta >= 0 ? "↑" : "↓"} {Math.abs(notesStats.moodDelta).toFixed(1)}
                     </span>
                   )}
                 </p>
-                <p className="text-xs text-gray-500">Compared to previous week</p>
+                <p className="text-xs text-gray-500">{t("comparedToPrevWeek")}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4">
-                <p className="text-sm text-gray-600">Sleep (7 days)</p>
+                <p className="text-sm text-gray-600">{t("sleep7days")}</p>
                 <p className="text-lg font-semibold">
                   {notesStats.avgSleepLast7 != null ? `${Math.round(notesStats.avgSleepLast7 / 60)}h` : "?"}
                   {notesStats.sleepDelta != null && (
                     <span className={`ml-2 text-xs ${notesStats.sleepDelta >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                      {notesStats.sleepDelta >= 0 ? "?" : "?"} {Math.abs(notesStats.sleepDelta / 60).toFixed(1)}h
+                      {notesStats.sleepDelta >= 0 ? "↑" : "↓"} {Math.abs(notesStats.sleepDelta / 60).toFixed(1)}h
                     </span>
                   )}
                 </p>
-                <p className="text-xs text-gray-500">Compared to previous week</p>
+                <p className="text-xs text-gray-500">{t("comparedToPrevWeek")}</p>
               </div>
               <div className="rounded-xl bg-gray-50 p-4">
-                <p className="text-sm text-gray-600">Weekly summary</p>
+                <p className="text-sm text-gray-600">{t("weekSummary")}</p>
                 <p className="text-sm text-gray-700 mt-1">{notesStats.stressSignal}</p>
               </div>
             </div>
@@ -380,7 +385,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-wrap gap-2">
                   {notesStats.topTopics.map((t) => (
                     <span key={t.word} className="px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs">
-                      {t.word} ? {t.count}
+                      {t.word} · {t.count}
                     </span>
                   ))}
                 </div>
@@ -394,7 +399,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-wrap gap-2">
                   {notesStats.stressTopics.map((t) => (
                     <span key={t.word} className="px-3 py-1 rounded-full bg-red-50 text-red-700 text-xs">
-                      {t.word} ? {t.count}
+                      {t.word} · {t.count}
                     </span>
                   ))}
                 </div>
@@ -408,7 +413,7 @@ export default function AnalyticsPage() {
                 <div className="flex flex-wrap gap-2">
                   {notesStats.positiveTopics.map((t) => (
                     <span key={t.word} className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs">
-                      {t.word} ? {t.count}
+                      {t.word} · {t.count}
                     </span>
                   ))}
                 </div>

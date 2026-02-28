@@ -19,13 +19,13 @@ export default function ChatComposer({ input, setInput, onSend, loading, voice }
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-black/10 bg-white/85 backdrop-blur-xl">
         <form onSubmit={onSend} className="mx-auto max-w-4xl px-4 py-4">
           {/* панель */}
-          <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/10 px-3 py-3">
-            <div className="flex items-end gap-2">
+          <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/10 px-4 py-3">
+            <div className="flex items-end gap-3">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Напишите, что чувствуете…"
-                className="w-full min-h-[44px] max-h-36 resize-none rounded-xl border border-black/10 bg-white px-3 py-2 text-[15px] leading-6 outline-none
+                className="w-full min-h-[48px] max-h-36 resize-none rounded-xl border border-black/10 bg-white px-4 py-3 text-[15px] leading-6 outline-none
                            focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -40,7 +40,7 @@ export default function ChatComposer({ input, setInput, onSend, loading, voice }
                 onClick={toggleVoice}
                 disabled={micDisabled}
                 className={[
-                  "h-10 w-10 rounded-full grid place-items-center transition",
+                  "h-12 w-12 rounded-full grid place-items-center transition flex-shrink-0",
                   micDisabled
                     ? "opacity-40 cursor-not-allowed"
                     : listening
@@ -50,21 +50,21 @@ export default function ChatComposer({ input, setInput, onSend, loading, voice }
                 title={micTitle}
                 aria-label="Voice"
               >
-                <Mic className="h-5 w-5" />
+                <Mic className="h-6 w-6" />
               </button>
 
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="h-10 w-10 rounded-full grid place-items-center bg-blue-600 text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-40"
+                className="h-12 w-12 rounded-full grid place-items-center bg-blue-600 text-white shadow-sm hover:bg-blue-700 transition disabled:opacity-40 flex-shrink-0"
                 title="Send"
                 aria-label="Send"
               >
-                <Send className="h-5 w-5" />
+                <Send className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="mt-2 flex items-center justify-between px-1">
+            <div className="mt-3 flex items-center justify-between px-1">
               <p className="text-[11px] text-slate-500">
                 <strong>Это поддерживающее пространство.</strong> Можно отвечать коротко или подробно.
               </p>

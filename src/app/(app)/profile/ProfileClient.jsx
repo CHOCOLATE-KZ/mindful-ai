@@ -4,7 +4,7 @@ import { useMemo, useCallback } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useProfileData } from "@/features/profile/useProfileData";
 import { useAppSettings } from "@/components/AppShell";
-import { useDict } from "./_i18n/dict";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 import ProfileHeroCard from "./_components/ProfileHeroCard";
 import SummaryCard from "./_components/SummaryCard";
@@ -30,7 +30,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
   });
 
   const lang = app?.settings?.language || settings?.language || "ru";
-  const t = useDict(lang);
+  const t = useTranslation("profile", lang);
 
   const mergedSettings = useMemo(() => {
     return {

@@ -101,6 +101,113 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* Psychology Science Section - НОВЫЙ РАЗДЕЛ */}
+        <section className="mb-20">
+          <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Наука о психологии и благополучии</h2>
+          
+          {/* Statistics Cards */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="text-4xl font-extrabold text-blue-600 mb-2">65%</div>
+              <p className="text-sm text-gray-700 font-medium">
+                Музыка снижает уровень кортизола (гормона стресса) на 65%
+              </p>
+              <p className="text-xs text-gray-500 mt-2">Trends in Cognitive Sciences, 2013</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="text-4xl font-extrabold text-green-600 mb-2">53%</div>
+              <p className="text-sm text-gray-700 font-medium">
+                30 минут физической активности снижают риск депрессии на 53%
+              </p>
+              <p className="text-xs text-gray-500 mt-2">WHO, 2022</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="text-4xl font-extrabold text-purple-600 mb-2">8 нед.</div>
+              <p className="text-sm text-gray-700 font-medium">
+                8 недель медитации увеличивают серое вещество мозга (память и обучение)
+              </p>
+              <p className="text-xs text-gray-500 mt-2">Harvard Medical School, 2011</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border-2 border-amber-200 hover:shadow-lg transition-all hover:-translate-y-1">
+              <div className="text-4xl font-extrabold text-amber-600 mb-2">60%</div>
+              <p className="text-sm text-gray-700 font-medium">
+                Прогулка на природе повышает креативность на 60%
+              </p>
+              <p className="text-xs text-gray-500 mt-2">Stanford University, 2014</p>
+            </div>
+          </div>
+
+          {/* Key Facts */}
+          <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 rounded-2xl p-8 border border-indigo-200">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              🧠 Ключевые факты о ментальном здоровье
+            </h3>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold">1</div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Дыхательные практики работают</h4>
+                  <p className="text-sm text-gray-700">
+                    Дыхание 4-7-8 активирует парасимпатическую нервную систему за 2 минуты, 
+                    снижая физиологические маркеры стресса (Dr. Andrew Weil).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold">2</div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Благодарность перепрограммирует мозг</h4>
+                  <p className="text-sm text-gray-700">
+                    Записывание 3 вещей благодарности каждый день в течение 21 дня меняет 
+                    нейронные пути, делая мозг более позитивным (Martin Seligman, 2005).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-pink-500 rounded-lg flex items-center justify-center text-white font-bold">3</div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Сон критически важен</h4>
+                  <p className="text-sm text-gray-700">
+                    7-9 часов сна улучшают когнитивные функции на 20%, консолидируют память 
+                    и снижают тревогу (Matthew Walker, "Why We Sleep", 2017).
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-rose-500 rounded-lg flex items-center justify-center text-white font-bold">4</div>
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-1">Эмоциональное заражение реально</h4>
+                  <p className="text-sm text-gray-700">
+                    Проводя время с грустным человеком, вы на 50% вероятнее почувствуете грусть сами. 
+                    Эмоции распространяются как вирус (Hatfield et al., 1993).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA to Psychology Page */}
+            <div className="mt-8 text-center">
+              <p className="text-gray-700 mb-4">
+                Хотите узнать больше научных фактов о психологии?
+              </p>
+              <a
+                href="/psychology"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5"
+              >
+                <span>📚</span>
+                <span>30+ фактов про психологию</span>
+                <span>→</span>
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* Values Section */}
         <section className="mb-20 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-12">
           <h2 className="text-3xl font-bold mb-12 text-center">Наши ценности</h2>
