@@ -6,36 +6,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAppSettings } from "@/components/AppShell";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { ChevronDown, User } from "lucide-react";
-
-const NAV_I18N = {
-  ru: {
-    home: "Главная",
-    about: "О проекте",
-    psychology: "Психология",
-    faq: "FAQ",
-    contacts: "Контакты",
-    chat: "Чат",
-    exercises: "Упражнения",
-    news: "Новости",
-    notes: "Дневник",
-    analytics: "Аналитика",
-    tools: "Инструменты",
-    signin: "Войти",
-    signup: "Регистрация",
-    profile: "Профиль",
-    signout: "Выйти",
-  },
-  en: { /* ... */ },
-  kz: { /* ... */ },
-};
 
 export default function Navbar() {
   const { user, settings } = useAppSettings();
   const lang = settings?.language || "ru";
-  const t = NAV_I18N[lang] || NAV_I18N.ru;
+  const t = useTranslation("nav", lang);
 
   const pathname = usePathname();
+  const isAdminPath = pathname?.startsWith("/admin");
+
   const router = useRouter();
   const supabase = useMemo(() => supabaseBrowser(), []);
   const [userName, setUserName] = useState(null);
@@ -48,31 +29,31 @@ export default function Navbar() {
 
   const guestLinks = useMemo(
     () => [
-      { href: "/", label: t.home },
-      { href: "/about", label: t.about },
-      { href: "/psychology", label: t.psychology },
-      { href: "/faq", label: t.faq },
-      { href: "/contacts", label: t.contacts },
-      { href: "/chat", label: t.chat },
+      { href: "/", label: t("home") },
+      { href: "/about", label: t("about") },
+      { href: "/psychology", label: t("psychology") },
+      { href: "/faq", label: t("faq") },
+      { href: "/contacts", label: t("contacts") },
+      { href: "/chat", label: t("chat") },
     ],
     [t]
   );
 
   const userLinks = useMemo(
     () => [
-      { href: "/", label: t.home },
-      { href: "/psychology", label: t.psychology },
-      { href: "/chat", label: t.chat },
-      { href: "/news", label: t.news },
+      { href: "/", label: t("home") },
+      { href: "/psychology", label: t("psychology") },
+      { href: "/chat", label: t("chat") },
+      { href: "/news", label: t("news") },
     ],
     [t]
   );
 
   const toolsLinks = useMemo(
     () => [
-      { href: "/exercises", label: t.exercises },
-      { href: "/notes", label: t.notes },
-      { href: "/analytics", label: t.analytics },
+      { href: "/exercises", label: t("exercises") },
+      { href: "/notes", label: t("notes") },
+      { href: "/analytics", label: t("analytics") },
     ],
     [t]
   );
@@ -121,6 +102,10 @@ export default function Navbar() {
   function requestSignOut() {
     setConfirmOpen(true);
     setProfileOpen(false);
+  }
+
+  if (isAdminPath) {
+    return null;
   }
 
   return (
@@ -175,7 +160,7 @@ export default function Navbar() {
                     : "text-gray-700 hover:text-gray-900"
                 }`}
               >
-                {t.tools}
+                {t("tools")}
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${toolsOpen ? 'rotate-180' : ''}`} />
               </button>
               
@@ -208,13 +193,13 @@ export default function Navbar() {
                 href="/auth/sign-in?next=/chat"
                 className="px-4 py-2 rounded-full border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-transform duration-200 transform hover:scale-105"
               >
-                {t.signin}
+                {t("signin")}
               </Link>
               <Link
                 href="/auth/sign-up"
                 className="px-4 py-2 rounded-full bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 transition-transform duration-200 transform hover:scale-105"
               >
-                {t.signup}
+                {t("signup")}
               </Link>
             </>
           ) : (
@@ -237,7 +222,7 @@ export default function Navbar() {
                 <div className="absolute top-full right-0 mt-2 w-52 bg-white rounded-lg shadow-xl border border-gray-200 py-2">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-800 truncate">
-                      {userName || "Пользователь"}
+                      {userName || t("user")}
                     </p>
                   </div>
                   <button
@@ -248,13 +233,13 @@ export default function Navbar() {
                     className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
                   >
                     <User className="w-4 h-4" />
-                    {t.profile}
+                    {t("profile")}
                   </button>
                   <button
                     onClick={requestSignOut}
                     className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 mt-1"
                   >
-                    {t.signout}
+                    {t("signout")}
                   </button>
                 </div>
               )}
@@ -273,17 +258,17 @@ export default function Navbar() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-900">
-              Подтвердите выход
+              {t("confirmLogout")}
             </h3>
             <p className="mt-2 text-sm text-gray-600">
-              Вы уверены, что хотите выйти из аккаунта?
+              {t("confirmLogoutText")}
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 onClick={() => setConfirmOpen(false)}
                 className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Остаться
+                {t("stay")}
               </button>
               <button
                 onClick={() => {
@@ -292,7 +277,7 @@ export default function Navbar() {
                 }}
                 className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
-                Выйти
+                {t("logout")}
               </button>
             </div>
           </div>

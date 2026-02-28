@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+body {
+  top: 0 !important;
+}
+
+.skiptranslate iframe,
+.goog-te-banner-frame,
+.goog-te-gadget,
+.goog-te-balloon-frame,
+#goog-gt-tt {
+  display: none !important;
+}
+
 @layer base {
   a, button, [role="button"], input[type="submit"], input[type="button"] { cursor: pointer; }
   button:disabled, [aria-disabled="true"] { cursor: not-allowed; }
@@ -157,43 +169,6 @@ html.dark .shadow-card {
 html.dark .glass-card {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-/* ===== Custom Scrollbar ===== */
-/* Webkit browsers (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(var(--bg));
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgb(37 99 235) 0%, rgb(37 99 235 / 0.7) 100%);
-  border-radius: 20px;
-  border: 2px solid rgba(var(--bg));
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgb(37 99 235) 0%, rgb(37 99 235 / 0.9) 100%);
-}
-
-/* Firefox */
-* {
-  scrollbar-color: rgb(37 99 235) rgba(var(--bg));
-  scrollbar-width: thin;
-}
-
-/* Dark mode scrollbar */
-html.dark ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgb(59 130 246) 0%, rgb(59 130 246 / 0.7) 100%);
-  border-color: rgb(var(--bg));
-}
-
-html.dark ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgb(59 130 246) 0%, rgb(59 130 246 / 0.95) 100%);
 }
 
 

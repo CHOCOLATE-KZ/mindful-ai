@@ -26,10 +26,12 @@ export default function TypingText({
 
     // when finished deleting
     if (deleting && subIndex === 0) {
-      setDeleting(false);
-      if (!loop && index === texts.length - 1) return;
-      setIndex((i) => (i + 1) % texts.length);
-      return;
+      const t = setTimeout(() => {
+        setDeleting(false);
+        if (!loop && index === texts.length - 1) return;
+        setIndex((i) => (i + 1) % texts.length);
+      }, 0);
+      return () => clearTimeout(t);
     }
 
     const t = setTimeout(() => {

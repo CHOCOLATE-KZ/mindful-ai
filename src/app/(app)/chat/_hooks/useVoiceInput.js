@@ -1,22 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
 export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
   const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
   const isSecure = useMemo(() => (typeof window === "undefined" ? true : window.isSecureContext), []);
-  const [mounted, setMounted] = useState(false);
-  const [text, setText] = useState("");
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (listening) setText(transcript);
-  }, [transcript, listening]);
+  const mounted = true;
 
   useEffect(() => {
     if (!listening) return;
@@ -40,13 +31,12 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
     }
 
     resetTranscript();
-    setText("");
     await SpeechRecognition.startListening({ continuous: false, language: lang });
   }
 
   return {
-    voiceText: text,
-    setVoiceText: setText,
+    voiceText: transcript,
+    setVoiceText: resetTranscript,
     listening,
     isSecure,
     mounted,

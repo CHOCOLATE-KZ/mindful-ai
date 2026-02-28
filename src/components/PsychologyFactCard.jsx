@@ -4,13 +4,18 @@ import { useState, useEffect } from "react";
 import { psychologyFacts } from "@/data/psychologyFacts";
 
 export default function PsychologyFactCard() {
-  const [fact, setFact] = useState(null);
+  const [fact, setFact] = useState(psychologyFacts[0]);
+  const [mounted, setMounted] = useState(false);
 
+  // Инициализируем случайный факт только на клиенте после монтирования
   useEffect(() => {
-    // Выбираем случайный факт при загрузке
-    const randomFact = psychologyFacts[Math.floor(Math.random() * psychologyFacts.length)];
-    setFact(randomFact);
-  }, []);
+    if (!mounted) {
+      const randomFact = psychologyFacts[Math.floor(Math.random() * psychologyFacts.length)];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFact(randomFact);
+      setMounted(true);
+    }
+  }, [mounted]);
 
   const getNextFact = () => {
     const randomFact = psychologyFacts[Math.floor(Math.random() * psychologyFacts.length)];

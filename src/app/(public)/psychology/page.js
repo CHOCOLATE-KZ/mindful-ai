@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useAppSettings } from "@/components/AppShell";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 import { psychologyFacts, factCategories } from "@/data/psychologyFacts";
 import {
   psychologyVideos,
@@ -22,6 +24,10 @@ import {
 } from "lucide-react";
 
 export default function PsychologyPage() {
+  const { settings } = useAppSettings();
+  const lang = settings?.language || "ru";
+  const t = useTranslation("psychology", lang);
+
   const [activeSection, setActiveSection] = useState("facts");
   const [selectedCategory, setSelectedCategory] = useState("Все");
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,15 +88,15 @@ export default function PsychologyPage() {
           <div className="flex items-center gap-3 mb-4">
             <Brain className="w-12 h-12" />
             <h1 className="text-5xl font-extrabold leading-tight">
-              База знаний по психологии
+              {t("title")}
             </h1>
           </div>
           <p className="mt-4 max-w-2xl text-xl text-purple-100">
-            30+ научных фактов о мозге, эмоциях и поведении. Узнайте, как работает ваш разум.
+            {t("subtitle")}
           </p>
           <div className="mt-6 flex items-center gap-2 text-purple-200">
             <Sparkles className="w-5 h-5" />
-            <span>Все факты основаны на научных исследованиях</span>
+            <span>{t("scientificBasis")}</span>
           </div>
         </div>
       </div>
@@ -105,7 +111,7 @@ export default function PsychologyPage() {
                 : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500"
             }`}
           >
-            Факты
+            {t("tabFacts")}
           </button>
           <button
             onClick={() => setActiveSection("videos")}
@@ -115,7 +121,7 @@ export default function PsychologyPage() {
                 : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500"
             }`}
           >
-            Видео
+            {t("tabVideos")}
           </button>
           <button
             onClick={() => setActiveSection("practice")}
@@ -125,7 +131,7 @@ export default function PsychologyPage() {
                 : "bg-white text-gray-700 border border-gray-300 hover:border-indigo-500"
             }`}
           >
-            Практика
+            {t("tabPractice")}
           </button>
         </div>
 
@@ -137,7 +143,7 @@ export default function PsychologyPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Поиск фактов... (например: стресс, память, эмоции)"
+              placeholder={t("searchPlaceholder")}
               className="w-full px-5 py-4 pr-12 rounded-2xl border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all text-lg"
             />
             <BookOpen className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
@@ -150,7 +156,7 @@ export default function PsychologyPage() {
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border-2 border-gray-200 hover:border-indigo-500 transition-all"
             >
               <Filter className="w-5 h-5" />
-              <span className="font-semibold">Категории</span>
+              <span className="font-semibold">{t("categoriesLabel")}</span>
               <ChevronDown
                 className={`w-5 h-5 transition-transform ${
                   showFilters ? "rotate-180" : ""
@@ -179,7 +185,7 @@ export default function PsychologyPage() {
 
           {/* Results Count */}
           <p className="text-sm text-gray-600">
-            Найдено фактов: <span className="font-bold text-indigo-600">{filteredFacts.length}</span>
+            {t("resultsCount")} <span className="font-bold text-indigo-600">{filteredFacts.length}</span>
           </p>
         </div>
 
@@ -217,7 +223,7 @@ export default function PsychologyPage() {
                 {/* Source */}
                 <div className="relative pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-500 italic">
-                    📚 {fact.source}
+                    📚 {t("source")} {fact.source}
                   </p>
                 </div>
               </div>
@@ -227,10 +233,10 @@ export default function PsychologyPage() {
           <div className="text-center py-16">
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Ничего не найдено
+              {t("noResults")}
             </h3>
             <p className="text-gray-600">
-              Попробуйте изменить категорию или поисковый запрос
+              {t("noResultsHint")}
             </p>
           </div>
         ) : null}
@@ -241,7 +247,7 @@ export default function PsychologyPage() {
               <article className="mb-8 rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-5 md:p-6">
                 <div className="mb-3 flex items-center gap-2">
                   <PlayCircle className="w-5 h-5 text-indigo-600" />
-                  <span className="text-sm font-semibold text-indigo-700">Видео недели</span>
+                  <span className="text-sm font-semibold text-indigo-700">{t("videoOfWeek")}</span>
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
@@ -269,7 +275,7 @@ export default function PsychologyPage() {
                     </div>
                     <h3 className="mb-2 text-xl font-bold text-gray-900">{featuredVideo.title}</h3>
                     <p className="mb-2 text-sm text-gray-700">{featuredVideo.whyWatch}</p>
-                    <p className="text-xs text-gray-500">Источник: {featuredVideo.channel}</p>
+                    <p className="text-xs text-gray-500">{t("source")}: {featuredVideo.channel}</p>
                   </div>
                 </div>
               </article>
@@ -322,7 +328,7 @@ export default function PsychologyPage() {
 
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{video.title}</h3>
                     <p className="text-sm text-gray-700 mb-3">{video.whyWatch}</p>
-                    <p className="text-xs text-gray-500">Источник: {video.channel}</p>
+                    <p className="text-xs text-gray-500">{t("source")} {video.channel}</p>
                   </div>
                 </article>
               ))}
@@ -340,7 +346,7 @@ export default function PsychologyPage() {
                 <div className="mb-3 flex items-center justify-between">
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
                     <Activity className="w-4 h-4" />
-                    Практика
+                  {t("practiceLabel")}
                   </span>
                   <span className="text-xs text-gray-500">{practice.duration}</span>
                 </div>
@@ -359,25 +365,23 @@ export default function PsychologyPage() {
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {activeSection === "videos" ? "Хотите ещё видео?" : "Интересно узнать больше?"}
+                {activeSection === "videos" ? t("educationalBannerTitleVideos") : t("educationalBannerTitle")}
               </h3>
               <p className="text-gray-700 mb-4">
-                {activeSection === "videos"
-                  ? "Мы будем регулярно добавлять новые видео по психологии: тревожность, отношения, самооценка и стресс."
-                  : "Применяйте эти знания на практике через наши упражнения и тесты. Или пообщайтесь с AI-ассистентом для персональной поддержки."}
+                {activeSection === "videos" ? t("educationalBannerTextVideos") : t("educationalBannerText")}
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/exercises"
                   className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors"
                 >
-                  Практики и упражнения →
+                  {t("practicesButton")}
                 </Link>
                 <Link
                   href="/auth/login"
                   className="px-5 py-2.5 rounded-xl bg-white text-indigo-600 font-semibold border-2 border-indigo-600 hover:bg-indigo-50 transition-colors"
                 >
-                  Поговорить с AI
+                  {t("aiButton")}
                 </Link>
               </div>
             </div>

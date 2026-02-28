@@ -12,6 +12,7 @@ export default function TelegramLoginButton({
   className = '',
 }) {
   const containerRef = useRef(null);
+  const scriptRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -61,12 +62,23 @@ export default function TelegramLoginButton({
 
     if (containerRef.current) {
       containerRef.current.appendChild(script);
+      scriptRef.current = script;
     }
 
     return () => {
-      // Cleanup
+      // Cleanup: удаляем скрипт и глобальную функцию
       if (window.onTelegramAuth) {
         delete window.onTelegramAuth;
+      }
+      // Безопасно удаляем скрипт используя ref
+      try {
+        if (scriptRef.current && scriptRef.current.parentNode) {
+          scriptRef.current.parentNode.removeChild(scriptRef.current);
+          scriptRef.current = null;
+        }
+      } catch (error) {
+        // Игнорируем ошибки при удалении - скрипт может быть уже удален
+        console.debug('[TelegramLoginButton] Script already removed:', error.message);
       }
     };
   }, [size, router, redirectUrl]);

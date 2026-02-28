@@ -183,7 +183,93 @@ export function useProfileData(supabase) {
   }
 
   useEffect(() => {
-    loadAll();
+    let mounted = true;
+    (async () => {
+      const { data: uRes, error: uErr } = await supabase.auth.getUser();
+      if (!mounted) return;
+      
+      if (uErr) {
+        console.error(uErr);
+        setLoading(false);
+        return;
+      }
+
+      const authUser = uRes?.user;
+      if (!authUser) {
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      if (mounted) setUser(authUser);
+
+      const p = await ensureProfile(authUser.id, authUser.user_metadata?.name || "");
+      const s = await ensureSettings(authUser.id);
+
+      if (!mounted) return;
+
+      setProfile(p);
+      setSettings(s);
+      setNameDraft(p?.name || "");
+
+      // NOTES
+      const { data: notes, error: nErr } = await supabase
+        .from("notes")
+        .select("date, sleep, mood")
+        .eq("user_id", authUser.id)
+        .order("date", { ascending: false })
+        .limit(400);
+      
+      if (!mounted) return;
+      
+      if (nErr) {
+        console.error(nErr);
+        setLoading(false);
+        return;
+      }
+
+      const dates = (notes || []).map((n) => n.date).filter(Boolean);
+      const uniqDates = Array.from(new Set(dates));
+      const activeDays = uniqDates.length;
+      const streak = calcStreak(uniqDates);
+
+      const sleeps = (notes || []).map((n) => n.sleep).filter((v) => typeof v === "number");
+      const moods = (notes || []).map((n) => n.mood).filter((v) => typeof v === "number");
+
+      const avgSleep = sleeps.length ? sleeps.reduce((a, b) => a + b, 0) / sleeps.length : null;
+      const avgMood = moods.length ? moods.reduce((a, b) => a + b, 0) / moods.length : null;
+
+      // AI MESSAGES count
+      const { count: messagesCount, error: mErr } = await supabase
+        .from("ai_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", authUser.id);
+      
+      if (!mounted) return;
+      
+      if (mErr) {
+        console.error(mErr);
+        setLoading(false);
+        return;
+      }
+
+      setStats((prev) => ({
+        ...prev,
+        activeDays,
+        streak,
+        avgSleep,
+        avgMood,
+        messagesCount: messagesCount || 0,
+        notesCount: notes?.length || 0,
+      }));
+      setLoading(false);
+    })();
+
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

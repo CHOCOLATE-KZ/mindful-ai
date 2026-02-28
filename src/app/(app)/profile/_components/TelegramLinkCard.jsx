@@ -4,6 +4,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { supabaseBrowser } from '@/lib/supabase/browser';
 
 export default function TelegramLinkCard() {
@@ -84,10 +85,13 @@ export default function TelegramLinkCard() {
 
       <div className="mb-4 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center">
-          <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/500px-Telegram_logo.svg.png" 
-            alt="Telegram" 
+          <Image
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/500px-Telegram_logo.svg.png"
+            alt="Telegram"
+            width={32}
+            height={32}
             className="h-8 w-8"
+            unoptimized
           />
         </div>
         <div>

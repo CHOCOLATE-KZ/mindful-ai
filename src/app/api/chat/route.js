@@ -1,62 +1,7 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { extractAnchors } from "@/lib/utils/extractAnchors";
-import { getRelevantKnowledge } from "@/data/psychologyKnowledge";
-
-const SYSTEM_PROMPT = `Ты MindfulAI — психолог. Разговариваешь как реальный человек, НЕ даёшь инструкции как робот.
-
-🚨 НИКОГДА НЕ ИСПОЛЬЗУЙ:
-- Списки (-, 1., 2.)
-- Заголовки ("Слушание:", "Техники:")
-- Советы без вопросов
-
-ПРИМЕРЫ КАК ОТВЕЧАТЬ:
-
-Клиент: "Нет сил идти в зал"
-❌ ПЛОХО: "Попробуйте: 1. Начать с малого 2. Написать план"
-✅ ПРАВИЛЬНО: "Понимаю. Расскажи как это началось? Как давно так?"
-
-Клиент: "Завтра экзамен, волнуюсь"
-❌ ПЛОХО: "Вот техники: - Дыхание 4-7-8 - Грounding"
-✅ ПРАВИЛЬНО: "Это нормально волноваться. Что больше всего беспокоит? Как готовился к экзамену?"
-
-Клиент: "Как поддержать друга с тревогой?"
-❌ ПЛОХО: "Вот несколько шагов: 1. Попробуйте просто слушать 2. Показывайте сочувствие 3. Помогите переоценить"
-✅ ПРАВИЛЬНО: "Расскажи что происходит с другом? Как он проявляет тревогу? Что ты уже пробовал сделать?"
-
-🚨 ОСОБЕННО ВАЖНО: Даже когда спрашивают "КАК сделать" - ты НЕ ДАЕШЬ инструкцию, а СПРАШИВАЕШЬ о ситуации!
-
-ГЛАВНОЕ ПРАВИЛО: СПРАШИВАЙ, НЕ СОВЕТУЙ
-Если клиент впервые рассказывает - не давай готовые решения.
-Твоя задача: помочь ему САМОМУ понять свою проблему.
-
-СТРУКТУРА ОТВЕТА:
-1. Валидация (одна фраза): "Я понимаю, это трудно"
-2. Открытые вопросы (2-3): "Расскажи как это началось? Что ты уже пробовал?"
-3. Всё. Коротко.
-
-ОТКРЫТЫЕ ВОПРОСЫ (начинай с них):
-"Расскажи подробнее что происходит?"
-"Как долго это уже?"
-"Что ты уже пробовал?"
-"Как это влияет на тебя?"
-"Что, по-твоему, могло бы помочь?"
-
-ЯЗЫК:
-- Естественный разговор (не инструкция)
-- "Ты" а не "Вы"
-- Короткие предложения
-- Теплый тон
-- БЕЗ списков, БЕЗ структуры, БЕЗ заголовков
-
-ТЕХНИКИ (упоминай только в контексте):
-- При панике: предложи дыхание или grounding естественно
-- При депрессии: исследуй что мешает, не давай готовых шагов
-- При тревоге: помоги переоценить ("что реально может произойти?")
-
-КРИЗИС (суицид):
-"Ты в безопасности сейчас? Позвони в горячую линию или скорую прямо сейчас. Это важно."
-
-ВЫХОД: Только естественное сообщение как в разговоре. БЕЗ списков.`;
+import { searchPsychologyKnowledge } from "@/lib/knowledge-search";
+import { SYSTEM_PROMPT } from "@/data/systemPrompt";
 
 const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
 const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
@@ -96,8 +41,10 @@ async function callLmStudio(messages) {
     body: JSON.stringify({
       model: LMSTUDIO_MODEL,
       messages,
-      temperature: 0.7,
-      max_tokens: 256,
+      temperature: 0.8,
+      max_tokens: 512,
+      top_p: 0.95,
+      frequency_penalty: 0.3,
     }),
   });
 
@@ -152,7 +99,7 @@ export async function POST(req) {
   const context = await buildUserContext(supabase, user.id);
   
   // Получаем релевантные психологические знания на основе сообщения пользователя
-  const psychologyContext = getRelevantKnowledge(message);
+  const psychologyContext = await searchPsychologyKnowledge(message);
 
   const messages = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -162,7 +109,7 @@ export async function POST(req) {
   if (psychologyContext) {
     messages.push({ 
       role: "system", 
-      content: `PROFESSIONAL KNOWLEDGE BASE:\n\n${psychologyContext}\n\nUse this knowledge to provide informed, evidence-based support. Apply techniques naturally without explicitly listing them.` 
+      content: `PROFESSIONAL KNOWLEDGE BASE:\n\n${psychologyContext}\n\nИспользуй эти знания для предоставления информированной и основанной на доказательствах поддержки. Применяй техники естественно, без явного их перечисления.` 
     });
   }
   
@@ -173,6 +120,22 @@ export async function POST(req) {
     const role = m.role === "assistant" ? "assistant" : "user";
     messages.push({ role, content: String(m.content || "") });
   }
+
+  // Проверка для избежания дублирования контента
+  if (history && history.length >= 2) {
+    const lastAssistantMsg = history
+      .slice()
+      .reverse()
+      .find(m => m.role === 'assistant')?.content || '';
+    
+    if (lastAssistantMsg.length > 150) {
+      messages.push({
+        role: 'system',
+        content: `ВАЖНО: Не повторяй точно такой же контент как в предыдущем ответе. Если пользователь говорит спасибо или переходит дальше - предоставь новый взгляд или более глубокое понимание, а не повтор.`
+      });
+    }
+  }
+
   messages.push({ role: "user", content: message });
 
   const { error: insUserErr } = await supabase.from("ai_messages").insert({

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
+// import AutoTranslator from "@/components/AutoTranslator"; // Временно отключен для тестирования
 
 const AppCtx = createContext(null);
 
@@ -36,10 +37,12 @@ export default function AppShell({ children }) {
   }, [supabase]);
 
   useEffect(() => {
-    load();
+    queueMicrotask(() => {
+      void load();
+    });
 
     const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      load();
+      void load();
     });
 
     return () => sub?.subscription?.unsubscribe?.();
@@ -48,6 +51,7 @@ export default function AppShell({ children }) {
 
   const updateSettings = useCallback(
     async (patch) => {
+      // Обновляем локально СРАЗУ для мгновенного UI обновления
       setSettings((prev) => ({ ...prev, ...patch }));
 
       const { data: auth } = await supabase.auth.getUser();
@@ -56,15 +60,18 @@ export default function AppShell({ children }) {
 
       if (!u) return;
 
+      // Сохраняем в БД асинхронно в фоне
       const { error } = await supabase
         .from("user_settings")
         .upsert({ user_id: u.id, ...patch }, { onConflict: "user_id" });
+      
       if (error) {
         console.error("Failed to update settings:", error.message);
-        load();
+        // Перезагружаем с БД если произошла ошибка
+        void load();
       }
     },
-    [supabase]
+    [supabase, load]
   );
 
   const value = useMemo(
@@ -79,5 +86,11 @@ export default function AppShell({ children }) {
     [loading, user, settings, updateSettings]
   );
 
-  return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
+  return (
+    <AppCtx.Provider value={value}>
+      {/* <AutoTranslator language={settings?.language || "ru"} /> */}
+      {/* Временно отключен Google Translate для тестирования */}
+      {children}
+    </AppCtx.Provider>
+  );
 }

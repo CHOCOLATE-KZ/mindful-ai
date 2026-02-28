@@ -5,21 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ChatDemo from "@/components/landing/ChatDemo";
 import TypingText from "@/components/ui/TypingText";
-
-// ⚠️ поменяй импорт под свой путь
-import { createClient } from "@supabase/supabase-js";
-
-function getSupabase() {
-  // Берём публичные ключи из env
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return null;
-  return createClient(url, anon);
-}
+import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export default function HeroSection() {
   const router = useRouter();
-  const supabase = useMemo(() => getSupabase(), []);
+  const supabase = useMemo(() => supabaseBrowser(), []);
 
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);

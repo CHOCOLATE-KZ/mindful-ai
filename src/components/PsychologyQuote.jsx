@@ -5,13 +5,18 @@ import { psychologyQuotes } from "@/data/psychologyFacts";
 import { Quote } from "lucide-react";
 
 export default function PsychologyQuote() {
-  const [quote, setQuote] = useState(null);
+  const [quote, setQuote] = useState(psychologyQuotes[0]);
+  const [mounted, setMounted] = useState(false);
 
+  // Инициализируем случайную цитату только на клиенте после монтирования
   useEffect(() => {
-    // Выбираем случайную цитату при загрузке
-    const randomQuote = psychologyQuotes[Math.floor(Math.random() * psychologyQuotes.length)];
-    setQuote(randomQuote);
-  }, []);
+    if (!mounted) {
+      const randomQuote = psychologyQuotes[Math.floor(Math.random() * psychologyQuotes.length)];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setQuote(randomQuote);
+      setMounted(true);
+    }
+  }, [mounted]);
 
   if (!quote) return null;
 
@@ -22,7 +27,7 @@ export default function PsychologyQuote() {
 
       {/* Quote Text */}
       <blockquote className="relative text-lg text-gray-800 font-medium leading-relaxed mb-4 italic">
-        "{quote.quote}"
+        &quot;{quote.quote}&quot;
       </blockquote>
 
       {/* Author & Book */}

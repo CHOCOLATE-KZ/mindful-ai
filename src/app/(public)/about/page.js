@@ -174,7 +174,7 @@ export default function AboutPage() {
                   <h4 className="font-semibold text-gray-900 mb-1">Сон критически важен</h4>
                   <p className="text-sm text-gray-700">
                     7-9 часов сна улучшают когнитивные функции на 20%, консолидируют память 
-                    и снижают тревогу (Matthew Walker, "Why We Sleep", 2017).
+                    и снижают тревогу (Matthew Walker, &quot;Why We Sleep&quot;, 2017).
                   </p>
                 </div>
               </div>

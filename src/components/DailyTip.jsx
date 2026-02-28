@@ -5,14 +5,19 @@ import { psychologyTips } from "@/data/psychologyFacts";
 import { Lightbulb, RefreshCw } from "lucide-react";
 
 export default function DailyTip() {
-  const [tip, setTip] = useState(null);
+  const [tip, setTip] = useState(psychologyTips[0]);
+  const [mounted, setMounted] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
+  // Инициализируем случайный совет только на клиенте после монтирования
   useEffect(() => {
-    // Выбираем случайный совет при загрузке
-    const randomTip = psychologyTips[Math.floor(Math.random() * psychologyTips.length)];
-    setTip(randomTip);
-  }, []);
+    if (!mounted) {
+      const randomTip = psychologyTips[Math.floor(Math.random() * psychologyTips.length)];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTip(randomTip);
+      setMounted(true);
+    }
+  }, [mounted]);
 
   const getNewTip = () => {
     setIsShaking(true);

@@ -6,16 +6,21 @@ import { Brain, Lightbulb, RefreshCw, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function PsychologySection() {
-  const [fact, setFact] = useState(null);
-  const [tip, setTip] = useState(null);
+  const [fact, setFact] = useState(psychologyFacts[0]);
+  const [tip, setTip] = useState(psychologyTips[0]);
+  const [mounted, setMounted] = useState(false);
 
+  // Инициализируем случайный факт только на клиенте после монтирования
   useEffect(() => {
-    // Выбираем случайные факт и совет
-    const randomFact = psychologyFacts[Math.floor(Math.random() * psychologyFacts.length)];
-    const randomTip = psychologyTips[Math.floor(Math.random() * psychologyTips.length)];
-    setFact(randomFact);
-    setTip(randomTip);
-  }, []);
+    if (!mounted) {
+      const randomFact = psychologyFacts[Math.floor(Math.random() * psychologyFacts.length)];
+      const randomTip = psychologyTips[Math.floor(Math.random() * psychologyTips.length)];
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFact(randomFact);
+      setTip(randomTip);
+      setMounted(true);
+    }
+  }, [mounted]);
 
   const getNewFact = () => {
     const randomFact = psychologyFacts[Math.floor(Math.random() * psychologyFacts.length)];
