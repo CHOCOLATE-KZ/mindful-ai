@@ -1,31 +1,40 @@
 export function extractAnchors(text) {
-  if (!text) return [];
+  if (!text || text.length < 20) return [];
 
-  const boldMatches = Array.from(text.matchAll(/\*\*([^*]{3,50})\*\*/g))
-    .map((m) => m[1].trim())
-    .filter((s) => s.length > 2 && !s.includes("<") && !s.includes("["));
+  // Исключаем фразы которые явно не якоря
+  const exclusionPatterns = [
+    /^(Настроение|Эмоциональная|Физическая|Сон|Дата|Как дела)[\s:?]*$/i,
+    /^(активность|регуляция|пример)[\s:]*$/i,
+    /^(как|что|кто|где|при|это|все|и|а|но)$/i,
+  ];
 
-  const strongMatches = Array.from(text.matchAll(/__([^_]{3,50})__/g))
-    .map((m) => m[1].trim())
-    .filter((s) => s.length > 2 && !s.includes("<") && !s.includes("["));
+  const isExcluded = (phrase) => {
+    return exclusionPatterns.some((pattern) => pattern.test(phrase));
+  };
 
-  const merged = [...new Set([...boldMatches, ...strongMatches])].slice(0, 3);
-  if (merged.length) return merged;
-
+  // Разбиваем на предложения
   const sentences = text
     .replace(/\s+/g, " ")
     .split(/[.!?]/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 15 && !s.includes("<") && !s.includes("["));
+    .filter((s) => {
+      const length = s.length > 15;
+      const enoughWords = s.split(/\s+/).length >= 4;
+      const notExcluded = !isExcluded(s);
+      const hasQuestion = s.includes('?') || s.includes('как') || s.includes('что');
+      return length && enoughWords && notExcluded && !hasQuestion;
+    });
 
-  return sentences.slice(0, 3).map((s) => {
-    const words = s.split(/\s+/).filter((w) => w.length > 2);
-    const max = Math.min(words.length, 5);
-    let phrase = words.slice(0, max).join(" ");
-    if (phrase.length > 50) {
-      phrase = phrase.slice(0, 50).trim();
-      if (!phrase.endsWith(" ")) phrase = phrase.slice(0, phrase.lastIndexOf(" "));
+  // Если есть хорошие предложения - берем их целиком (до 60 символов)
+  const anchors = sentences.slice(0, 3).map((s) => {
+    if (s.length > 60) {
+      // Обрезаем в конце слова, не в середине
+      const truncated = s.slice(0, 60);
+      const lastSpace = truncated.lastIndexOf(' ');
+      return lastSpace > 30 ? truncated.slice(0, lastSpace) : truncated;
     }
-    return phrase;
-  });
+    return s;
+  }).filter(a => a.length > 15);
+
+  return anchors.length > 0 ? anchors : [];
 }

@@ -65,7 +65,7 @@ export default function HeroSection() {
           {/* Left */}
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-1 text-sm text-black/70">
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <span className="h-2 w-2 rounded-full bg-[#5479F7]" />
               Спокойно • Приватно • С поддержкой
             </div>
 
@@ -104,7 +104,7 @@ export default function HeroSection() {
                   type="button"
                   onClick={continueWithEmail}
                   disabled={!emailOk}
-                  className="h-14 w-14 shrink-0 rounded-full border border-blue-200 bg-white text-blue-600 shadow-sm transition hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="h-14 w-14 shrink-0 rounded-full border border-blue-200 bg-white text-[#5479F7] shadow-sm transition hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Продолжить"
                   title={!emailOk ? "Введите корректный email" : "Продолжить"}
                 >
@@ -131,7 +131,7 @@ export default function HeroSection() {
                 type="button"
                 onClick={() => oauth("google")}
                 disabled={busy}
-                className="h-12 w-full rounded-xl bg-blue-600 text-white font-medium shadow-sm transition hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="h-12 w-full rounded-xl bg-[#5479F7] text-white font-medium shadow-sm transition hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {busy ? "Подключаем..." : "Продолжить с Google"}
               </button>
@@ -147,7 +147,7 @@ export default function HeroSection() {
 
               <div className="pt-2 text-sm text-black/60">
                 Уже есть аккаунт?{" "}
-                <Link href="/auth/sign-in" className="text-blue-600 hover:underline">
+                <Link href="/auth/sign-in" className="text-[#5479F7] hover:underline">
                   Войти
                 </Link>
               </div>
@@ -156,7 +156,7 @@ export default function HeroSection() {
 
           {/* Right - chat preview */}
           <div className="relative">
-            <div className="absolute -inset-10 -z-10 bg-gradient-to-br from-blue-100 via-white to-purple-100 blur-2xl" />
+            <div className="absolute -inset-10 -z-10 bg-blue-100/50 blur-2xl" />
             <ChatDemo />
           </div>
         </div>

@@ -3,6 +3,14 @@ import AppShell from "@/components/AppShell";
 import Navbar from "@/components/Navbar";
 import NavObserver from "@/components/NavObserver";
 
+export const metadata = {
+  title: "MindfulAI - Психологическая поддержка через AI",
+  description: "Персональный AI-ассистент для психологической поддержки, медитации и развития осознанности",
+  icons: {
+    icon: "/gradient-logo.png",
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="ru">

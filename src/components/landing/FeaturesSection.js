@@ -10,22 +10,19 @@ export default function FeaturesSection() {
       title: "Безопасность с приоритетом приватности",
       subtitle: "Ваши данные остаются защищёнными и конфиденциальными.",
       Icon: ShieldCheck,
-      blob: "from-blue-200/70 via-blue-100/40 to-white",
-      iconBg: "bg-blue-600",
+      iconBg: "bg-[#5479F7]",
     },
     {
       title: "Умная память",
       subtitle: "Запоминает то, что действительно важно для вас.",
       Icon: Brain,
-      blob: "from-purple-200/70 via-purple-100/40 to-white",
-      iconBg: "bg-purple-600",
+      iconBg: "bg-blue-600",
     },
     {
       title: "Персональная поддержка",
       subtitle: "Помощь, адаптированная под ваши цели.",
       Icon: Sparkles,
-      blob: "from-orange-200/70 via-orange-100/40 to-white",
-      iconBg: "bg-orange-500",
+      iconBg: "bg-[#5479F7]",
     },
   ];
 
@@ -34,7 +31,7 @@ export default function FeaturesSection() {
       <div className="mx-auto max-w-4xl text-center">
         <Reveal>
           <h2 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl">
-            Когда <span className="text-blue-600">MindfulAI</span> на вашей стороне
+            Когда <span className="text-[#5479F7]">MindfulAI</span> на вашей стороне
           </h2>
         </Reveal>
 
@@ -58,18 +55,13 @@ export default function FeaturesSection() {
   );
 }
 
-function FeatureCard({ title, subtitle, Icon, blob, iconBg }) {
+function FeatureCard({ title, subtitle, Icon, iconBg }) {
   return (
     <div
       className="group relative h-full overflow-hidden rounded-2xl border border-black/10 bg-white p-8 shadow-lg
              transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
     >
-      {/* мягкое свечение */}
-      <div
-        className={`pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full
-                    bg-gradient-to-br ${blob} blur-3xl opacity-60 transition-opacity duration-500
-                    group-hover:opacity-90`}
-      />
+      <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-blue-100/60 blur-3xl opacity-60 transition-opacity duration-500 group-hover:opacity-90" />
 
       {/* иконка */}
       <div className="relative z-10 flex flex-col items-center text-center">

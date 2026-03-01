@@ -242,7 +242,7 @@ export default function ChatDemo() {
                 </div>
 
                 {isUser && (
-                  <div className="h-9 w-9 rounded-full bg-orange-200 grid place-items-center font-semibold text-black shrink-0">
+                  <div className="h-9 w-9 rounded-full bg-blue-200 grid place-items-center font-semibold text-blue-800 shrink-0">
                     Я
                   </div>
                 )}

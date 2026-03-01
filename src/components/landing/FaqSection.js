@@ -75,17 +75,14 @@ function FaqItem({ f }) {
   return (
     <details
       ref={detailsRef}
-      className="group rounded-xl border border-gray-200 bg-white transition-all duration-300 hover:border-blue-400 hover:shadow-lg open:border-blue-500 open:bg-gradient-to-br open:from-blue-50 open:to-purple-50"
+      className="group rounded-lg bg-white border border-blue-100 transition-all duration-300 hover:shadow-md open:border-2 open:border-blue-300"
     >
-      <summary className="cursor-pointer list-none px-6 py-5 flex items-center justify-between font-medium text-gray-900 hover:text-blue-600 transition-colors">
-        <div className="flex items-center gap-4">
-          <span className="text-2xl">{f.icon}</span>
-          <span className="text-lg">{f.q}</span>
-        </div>
+      <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between font-medium text-black hover:text-[#5479F7] transition-colors">
+        <span className="text-base">{f.q}</span>
 
-        <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-gray-400 transition-all duration-300 group-hover:text-blue-500 group-open:text-blue-600 group-open:rotate-45">
+        <span className="flex-shrink-0 text-blue-400 transition-all duration-300 group-hover:text-[#5479F7] group-open:text-[#5479F7]">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
         </span>
       </summary>
@@ -95,7 +92,7 @@ function FaqItem({ f }) {
         className="overflow-hidden"
         style={{ height: "0px", opacity: 0 }}
       >
-        <p className="px-6 pb-5 text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+        <p className="px-6 pb-4 text-black leading-relaxed border-t border-blue-200 pt-4">
           {f.a}
         </p>
       </div>
@@ -150,19 +147,28 @@ export default function FaqSection() {
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-20">
-      {/* Header */}
-      <div className="mb-16 text-center">
-        <h2 className="text-4xl font-bold text-gray-900 mb-4">
-          Часто задаваемые вопросы
-        </h2>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          Найдите ответы на популярные вопросы о Mindful AI
-        </p>
+      {/* Header with Image */}
+      <div className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div>
+          <h2 className="text-4xl font-bold text-black mb-4">
+            Часто задаваемые вопросы
+          </h2>
+          <p className="text-xl text-black">
+            Найдите ответы на популярные вопросы о Mindful AI
+          </p>
+        </div>
+        <div className="flex justify-center md:justify-end">
+          <img 
+            src="/faq-illustration.png" 
+            alt="FAQ Illustration" 
+            className="w-full max-w-sm h-auto rounded-xl shadow-lg"
+          />
+        </div>
       </div>
 
-      {/* FAQ */}
+      {/* FAQ Grid */}
       <div className="mx-auto max-w-4xl">
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {faqs.map((f, i) => (
             <FaqItem key={i} f={f} />
           ))}
@@ -170,14 +176,14 @@ export default function FaqSection() {
       </div>
 
       {/* CTA */}
-      <div className="mt-16 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-12 text-center text-white">
+      <div className="mt-16 rounded-2xl bg-[#5479F7] p-12 text-center text-white">
         <h3 className="text-2xl font-bold mb-3">Не нашли ответ?</h3>
         <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
           Свяжитесь с нами, если у вас остались вопросы
         </p>
         <a
           href="/contacts"
-          className="inline-block bg-white text-blue-600 font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors duration-200"
+          className="inline-block bg-white text-[#5479F7] font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors duration-200"
         >
           Связаться с нами
         </a>

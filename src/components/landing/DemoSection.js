@@ -8,17 +8,17 @@ const STATS = [
   {
     label: "Люди, сталкивающиеся с признаками депрессивных состояний",
     value: 28,
-    color: "#6366F1",
+    color: "#2563EB",
   },
   {
     label: "Подростки с выраженной тревожностью",
     value: 16,
-    color: "#EC4899",
+    color: "#1D4ED8",
   },
   {
     label: "Школьники, сообщающие о случаях буллинга",
     value: 17,
-    color: "#3B82F6",
+    color: "#60A5FA",
   },
 ];
 
@@ -39,7 +39,7 @@ export default function DemoSection() {
       <motion.div
         ref={bgRef}
         style={{ y: yTransform }}
-        className="absolute top-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-indigo-200/30 blur-3xl -z-10"
+        className="absolute top-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/40 blur-3xl -z-10"
       />
 
       <div className="mx-auto max-w-5xl px-6">
@@ -48,7 +48,7 @@ export default function DemoSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-3xl font-semibold text-gray-900 text-center tracking-tight"
+          className="text-3xl font-semibold text-black text-center tracking-tight"
         >
           Психологическое состояние общества
         </motion.h2>
@@ -58,7 +58,7 @@ export default function DemoSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.15, duration: 0.6 }}
-          className="mt-3 text-gray-600 text-center max-w-2xl mx-auto"
+          className="mt-3 text-black text-center max-w-2xl mx-auto"
         >
           Данные подчёркивают важность своевременной психологической поддержки
         </motion.p>
@@ -82,10 +82,10 @@ export default function DemoSection() {
             whileInView={{ width: "120px" }}
             viewport={{ once: true }}
             transition={{ delay: 0.7, duration: 0.8 }}
-            className="h-px bg-gradient-to-r from-transparent via-indigo-300 to-transparent mx-auto mb-6"
+            className="h-px bg-blue-200 mx-auto mb-6"
           />
 
-          <p className="text-xs text-gray-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs text-black/70 max-w-2xl mx-auto leading-relaxed">
             Источники: обобщённые данные на основе открытых общественных исследований
             психологического благополучия населения и подростков, опубликованных в СМИ
             и аналитических обзорах. Показатели приведены в демонстрационных целях для
@@ -134,25 +134,19 @@ function StatCard({ stat, delay }) {
       transition={{ delay, duration: 0.7, type: "spring" }}
       className="perspective-[1200px]"
     >
-      <Card className="relative p-8 text-center backdrop-blur-xl bg-white/80 border border-gray-100 shadow-xl rounded-3xl overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition"
-          style={{
-            background: `radial-gradient(circle at 50% 40%, ${color}22, transparent 70%)`,
-          }}
-        />
+      <Card className="relative p-8 text-center bg-white border border-blue-100 shadow-xl rounded-3xl overflow-hidden">
 
         <CircleProgress percent={count} color={color} pulse={done} />
 
         <motion.div
           animate={done ? { scale: [1, 1.15, 1] } : {}}
           transition={{ duration: 0.4 }}
-          className="mt-6 text-4xl font-bold text-gray-900"
+          className="mt-6 text-4xl font-bold text-black"
         >
           {count}%
         </motion.div>
 
-        <p className="mt-3 text-sm text-gray-600 leading-relaxed">{label}</p>
+        <p className="mt-3 text-sm text-black/80 leading-relaxed">{label}</p>
       </Card>
     </motion.div>
   );
@@ -171,7 +165,7 @@ function CircleProgress({ percent, color, pulse }) {
           cy="70"
           r={radius}
           fill="none"
-          stroke="#E5E7EB"
+          stroke="#DBEAFE"
           strokeWidth="12"
         />
 

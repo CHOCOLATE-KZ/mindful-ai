@@ -1,0 +1,325 @@
+.thoughtBubble {
+  position: relative;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 200px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  animation: slideDown 0.4s ease-out;
+  padding-right: 20px;
+}
+
+/* Облако с вопросительным знаком при размышлении */
+.thoughtCloud {
+  position: relative;
+  width: 60px;
+  height: 50px;
+  margin-bottom: 20px;
+}
+
+.questionMark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  font-weight: bold;
+  color: #5a4a3a;
+  z-index: 10;
+}
+
+.cloudFloat {
+  position: absolute;
+  width: 70px;
+  height: 50px;
+  background: rgba(245, 220, 190, 0.85);
+  border-radius: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cloudFloat::before {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: rgba(245, 220, 190, 0.85);
+  border-radius: 50%;
+  top: -15px;
+  left: 10px;
+}
+
+.cloudFloat::after {
+  content: '';
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background: rgba(245, 220, 190, 0.85);
+  border-radius: 50%;
+  top: -12px;
+  right: 15px;
+}
+
+/* Реалистичная поза размышления внутри SVG */
+.thinkingBody {
+  animation: thinkingBodyPose 2.8s ease-in-out infinite;
+  transform-origin: center 60%;
+}
+
+.thinkingHead {
+  animation: thinkingHeadPose 2.8s ease-in-out infinite;
+  transform-origin: 97px 70px;
+}
+
+.thinkingLeftArm {
+  animation: thinkingLeftArmPose 2.8s ease-in-out infinite;
+  transform-origin: 48px 160px;
+}
+
+.thinkingRightArm {
+  animation: thinkingRightArmPose 2.8s ease-in-out infinite;
+  transform-origin: 124px 162px;
+}
+
+@keyframes thinkingBodyPose {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes thinkingHeadPose {
+  0%, 100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  50% {
+    transform: rotate(-4deg) translateX(-1px);
+  }
+}
+
+@keyframes thinkingLeftArmPose {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-8deg) translateY(-2px);
+  }
+}
+
+@keyframes thinkingRightArmPose {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(12deg) translateX(2px) translateY(-2px);
+  }
+}
+
+.thoughtBubble::before {
+  content: '';
+  position: absolute;
+  right: -8px;
+  bottom: 12px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid #764ba2;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+}
+
+.thoughtBubbleTail {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #764ba2;
+  border-radius: 50%;
+  bottom: -12px;
+  right: 20px;
+  box-shadow: 
+    -8px -8px 0 -6px #764ba2,
+    -16px -16px 0 -12px #764ba2;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Анимация мигания глаз */
+.eye {
+  animation: normalBlink 0.15s ease-out;
+}
+
+.eyeClosed {
+  animation: blink 0.3s ease-in-out;
+}
+
+@keyframes blink {
+  0% {
+    ry: 16;
+  }
+  50% {
+    ry: 2;
+  }
+  100% {
+    ry: 16;
+  }
+}
+
+/* Движение рук */
+.arm {
+  animation: armWave 3s ease-in-out infinite;
+  transform-origin: 100px 120px;
+}
+
+.arm:nth-child(8) {
+  animation-delay: 0.3s;
+}
+
+@keyframes armWave {
+  0% {
+    transform: translateY(0) rotateZ(0deg);
+  }
+  25% {
+    transform: translateY(-5px) rotateZ(-5deg);
+  }
+  50% {
+    transform: translateY(0) rotateZ(0deg);
+  }
+  75% {
+    transform: translateY(-3px) rotateZ(3deg);
+  }
+  100% {
+    transform: translateY(0) rotateZ(0deg);
+  }
+}
+
+/* Пульсация при активности */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.1;
+    transform: scale(1.1);
+  }
+}
+
+/* Скольжение вход персонажа */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(0);
+  }
+}
+
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Легкое покачивание влево-вправо */
+@keyframes sway {
+  0%, 100% {
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+}
+
+/* Подпрыгивание (для счастья) */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Нервное движение (для беспокойства) */
+@keyframes nervousShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  75% {
+    transform: translateX(2px);
+  }
+}
+
+/* Кивание (для согласия) */
+@keyframes nod {
+  0% {
+    transform: rotateX(0deg);
+  }
+  25% {
+    transform: rotateX(-10deg);
+  }
+  50% {
+    transform: rotateX(0deg);
+  }
+  75% {
+    transform: rotateX(-10deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+/* Фокус/размещение */
+@keyframes focus {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.1);
+  }
+}
+
+/* Светящийся эффект для активности */
+@keyframes glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+  }
+}

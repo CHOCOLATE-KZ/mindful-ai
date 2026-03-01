@@ -7,6 +7,7 @@ import ChatSidebar from "./_components/ChatSidebar";
 import AnchorTooltip from "./_components/AnchorTooltip";
 import ScrollToTopButton from "./_components/ScrollToTopButton";
 import ChatConversation from "./_components/ChatConversation";
+import CharacterController from "@/components/CharacterController";
 import { useChatPageModel } from "./_hooks/useChatPageModel";
 
 export default function ChatPage() {
@@ -73,7 +74,22 @@ export default function ChatPage() {
         />
       </div>
 
-      <ChatComposer input={input} setInput={setInput} onSend={send} loading={loading} voice={voice} />
+      {/* Персонаж фиксирован справа с большим отступом */}
+      <div className="fixed right-32 bottom-48 z-40">
+        <CharacterController
+          chatMessages={messages}
+          isLoading={loading}
+          position="center"
+          size="medium"
+          showCharacter={true}
+        />
+      </div>
+
+      <div className="bg-white border-t border-gray-200 p-4">
+        <div className="flex-1 max-w-5xl mx-auto">
+          <ChatComposer input={input} setInput={setInput} onSend={send} loading={loading} voice={voice} />
+        </div>
+      </div>
 
       <ScrollToTopButton onClick={scrollToTop} />
       <AnchorTooltip show={showAnchorTooltip} position={tooltipPosition} />

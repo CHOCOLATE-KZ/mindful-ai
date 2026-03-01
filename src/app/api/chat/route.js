@@ -35,21 +35,31 @@ async function buildUserContext(supabase, userId) {
 }
 
 async function callLmStudio(messages) {
+  console.log('[LM STUDIO] 📨 Отправляю запрос...');
+  console.log('[LM STUDIO] 📋 Messages count:', messages.length);
+  
+  // Логируем только первый (system) и последний (user) messages для краткости
+  if (messages.length > 0) {
+    console.log('[LM STUDIO] 🤖 System prompt длина:', messages[0]?.content?.length || 0, 'символов');
+    console.log('[LM STUDIO] 👤 User message:', messages[messages.length - 1]?.content?.slice(0, 100) || '');
+  }
+
   const resp = await fetch(`${LMSTUDIO_BASE_URL}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: LMSTUDIO_MODEL,
       messages,
-      temperature: 0.8,
+      temperature: 0.6,
       max_tokens: 512,
-      top_p: 0.95,
-      frequency_penalty: 0.3,
+      top_p: 0.9,
+      frequency_penalty: 0.5,
     }),
   });
 
   const raw = await resp.text();
   if (!resp.ok) {
+    console.error('[LM STUDIO] ❌ Error:', resp.status, raw.slice(0, 200));
     return { error: `LM Studio error (${resp.status}): ${raw}` };
   }
 
@@ -61,6 +71,7 @@ async function callLmStudio(messages) {
   }
 
   const reply = (json?.choices?.[0]?.message?.content || "").trim();
+  console.log('[LM STUDIO] ✅ Reply length:', reply.length, 'символов');
   return { reply };
 }
 
@@ -98,12 +109,17 @@ export async function POST(req) {
 
   const context = await buildUserContext(supabase, user.id);
   
-  // Получаем релевантные психологические знания на основе сообщения пользователя
-  const psychologyContext = await searchPsychologyKnowledge(message);
+  // ⛔ ОТКЛЮЧИЛИ psychological context полностью
+  // Он заставляет модель выводить статистику даже когда её не просят
+  // Модель работает лучше БЕЗ него для casual conversations
+  let psychologyContext = '';
 
   const messages = [
     { role: "system", content: SYSTEM_PROMPT },
   ];
+  
+  console.log('[CHAT API] 🚀 Начинаю конструирование messages...');
+  console.log('[CHAT API] 📝 System prompt первая строка:', SYSTEM_PROMPT.slice(0, 80) + '...');
   
   // Добавляем психологические знания как контекст для AI
   if (psychologyContext) {
@@ -136,6 +152,18 @@ export async function POST(req) {
     }
   }
 
+  // ⚠️ КРИТИЧНОЕ НАПОМИНАНИЕ перед тем как читать пользовательское сообщение
+  messages.push({
+    role: 'system',
+    content: `ПЕРЕД ОТВЕТОМ: Внимательно прочитай что пишет юзер и ответь ТОЧНО на эту тему. НЕ меняй тему внезапно. Если юзер про "диплом" - говори про "диплом", если про "плагиат" - про "плагиат". Юзер просто РАССКАЗЫВАЕТ о проблеме - только СЛУШАЙ И СПРАШИВАЙ. БЕЗ советов, БЕЗ статистики.`
+  });
+
+  // 🚫 ФИНАЛЬНОЕ ПРЕДУПРЕЖДЕНИЕ О ЗАПРЕТЕ НА СТАТИСТИКУ
+  messages.push({
+    role: 'system',
+    content: `СОВЕТ! ЗАПОМНИ: Если юзер НЕ просит статистику - НЕ ВЫВОДИ её. Точка. Не выводи "Дата:", не выводи "Настроение:", не выводи "Сон:". Если выведешь статистику когда её не просили - это ПОЛНОСТЬЮ НЕПРАВИЛЬНО.`
+  });
+
   messages.push({ role: "user", content: message });
 
   const { error: insUserErr } = await supabase.from("ai_messages").insert({
@@ -164,6 +192,98 @@ export async function POST(req) {
   }
 
   reply = reply.trim() || "...";
+
+  // 🔍 DEBUG: логируем ответ от LM Studio ДО очистки
+  if (reply.length < 300) {
+    console.log('[LM STUDIO] 📨 RAW ответ от LM Studio:', reply);
+  } else {
+    console.log('[LM STUDIO] 📨 RAW ответ (первые 300 символов):', reply.slice(0, 300));
+  }
+
+  // СУПЕР-АГРЕССИВНАЯ очистка: удаляем всё что пахнет попыткой вывести статистику
+  const statTriggers = ['статистика', 'на сегодня', 'давай посмотрим на', 'посмотрим на твою'];
+  for (const trigger of statTriggers) {
+    if (reply.toLowerCase().includes(trigger)) {
+      console.log(`[LM STUDIO] ⚠️  НАЙДЕНА ФРАЗА "${trigger}"! Удаляю...`);
+      // Ищем нормальный текст после этой фразы
+      const idx = reply.toLowerCase().indexOf(trigger);
+      if (idx >= 0) {
+        // Берем текст после фразы и двоеточия
+        const afterTrigger = reply.slice(idx + trigger.length).trim();
+        const colonIdx = afterTrigger.indexOf(':');
+        if (colonIdx >= 0) {
+          const afterColon = afterTrigger.slice(colonIdx + 1).trim();
+          if (afterColon.length > 15 && !afterColon.match(/^дата|настроение|сон/i)) {
+            reply = afterColon;
+            console.log(`[LM STUDIO] ✂️  Извлек текст после "${trigger}"`);
+          } else {
+            // Если после нет смысла - берем всё что было ДО фразы
+            const beforeTrigger = reply.slice(0, idx).trim();
+            if (beforeTrigger.length > 15) {
+              reply = beforeTrigger;
+              console.log(`[LM STUDIO] ✂️  Взял текст ДО "${trigger}"`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // КРАЙНЕ АГРЕССИВНАЯ очистка: если видим "статистика" в ответе - это плохой ответ
+  // Удаляем всё до и после статистики
+  if (reply.toLowerCase().includes('статистика')) {
+    console.log('[LM STUDIO] ⚠️  НАЙДЕНА СТАТИСТИКА (вторая проверка)! Удаляю...');
+    // Попытка найти нормальный текст после статистики
+    const parts = reply.split(/статистика[^а-яёa-z]*/i);
+    if (parts.length > 1 && parts[parts.length - 1].trim().length > 10) {
+      reply = parts[parts.length - 1].trim();
+    } else {
+      // Если нет смысла после "статистика" - просто заменяем на generic ответ
+      reply = "Как дела?";
+    }
+  }
+
+  // Удаляем строки со статистикой/мониторингом
+  let lines = reply.split('\n');
+  lines = lines.filter(line => {
+    const lower = line.toLowerCase().trim();
+    
+    if (lower.includes('дата:') || lower.includes('дата :')) return false;
+    if (lower.includes('настроение:') || lower.includes('настроение :')) return false;
+    if (lower.includes('сон:') || lower.includes('сон :')) return false;
+    if (lower.includes('эмоциональная регуляция')) return false;
+    if (lower.includes('физическая активность')) return false;
+    if (lower.includes('на сегодня:')) return false;  // Вот это было проблема!
+    if (lower.includes('давай посмотрим на')) return false;
+    if (lower.includes('посмотрим на твою')) return false;
+    if (lower.match(/\d+\s*минут/) && lower.match(/\/10/)) return false;
+    if (lower.match(/^\d+\/10/)) return false;
+    if (lower.includes('продолжай в том же духе')) return false;
+    
+    return true;
+  });
+
+  reply = lines.join('\n').trim() || "...";
+
+  // 🔍 DEBUG: логируем ответ ПОСЛЕ очистки
+  console.log('[LM STUDIO] ✅ ПОСЛЕ очистки:', reply.slice(0, 200));
+  console.log('[LM STUDIO] 📊 Содержит статистику?', reply.includes('Дата:') || reply.includes('Настроение:') ? 'ДА ❌' : 'НЕТ ✅');
+  
+  // Финальная проверка: если ответ всё ещё странный или минимальной длины - берем последний параграф
+  if (reply.length < 15 || reply.match(/дата|настроение|сон/i)) {
+    const paragraphs = reply.split(/\n\n+/).filter(p => p.trim().length > 0);
+    if (paragraphs.length > 1) {
+      reply = paragraphs[paragraphs.length - 1];
+    } else {
+      reply = "Как дела?";
+    }
+  }
+
+  reply = reply.trim() || "Как дела?";
+
+  // 🔍 DEBUG: логируем финальный ответ который отправляется пользователю
+  console.log('[LM STUDIO] 🎯 ФИНАЛЬНЫЙ ответ:', reply);
+  console.log('[LM STUDIO] ✨ Все проверки пройдены\n');
 
   const { error: insAiErr } = await supabase.from("ai_messages").insert({
     user_id: user.id,

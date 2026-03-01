@@ -69,7 +69,7 @@ export async function searchPsychologyKnowledge(userMessage, limit = 3) {
       'search_psychology_knowledge',
       {
         query_embedding: queryEmbedding,
-        similarity_threshold: 0.2,
+        similarity_threshold: 0.5,  // Повышаем threshold чтобы искать только релевантное
         limit_count: limit,
       }
     );
