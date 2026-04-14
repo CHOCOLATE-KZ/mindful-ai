@@ -97,8 +97,8 @@ src/app/(app)/notes/
 │   └── NotesAIAnalysis.jsx           # Компонент ИИ-анализа
 ├── _hooks/
 │   └── useNotesAnalytics.js          # Хук для аналитики
-└── sql/
-    └── notes_table.sql               # Миграция БД
+
+Supabase: таблица `notes` (схема управляется в Supabase)
 
 src/app/api/notes/
 └── analyze/

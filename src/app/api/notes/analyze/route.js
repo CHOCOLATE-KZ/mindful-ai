@@ -1,14 +1,23 @@
 /**
- * 🤖 API для анализа комментариев заметок с помощью ИИ
+ *  API для анализа комментариев заметок с помощью ИИ
  * POST /api/notes/analyze
  * 
  * Принимает структурированные данные заметок и возвращает анализ
  */
 
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { supabaseServer } from '@/lib/supabase/server';
 
 export async function POST(request) {
   try {
+    // Аутентификация через сессию (не доверяем userId из тела запроса)
+    const supabase = await supabaseServer();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const userId = user.id;
+
     let rawBody = null;
     try {
       rawBody = await request.text();
@@ -22,12 +31,12 @@ export async function POST(request) {
       console.error('analyze: invalid JSON body', e && e.message);
       return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    const { userId, comments, mood, sleep } = body;
+    const { comments, mood, sleep } = body;
 
     // basic validation
-    if (!userId || !comments) {
-      console.error('analyze: missing fields', { userId, comments });
-      return Response.json({ error: 'Missing required fields', details: { userId: !!userId, comments: !!comments } }, { status: 400 });
+    if (!comments) {
+      console.error('analyze: missing fields', { comments });
+      return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     if (!Array.isArray(comments)) {
@@ -35,26 +44,7 @@ export async function POST(request) {
       return Response.json({ error: 'Invalid comments format' }, { status: 400 });
     }
 
-    // 🔹 Валидация пользователя (defensive)
-    let user = null;
-    try {
-      if (!supabaseAdmin) throw new Error('supabaseAdmin client not initialized');
-      const res = await supabaseAdmin.auth.admin.getUserById(userId);
-      // res might be { data: { user }, error }
-      if (res && res.data && res.data.user) user = res.data.user;
-      if (res && res.error) console.warn('supabase getUserById returned error', res.error);
-    } catch (e) {
-      console.error('analyze: error fetching user by id', e && (e.message || e));
-      // don't leak service-role key, just fail auth
-      return Response.json({ error: 'User validation failed', message: e.message || String(e) }, { status: 500 });
-    }
-
-    if (!user) {
-      console.error('analyze: user not found for id', userId);
-      return Response.json({ error: 'User not found' }, { status: 401 });
-    }
-
-    // 🔹 Подготовка данных для анализа
+    //  Подготовка данных для анализа
     const analysisPrompt = `
 Проанализируй следующие заметки пользователя и предоставь инсайты:
 
@@ -74,7 +64,7 @@ ${comments.map((c, i) => `${i + 1}. [${new Date(c.date).toLocaleDateString('ru-R
 Ответь структурированно на русском языке.
     `.trim();
 
-    // 🔹 Сохранение запроса анализа в БД
+    //  Сохранение запроса анализа в БД
     const { data: analysisRecord, error: saveError } = await supabaseAdmin
       .from('notes_analysis')
       .insert({

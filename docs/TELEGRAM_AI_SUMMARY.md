@@ -33,7 +33,7 @@
 
 ### 3. ✅ Database Migration
 
-**Создан `sql/ai_messages_add_source.sql`:**
+**Добавлены SQL-изменения для `ai_messages`:**
 - Добавлена колонка `source` (TEXT) для различения web/telegram
 - Индекс для быстрого поиска по источнику
 - Дефолтное значение 'web' для существующих записей
@@ -187,7 +187,6 @@ Bot: Также помогут:
 
 ### Созданы
 - `src/lib/lmStudioClient.js` - клиент LM Studio
-- `sql/ai_messages_add_source.sql` - миграция БД
 - `docs/assistant/TELEGRAM_AI_GUIDE.md` - полная документация
 - `docs/assistant/TELEGRAM_AI_QUICKSTART.md` - быстрый старт
 - `docs/assistant/TELEGRAM_AI_SUMMARY.md` - этот файл

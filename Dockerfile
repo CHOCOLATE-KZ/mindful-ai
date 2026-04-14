@@ -1,6 +1,6 @@
 # Multi-stage build для MindfulAI
 # Stage 1: Builder
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -13,11 +13,19 @@ RUN npm ci
 # Копируем исходный код
 COPY . .
 
+# Build-time fallback values to avoid failing static analysis when local env is absent.
+ARG NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-anon-key
+ARG SUPABASE_SERVICE_ROLE_KEY=dummy-service-role-key
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+
 # Собираем Next.js приложение
 RUN npm run build
 
 # Stage 2: Runtime
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -29,9 +37,7 @@ COPY --from=builder /app/package*.json ./
 
 # Копируем src и другие нужные директории для runtime
 COPY src ./src
-COPY sql ./sql
 COPY psychology_knowledge ./psychology_knowledge
-COPY scripts ./scripts
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

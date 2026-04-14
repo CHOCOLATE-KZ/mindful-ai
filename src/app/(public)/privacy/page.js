@@ -1,10 +1,11 @@
 import Footer from "../../../components/landing/Footer";
+import { CheckCircle2 } from "lucide-react";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <div className="relative overflow-hidden bg-[#5d9088] text-white">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%22100%22 height=%22100%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M0 0h100v100H0z%22 fill=%22none%22/%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2240%22 fill=%22white%22 opacity=%220.1%22/%3E%3C/svg%3E')] bg-repeat"></div>
         </div>
@@ -50,23 +51,23 @@ export default function PrivacyPage() {
           <h2 className="text-3xl font-bold text-gray-900 mb-4">2. Как мы используем вашу информацию</h2>
           <ul className="space-y-3 text-gray-700">
             <li className="flex gap-3">
-              <span className="text-blue-600 font-bold">✓</span>
+              <CheckCircle2 size={18} className="mt-0.5 text-blue-600" />
               <span>Предоставления доступа к функциям приложения</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-blue-600 font-bold">✓</span>
+              <CheckCircle2 size={18} className="mt-0.5 text-blue-600" />
               <span>Улучшения качества сервиса и пользовательского опыта</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-blue-600 font-bold">✓</span>
+              <CheckCircle2 size={18} className="mt-0.5 text-blue-600" />
               <span>Отправки важных уведомлений и обновлений</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-blue-600 font-bold">✓</span>
+              <CheckCircle2 size={18} className="mt-0.5 text-blue-600" />
               <span>Проведения анализа использования приложения</span>
             </li>
             <li className="flex gap-3">
-              <span className="text-blue-600 font-bold">✓</span>
+              <CheckCircle2 size={18} className="mt-0.5 text-blue-600" />
               <span>Обеспечения безопасности и предотвращения мошенничества</span>
             </li>
           </ul>

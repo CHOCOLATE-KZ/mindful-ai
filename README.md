@@ -114,12 +114,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### Database Setup
 
 ```bash
-# Run migrations in Supabase SQL Editor
-# Execute files from /sql/ folder:
-# - notes_table.sql
-# - telegram_migration.sql
-# - psychology_embeddings.sql
-# - psychology_rag_768.sql
+# Database schema is managed directly in Supabase.
+# Run required SQL statements in Supabase SQL Editor for your environment.
 ```
 
 ### Load Psychology Knowledge Base
@@ -167,7 +163,6 @@ diplomaproject/
 │   └── data/                # Static data & prompts
 ├── psychology_knowledge/    # Knowledge base (MD files)
 ├── scripts/                 # Utility scripts
-├── sql/                     # Database migrations
 └── telegram-bot-polling.js  # Telegram bot entry
 ```
 

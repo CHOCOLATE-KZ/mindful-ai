@@ -77,10 +77,10 @@ function FaqItem({ f }) {
       ref={detailsRef}
       className="group rounded-lg bg-white border border-blue-100 transition-all duration-300 hover:shadow-md open:border-2 open:border-blue-300"
     >
-      <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between font-medium text-black hover:text-[#5479F7] transition-colors">
+      <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between font-medium text-black hover:text-[#74AA9C] transition-colors">
         <span className="text-base">{f.q}</span>
 
-        <span className="flex-shrink-0 text-blue-400 transition-all duration-300 group-hover:text-[#5479F7] group-open:text-[#5479F7]">
+        <span className="flex-shrink-0 text-blue-400 transition-all duration-300 group-hover:text-[#74AA9C] group-open:text-[#74AA9C]">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
@@ -106,42 +106,42 @@ export default function FaqSection() {
     {
       q: "Mindful AI — это настоящий психолог?",
       a: "Нет. Mindful AI — это помощник для поддержки и самопознания, а не лицензированный психолог. Мы можем помочь вам размышлять и развивать здоровые привычки, но не заменяем профессиональную помощь. При серьёзных проблемах обратитесь к специалисту.",
-      icon: "🤖",
+      icon: "",
     },
     {
       q: "Моя информация конфиденциальна?",
       a: "Да. Мы храним только минимально необходимые данные. Все заметки, диалоги и личная информация защищены и не передаются третьим лицам.",
-      icon: "🔒",
+      icon: "",
     },
     {
       q: "Могу ли я удалить свои данные?",
       a: "Полностью. Вы можете удалить заметки, историю чатов и даже весь аккаунт. Также доступен экспорт данных.",
-      icon: "🗑️",
+      icon: "️",
     },
     {
       q: "Как работают дыхательные практики?",
       a: "Практики основаны на научных методах: диафрагмальное дыхание, техника 4-7-8 и другие. Они помогают снизить стресс и стабилизировать нервную систему.",
-      icon: "🌬️",
+      icon: "️",
     },
     {
       q: "Как часто использовать приложение?",
       a: "Даже 5–10 минут в день дают эффект. Лучше коротко, но регулярно, чем редко и долго.",
-      icon: "📅",
+      icon: "",
     },
     {
       q: "Какой язык поддерживается?",
       a: "Сейчас приложение полностью на русском языке. В будущем появится английский и другие языки.",
-      icon: "🌐",
+      icon: "",
     },
     {
       q: "Можно ли использовать без интернета?",
       a: "Некоторые функции доступны офлайн, но для синхронизации и ИИ требуется интернет.",
-      icon: "📡",
+      icon: "",
     },
     {
       q: "Безопасен ли ИИ-ассистент?",
       a: "Да. Ассистент не ставит диагнозы и не назначает лечение. Он работает в рамках этических и безопасных ограничений.",
-      icon: "✅",
+      icon: "",
     },
   ];
 
@@ -176,14 +176,14 @@ export default function FaqSection() {
       </div>
 
       {/* CTA */}
-      <div className="mt-16 rounded-2xl bg-[#5479F7] p-12 text-center text-white">
+      <div className="mt-16 rounded-2xl bg-[#74AA9C] p-12 text-center text-white">
         <h3 className="text-2xl font-bold mb-3">Не нашли ответ?</h3>
         <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
           Свяжитесь с нами, если у вас остались вопросы
         </p>
         <a
           href="/contacts"
-          className="inline-block bg-white text-[#5479F7] font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors duration-200"
+          className="inline-block bg-white text-[#74AA9C] font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors duration-200"
         >
           Связаться с нами
         </a>

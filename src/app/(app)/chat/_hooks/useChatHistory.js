@@ -2,6 +2,18 @@
 
 import { useEffect, useState, useCallback } from "react";
 
+// Приветственное сообщение для новых пользователей (без истории)
+const WELCOME_MESSAGE = {
+  role: "assistant",
+  content:
+    "Привет! Я MindfulAI — твой психологический помощник. Я здесь, чтобы выслушать и поддержать тебя.\n\n" +
+    "Ты можешь рассказать мне о том, что тебя беспокоит, поделиться своими мыслями или просто поговорить. " +
+    "Всё, что ты напишешь, останется приватным.\n\n" +
+    "С чего начнём?",
+  created_at: new Date().toISOString(),
+  isWelcome: true,
+};
+
 export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
   const [messages, setMessages] = useState([]);
 
@@ -23,8 +35,13 @@ export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
 
       if (!active) return;
 
-      if (!error) setMessages(data || []);
-      else console.error("history error:", error);
+      if (!error) {
+        const history = data || [];
+        // Если истории нет — показываем онбординг
+        setMessages(history.length === 0 ? [WELCOME_MESSAGE] : history);
+      } else {
+        console.error("history error:", error);
+      }
     })();
 
     return () => {
@@ -46,7 +63,7 @@ export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
       return;
     }
 
-    setMessages([]);
+    setMessages([WELCOME_MESSAGE]);
     onHistoryCleared?.();
   }, [getUserId, onHistoryCleared, supabase]);
 

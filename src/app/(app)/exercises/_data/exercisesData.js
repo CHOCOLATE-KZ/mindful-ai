@@ -24,7 +24,7 @@ export const TESTS = [
     time: "3–4 мин",
     tags: ["Тревога", "Устойчивость", "Самопознание"],
     Icon: Compass,
-    accent: "from-blue-100 via-white to-purple-100",
+    accent: "from-blue-100 via-white to-blue-100",
   },
   {
     key: "manipulation_test",
@@ -33,7 +33,7 @@ export const TESTS = [
     time: "3–4 мин",
     tags: ["Отношения", "Границы", "Самопознание"],
     Icon: Hand,
-    accent: "from-purple-100 via-white to-blue-100",
+    accent: "from-blue-100 via-white to-blue-100",
   },
   {
     key: "money_attitude",
@@ -69,7 +69,7 @@ export const TESTS = [
     time: "4–5 мин",
     tags: ["Эмоции", "Самопознание", "Отношения"],
     Icon: HeartHandshake,
-    accent: "from-pink-100 via-white to-purple-100",
+    accent: "from-pink-100 via-white to-blue-100",
   },
   {
     key: "burnout_test",
@@ -91,7 +91,7 @@ export const EXERCISES = [
     time: "1–2 минуты",
     tags: ["Дыхание", "Тревога"],
     Icon: Wind,
-    accent: "from-blue-100 via-white to-purple-100",
+    accent: "from-blue-100 via-white to-blue-100",
   },
   {
     key: "5_4_3_2_1",
@@ -101,7 +101,7 @@ export const EXERCISES = [
     time: "2 минуты",
     tags: ["Фокус", "Стресс"],
     Icon: Anchor,
-    accent: "from-purple-100 via-white to-blue-100",
+    accent: "from-blue-100 via-white to-blue-100",
   },
   {
     key: "micro_body_scan",
@@ -111,7 +111,7 @@ export const EXERCISES = [
     time: "2 минуты",
     tags: ["Тело", "Напряжение"],
     Icon: ScanFace,
-    accent: "from-orange-100 via-white to-purple-100",
+    accent: "from-orange-100 via-white to-blue-100",
   },
   {
     key: "4_7_8_breathing",
@@ -121,7 +121,7 @@ export const EXERCISES = [
     time: "2 минуты",
     tags: ["Дыхание", "Тревога", "Сон"],
     Icon: Wind,
-    accent: "from-sky-100 via-white to-blue-100",
+    accent: "from-blue-100 via-white to-blue-100",
   },
   {
     key: "progressive_muscle_relaxation",
@@ -131,7 +131,7 @@ export const EXERCISES = [
     time: "5 минут",
     tags: ["Тело", "Напряжение", "Релаксация"],
     Icon: Dumbbell,
-    accent: "from-violet-100 via-white to-purple-100",
+    accent: "from-blue-100 via-white to-blue-100",
   },
   {
     key: "loving_kindness_meditation",
@@ -171,7 +171,7 @@ export const EXERCISES = [
     time: "5 минут",
     tags: ["Релаксация", "Самовнушение", "Глубокий отдых"],
     Icon: Bed,
-    accent: "from-indigo-100 via-white to-violet-100",
+    accent: "from-blue-100 via-white to-blue-100",
   },
   {
     key: "mindful_walking",

@@ -65,7 +65,7 @@ async function testSearch() {
     if (error) {
       console.error('❌ Ошибка:', error.message);
       console.log('\nВозможно, таблица ещё не создана.');
-      console.log('Запустите SQL миграцию: sql/psychology_embeddings.sql');
+      console.log('Создайте таблицу psychology_knowledge в Supabase SQL Editor.');
     } else {
       console.log(`✅ Таблица создана`);
       console.log(`   Записей в таблице: ${data?.[0]?.count || 0}`);

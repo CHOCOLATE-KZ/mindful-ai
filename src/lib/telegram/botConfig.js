@@ -33,7 +33,7 @@ export function getBot() {
     // Обработка ошибок
     botInstance.catch((err, ctx) => {
       console.error('[Telegram Error]', err);
-      ctx.reply('❌ Произошла ошибка. Попробуйте позже.')
+      ctx.reply(' Произошла ошибка. Попробуйте позже.')
         .catch((e) => console.error('Error sending error message:', e));
     });
   }

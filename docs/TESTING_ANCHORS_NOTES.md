@@ -7,7 +7,7 @@
 ```
 Projects → Your Project → SQL Editor → New Query
 ```
-Вставь содержимое из [sql/chat_notes.sql](../sql/chat_notes.sql) и запусти.
+Вставь SQL для создания `chat_notes` (таблица, индексы, RLS) и запусти.
 
 ### 2. Убедись, что локально всё работает
 ```bash

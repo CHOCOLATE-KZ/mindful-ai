@@ -8,6 +8,9 @@ export const runtime = "nodejs";
  *  ========================= */
 const BASE_BAQ = "https://rus.baq.kz";
 const FEED_BAQ = "https://rus.baq.kz/teg/psikhologiya/";
+const BASE_SEZ = "https://sez.im";
+const FEED_SEZ = "https://sez.im/blog";
+const FEED_SEZ_FALLBACK = "https://r.jina.ai/http://sez.im/blog";
 
 // RSS sources (stable to parse)
 const RSS_SOURCES = [
@@ -92,6 +95,36 @@ function parseDateFromText(text) {
     return new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`).toISOString();
   }
   return null;
+}
+
+function parseRuMonthDate(text) {
+  if (!text) return null;
+
+  const months = {
+    янв: "01",
+    фев: "02",
+    мар: "03",
+    апр: "04",
+    май: "05",
+    июн: "06",
+    июл: "07",
+    авг: "08",
+    сен: "09",
+    окт: "10",
+    ноя: "11",
+    дек: "12",
+  };
+
+  const m = text.match(/(\d{1,2})\s+([А-Яа-яЁё]{3,})\s+(\d{4})/);
+  if (!m) return null;
+
+  const dd = m[1].padStart(2, "0");
+  const monthKey = m[2].toLowerCase().slice(0, 3);
+  const yyyy = m[3];
+  const mm = months[monthKey];
+  if (!mm) return null;
+
+  return new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`).toISOString();
 }
 
 function dateValue(d) {
@@ -231,6 +264,179 @@ async function fetchBAQ() {
 }
 
 /** =========================
+ *  SEZ.IM PARSER (HTML)
+ *  ========================= */
+function isPossibleDateText(text) {
+  return Boolean(text.match(/\d{1,2}\s+[А-Яа-яЁё]{3,}\s+\d{4}/));
+}
+
+function isPossibleViewsText(text) {
+  return Boolean(text.match(/^\d[\d\s]*$/));
+}
+
+function cleanSummaryText(text) {
+  return normalizeSpaces(String(text || "").replace(/<br\s*\/?>/gi, " "));
+}
+
+function extractArticlesFromSEZ(html) {
+  let $;
+  try {
+    $ = cheerioLoad(html);
+  } catch (e) {
+    console.error("SEZ_CHEERIO_ERROR:", e);
+    return [];
+  }
+
+  const found = [];
+  const seen = new Set();
+
+  $("a[href*='/blog_article?art_id=']").each((i, el) => {
+    const $a = $(el);
+    const title = normalizeSpaces($a.text());
+    if (!title) return;
+
+    let href = $a.attr("href") || "";
+    try {
+      href = new URL(href, BASE_SEZ).toString();
+    } catch {
+      return;
+    }
+
+    if (seen.has(href)) return;
+    seen.add(href);
+
+    const $card = $a.closest("div.clickable-element, div.group-item, article, li, .bubble-r-container");
+    if (!$card || !$card.length) return;
+
+    const texts = [];
+    $card.find("div, p, span").each((_, n) => {
+      const t = normalizeSpaces($(n).text());
+      if (t) texts.push(t);
+    });
+
+    const dateText = texts.find((t) => isPossibleDateText(t)) || "";
+    const published_at =
+      parseRuMonthDate(dateText) ||
+      parseDateFromText(dateText) ||
+      toISODateMaybe(dateText);
+
+    const views = texts.find((t) => isPossibleViewsText(t)) || "";
+
+    const category =
+      texts.find(
+        (t) =>
+          t !== title &&
+          !isPossibleDateText(t) &&
+          !isPossibleViewsText(t) &&
+          t.length >= 4 &&
+          t.length <= 50
+      ) || "Психология";
+
+    const summaryCandidate =
+      texts.find(
+        (t) =>
+          t !== title &&
+          t !== category &&
+          !isPossibleDateText(t) &&
+          !isPossibleViewsText(t) &&
+          t.length > 35
+      ) || "";
+
+    const summary = cleanSummaryText(summaryCandidate);
+    const tags = computeTags(`${category} ${title}`, summary);
+
+    found.push({
+      id: href,
+      title,
+      url: href,
+      summary,
+      published_at,
+      tags,
+      source: "SEZ.im",
+      rank: i,
+      views,
+      category,
+    });
+  });
+
+  return found.slice(0, 120);
+}
+
+function extractArticlesFromSEZFallbackMarkdown(mdText) {
+  const text = String(mdText || "");
+  const found = [];
+  const seen = new Set();
+
+  // [Title](https://sez.im/blog_article?art_id=...)
+  const re = /\[([^\]]+)\]\((https?:\/\/sez\.im\/blog_article\?art_id=[^)\s]+)\)/g;
+
+  let match;
+  let rank = 0;
+  while ((match = re.exec(text)) !== null) {
+    const title = normalizeSpaces(match[1]);
+    const url = normalizeSpaces(match[2]);
+    if (!title || !url || seen.has(url)) continue;
+    seen.add(url);
+
+    const idx = match.index;
+    const context = text.slice(Math.max(0, idx - 260), Math.min(text.length, idx + 420));
+
+    const dateText = (context.match(/\d{1,2}\s+[А-Яа-яЁё]{3,}\s+\d{4}/) || [""])[0];
+    const published_at =
+      parseRuMonthDate(dateText) ||
+      parseDateFromText(dateText) ||
+      toISODateMaybe(dateText);
+
+    // Nearest heading-ish line before link as category fallback.
+    const before = text.slice(Math.max(0, idx - 220), idx).split(/\r?\n/).map((s) => normalizeSpaces(s)).filter(Boolean);
+    const category = (before.reverse().find((line) => line.length >= 4 && line.length <= 60 && !line.startsWith("[") && !isPossibleDateText(line)) || "Психология").replace(/^#+\s*/, "");
+
+    const after = text.slice(idx, Math.min(text.length, idx + 420));
+    const summary = normalizeSpaces(after.replace(/\[[^\]]+\]\([^)]+\)/g, "").replace(/\s+/g, " ")).slice(0, 220);
+
+    const tags = computeTags(`${category} ${title}`, summary);
+
+    found.push({
+      id: url,
+      title,
+      url,
+      summary,
+      published_at,
+      tags,
+      source: "SEZ.im",
+      rank: rank++,
+      category,
+    });
+  }
+
+  return found.slice(0, 120);
+}
+
+async function fetchSEZ() {
+  const primary = await fetchWithTimeout(FEED_SEZ, {
+    timeoutMs: 14000,
+    headers: {
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      Referer: BASE_SEZ,
+    },
+  });
+
+  if (!primary.ok) throw new Error(`SEZ fetch failed: ${primary.status}`);
+
+  const html = await primary.text();
+  if (html.includes("blog_article?art_id=")) {
+    const fromHtml = extractArticlesFromSEZ(html);
+    if (fromHtml.length) return fromHtml;
+  }
+
+  // Bubble pages often render list client-side only; fallback to rendered markdown mirror.
+  const fallbackRes = await fetchWithTimeout(FEED_SEZ_FALLBACK, { timeoutMs: 16000 });
+  if (!fallbackRes.ok) return [];
+  const markdown = await fallbackRes.text();
+  return extractArticlesFromSEZFallbackMarkdown(markdown);
+}
+
+/** =========================
  *  RSS PARSER
  *  ========================= */
 function parseRSS(xml, sourceName) {
@@ -293,6 +499,7 @@ async function fetchRSS(source) {
 async function refreshAggregate() {
   const jobs = [
     fetchBAQ().then((x) => ({ ok: true, items: x, name: "BAQ" })).catch((e) => ({ ok: false, items: [], name: "BAQ", error: e })),
+    fetchSEZ().then((x) => ({ ok: true, items: x, name: "SEZ" })).catch((e) => ({ ok: false, items: [], name: "SEZ", error: e })),
     ...RSS_SOURCES.map((s) =>
       fetchRSS(s)
         .then((x) => ({ ok: true, items: x, name: s.id }))

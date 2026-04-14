@@ -399,7 +399,7 @@ export function useProfileData(supabase) {
       if (error) throw error;
 
       setProfile(data?.[0] || null);
-      setMsg("Аватар обновлён ✅");
+      setMsg("Аватар обновлён ");
     } catch (e) {
       console.error(e);
       setMsg(e?.message || "Avatar upload failed");

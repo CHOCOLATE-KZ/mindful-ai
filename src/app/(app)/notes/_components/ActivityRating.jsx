@@ -3,10 +3,10 @@
  */
 export default function ActivityRating({ icon, label, value, onChange }) {
   const options = [
-    { val: "great", label: "Отлично", emoji: "⭐", color: "emerald" },
-    { val: "fine", label: "Хорошо", emoji: "✓", color: "blue" },
+    { val: "great", label: "Отлично", emoji: "●", color: "emerald" },
+    { val: "fine", label: "Хорошо", emoji: "◉", color: "blue" },
     { val: "ok", label: "OK", emoji: "○", color: "yellow" },
-    { val: "poor", label: "Плохо", emoji: "✗", color: "red" },
+    { val: "poor", label: "Плохо", emoji: "◌", color: "red" },
   ];
 
   return (
@@ -32,13 +32,13 @@ export default function ActivityRating({ icon, label, value, onChange }) {
             `}
             style={value === opt.val ? {
               backgroundColor: opt.color === 'emerald' ? '#d1fae5' : 
-                               opt.color === 'blue' ? '#dbeafe' :
+                               opt.color === 'blue' ? '#d9eeea' :
                                opt.color === 'yellow' ? '#fef3c7' : '#fee2e2',
               color: opt.color === 'emerald' ? '#047857' :
-                     opt.color === 'blue' ? '#1d4ed8' :
+                     opt.color === 'blue' ? '#5d9088' :
                      opt.color === 'yellow' ? '#b45309' : '#dc2626',
               borderColor: opt.color === 'emerald' ? '#6ee7b7' :
-                          opt.color === 'blue' ? '#93c5fd' :
+                          opt.color === 'blue' ? '#74AA9C' :
                           opt.color === 'yellow' ? '#fcd34d' : '#fca5a5',
             } : {}}
           >

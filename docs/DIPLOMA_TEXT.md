@@ -194,10 +194,7 @@ diplomaproject/
 │   └── middleware.js           # Next.js middleware
 ├── public/                     # Статические файлы
 │   └── gradient-logo.png       # Логотип приложения
-├── sql/                        # Миграции БД
-│   ├── notes_table.sql         # Таблица заметок
-│   ├── telegram_migration.sql  # Интеграция Telegram
-│   └── telegram_reminders.sql  # Напоминания
+├── (schema в Supabase)         # SQL-структура и миграции ведутся в Supabase
 ├── telegram-bot-polling.js     # Основной бот
 └── package.json                # Зависимости
 
@@ -1047,8 +1044,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_SERVICE_KEY=eyJhbGc...
 LMSTUDIO_BASE_URL=http://127.0.0.1:1234
 
-# 4. Запускаем миграции БД (в Supabase SQL Editor):
-# Копируем и запускаем файлы из sql/
+# 4. Применяем SQL-изменения напрямую в Supabase SQL Editor
 
 # 5. Запускаем приложение
 npm run dev              # Веб на http://localhost:3000

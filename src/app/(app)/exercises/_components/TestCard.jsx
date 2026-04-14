@@ -21,7 +21,7 @@ export default function TestCard({ test }) {
       <div className="relative p-6 flex h-full flex-col">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div className="flex items-start gap-3 flex-1">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 text-blue-700 flex-shrink-0">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-blue-100 text-blue-700 flex-shrink-0">
               <test.Icon className="h-6 w-6" />
             </div>
             <div className="text-lg font-semibold text-slate-900 leading-snug">{test.title}</div>

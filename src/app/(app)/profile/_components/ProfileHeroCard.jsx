@@ -1,64 +1,79 @@
 "use client";
 
-export default function ProfileHeroCard({ user, profile, stats, onEdit, onSecurity }) {
+import { Pencil, ShieldCheck, Flame, CalendarDays, Trophy } from "lucide-react";
+
+export default function ProfileHeroCard({ user, profile, stats, onEdit, onSecurity, t }) {
   const name = profile?.name || "User";
   const email = user?.email || "";
+  const initials = (name || "U").slice(0, 2).toUpperCase();
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-black/10 bg-white shadow-[0_12px_35px_rgba(0,0,0,0.08)]">
-      {/* фирменный акцент сверху */}
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-blue-600" />
+    <div className="relative overflow-hidden rounded-3xl shadow-lg">
+      {/* gradient background */}
+      <div className="absolute inset-0 bg-blue-600" />
+      {/* subtle noise layer */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.18),transparent_60%)]" />
 
-      {/* лёгкий голубой glow (очень мягкий, как на мейне) */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl" />
-
-      <div className="relative p-6 sm:p-8">
-        <div className="flex items-start justify-between gap-4">
+      <div className="relative px-6 pb-6 pt-8 sm:px-8 sm:pb-8">
+        {/* top row */}
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          {/* avatar + name */}
           <div className="flex items-center gap-4">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl border border-black/10 bg-white text-xl font-semibold text-black">
-              {(name?.[0] || "U").toUpperCase()}
-            </div>
-
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Profile avatar"
+                className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-2 ring-white/30"
+              />
+            ) : (
+              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/20 text-xl font-bold text-white backdrop-blur-sm ring-2 ring-white/30">
+                {initials}
+              </div>
+            )}
             <div>
-              <div className="text-xl font-semibold text-black">{name}</div>
-              <div className="text-sm text-black/60">{email}</div>
+              <div className="text-xl font-bold text-white">{name}</div>
+              <div className="mt-0.5 text-sm text-white/70">{email}</div>
             </div>
           </div>
 
+          {/* action buttons */}
           <div className="flex gap-2">
-            {/* primary */}
             <button
               onClick={onEdit}
-              className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
+              className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30 active:scale-95"
             >
-              Edit profile
+              <Pencil className="h-3.5 w-3.5" />
+              {t ? t("editProfile") : "Edit profile"}
             </button>
-
-            {/* secondary */}
             <button
               onClick={onSecurity}
-              className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:bg-black/[0.03]"
+              className="flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-sm transition hover:bg-white/20 active:scale-95"
             >
-              Security
+              <ShieldCheck className="h-3.5 w-3.5" />
+              {t ? t("security") : "Security"}
             </button>
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-3 rounded-2xl border border-black/10 bg-white p-4">
-          <Stat label="Active Days" value={stats?.activeDays ?? 0} />
-          <Stat label="Day Streak" value={stats?.dayStreak ?? 0} />
-          <Stat label="Achievements" value={stats?.achievements ?? 0} />
+        {/* stats row */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <StatPill icon={<CalendarDays className="h-4 w-4" />} label={t ? t("activeDays") : "Active Days"} value={stats?.activeDays ?? 0} />
+          <StatPill icon={<Flame className="h-4 w-4" />} label={t ? t("dayStreak") : "Day Streak"} value={stats?.dayStreak ?? 0} accent />
+          <StatPill icon={<Trophy className="h-4 w-4" />} label={t ? t("achievements") : "Achievements"} value={stats?.achievements ?? 0} />
         </div>
       </div>
     </div>
   );
 }
 
-function Stat({ label, value }) {
+function StatPill({ icon, label, value, accent }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-white px-3 py-3 text-center">
-      <div className="text-2xl font-semibold text-black">{value}</div>
-      <div className="mt-1 text-xs text-black/60">{label}</div>
+    <div className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-3 text-center ${
+      accent ? "bg-white/25" : "bg-white/15"
+    } backdrop-blur-sm`}>
+      <span className="text-white/80">{icon}</span>
+      <span className="text-2xl font-bold text-white">{value}</span>
+      <span className="text-xs text-white/70 leading-tight">{label}</span>
     </div>
   );
 }

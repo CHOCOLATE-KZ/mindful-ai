@@ -3,7 +3,7 @@ export default function TestHistory({ testResults, selectedTest }) {
 
   return (
     <div className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl p-6">
-      <h3 className="text-xl font-semibold mb-6">📝 История попыток</h3>
+      <h3 className="text-xl font-semibold mb-6"> История попыток</h3>
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {filteredResults.map((result, idx) => (
           <div

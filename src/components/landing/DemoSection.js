@@ -1,90 +1,151 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Card from "../ui/Card";
-import { motion, useInView, useMotionValue, useTransform } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { ArrowUpRight, HeartPulse, ShieldAlert, Users, LineChart } from "lucide-react";
 
 const STATS = [
   {
     label: "Люди, сталкивающиеся с признаками депрессивных состояний",
     value: 28,
-    color: "#2563EB",
+    color: "#74AA9C",
   },
   {
     label: "Подростки с выраженной тревожностью",
     value: 16,
-    color: "#1D4ED8",
+    color: "#5d9088",
   },
   {
     label: "Школьники, сообщающие о случаях буллинга",
     value: 17,
-    color: "#60A5FA",
+    color: "#8fc2b9",
   },
 ];
 
 export default function DemoSection() {
-  const bgRef = useRef(null);
-  const scrollY = useMotionValue(0);
-  const yTransform = useTransform(scrollY, [0, 500], [0, 80]); // параллакс движение
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-120px" });
+  const [heroValue, setHeroValue] = useState(0);
 
   useEffect(() => {
-    const handleScroll = () => scrollY.set(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [scrollY]);
+    if (!isInView) return;
+
+    const target = STATS[0].value;
+    let start = 0;
+    const timer = setInterval(() => {
+      start += 1;
+      setHeroValue(start);
+      if (start >= target) clearInterval(timer);
+    }, 35);
+
+    return () => clearInterval(timer);
+  }, [isInView]);
 
   return (
-    <section className="relative py-24 overflow-hidden">
-      {/* Параллакс фон */}
+    <section ref={sectionRef} className="relative py-20 overflow-hidden bg-white">
       <motion.div
-        ref={bgRef}
-        style={{ y: yTransform }}
-        className="absolute top-0 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-blue-200/40 blur-3xl -z-10"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="absolute -top-16 right-20 h-72 w-72 rounded-full bg-blue-100/60 blur-3xl -z-10"
       />
+      <div className="absolute -bottom-20 left-10 h-80 w-80 rounded-full bg-slate-100 blur-3xl -z-10" />
 
-      <div className="mx-auto max-w-5xl px-6">
-        <motion.h2
-          initial={{ opacity: 0, y: 15 }}
+      <div className="mx-auto max-w-7xl px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-3xl font-semibold text-black text-center tracking-tight"
+          className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700"
         >
-          Психологическое состояние общества
-        </motion.h2>
+          <HeartPulse size={16} />
+          Why Mental Health Matters
+        </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.15, duration: 0.6 }}
-          className="mt-3 text-black text-center max-w-2xl mx-auto"
-        >
-          Данные подчёркивают важность своевременной психологической поддержки
-        </motion.p>
+        <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
+          <motion.div
+            initial={{ opacity: 0, x: -24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="rounded-3xl border border-black/10 bg-white p-7 shadow-lg"
+          >
+            <h2 className="text-4xl font-bold leading-tight text-black md:text-5xl">
+              Психологическое состояние общества
+            </h2>
+            <p className="mt-4 max-w-xl text-black/65 text-base">
+              Сводные индикаторы показывают, насколько важна ранняя эмоциональная поддержка
+              для подростков и взрослых. Эти значения используются в приложении как опорный
+              контекст для профилактики тревожности, стресса и выгорания.
+            </p>
 
-        <div className="mt-14 grid gap-8 md:grid-cols-3">
-          {STATS.map((stat, i) => (
-            <StatCard key={i} stat={stat} delay={i * 0.2} />
-          ))}
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <InfoTile
+                title={STATS[1].label}
+                value={STATS[1].value}
+                icon={<Users size={16} className="text-blue-700" />}
+              />
+              <InfoTile
+                title={STATS[2].label}
+                value={STATS[2].value}
+                icon={<ShieldAlert size={16} className="text-blue-700" />}
+              />
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-black/10 bg-slate-50 p-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-semibold text-black/70">Тренд индикаторов</div>
+                <LineChart size={16} className="text-blue-600" />
+              </div>
+              <div className="mt-3 h-16 rounded-xl bg-white border border-black/10 px-3 py-2 flex items-end gap-2">
+                <div className="h-6 w-2 rounded bg-blue-200" />
+                <div className="h-10 w-2 rounded bg-blue-400" />
+                <div className="h-8 w-2 rounded bg-blue-300" />
+                <div className="h-12 w-2 rounded bg-blue-500" />
+                <div className="h-11 w-2 rounded bg-blue-600" />
+                <div className="h-14 w-2 rounded bg-blue-700" />
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 24 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.65 }}
+            className="rounded-3xl border border-blue-700 bg-blue-600 p-7 shadow-lg"
+          >
+            <div className="text-sm font-semibold text-white/80">Ключевой показатель</div>
+            <div className="mt-2 text-6xl font-extrabold tracking-tight text-white">
+              {heroValue}%
+            </div>
+            <div className="mt-1 text-sm text-white/80">Группа повышенного риска</div>
+
+            <div className="mt-6 space-y-3">
+              {STATS.map((item, idx) => (
+                <div key={item.label} className="rounded-2xl border border-black/10 bg-white p-4">
+                  <div className="flex items-center justify-between gap-2 text-xs text-black/55">
+                    <span>{idx + 1}. Индикатор</span>
+                    <span className="inline-flex items-center gap-1 text-blue-600 font-semibold">
+                      {item.value}% <ArrowUpRight size={13} />
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm font-medium text-black/80 leading-snug">{item.label}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
 
-        {/* Источники */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-          className="mt-16 text-center"
+          transition={{ delay: 0.35, duration: 0.7 }}
+          className="mt-8 text-center"
         >
-          <motion.div
-            initial={{ width: 0 }}
-            whileInView={{ width: "120px" }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-            className="h-px bg-blue-200 mx-auto mb-6"
-          />
-
           <p className="text-xs text-black/70 max-w-2xl mx-auto leading-relaxed">
             Источники: обобщённые данные на основе открытых общественных исследований
             психологического благополучия населения и подростков, опубликованных в СМИ
@@ -97,109 +158,15 @@ export default function DemoSection() {
   );
 }
 
-function StatCard({ stat, delay }) {
-  const { label, value, color } = stat;
-  const [count, setCount] = useState(0);
-  const [done, setDone] = useState(false);
-
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-80px" });
-
-  useEffect(() => {
-    if (!isInView) return;
-
-    let start = 0;
-    const duration = 1400;
-    const step = Math.max(10, Math.floor(duration / value));
-
-    const timer = setInterval(() => {
-      start += 1;
-      setCount(start);
-      if (start >= value) {
-        clearInterval(timer);
-        setDone(true);
-      }
-    }, step);
-
-    return () => clearInterval(timer);
-  }, [isInView, value]);
-
+function InfoTile({ title, value, icon }) {
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      whileHover={{ rotateX: 6, rotateY: -6 }}
-      viewport={{ once: true }}
-      transition={{ delay, duration: 0.7, type: "spring" }}
-      className="perspective-[1200px]"
-    >
-      <Card className="relative p-8 text-center bg-white border border-blue-100 shadow-xl rounded-3xl overflow-hidden">
-
-        <CircleProgress percent={count} color={color} pulse={done} />
-
-        <motion.div
-          animate={done ? { scale: [1, 1.15, 1] } : {}}
-          transition={{ duration: 0.4 }}
-          className="mt-6 text-4xl font-bold text-black"
-        >
-          {count}%
-        </motion.div>
-
-        <p className="mt-3 text-sm text-black/80 leading-relaxed">{label}</p>
-      </Card>
-    </motion.div>
-  );
-}
-
-function CircleProgress({ percent, color, pulse }) {
-  const radius = 54;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percent / 100) * circumference;
-
-  return (
-    <div className="flex justify-center">
-      <svg width="140" height="140">
-        <circle
-          cx="70"
-          cy="70"
-          r={radius}
-          fill="none"
-          stroke="#DBEAFE"
-          strokeWidth="12"
-        />
-
-        <motion.circle
-          cx="70"
-          cy="70"
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.4, ease: "easeOut" }}
-        />
-
-        {pulse && (
-          <motion.circle
-            cx="70"
-            cy="70"
-            r={radius}
-            fill="none"
-            stroke={color}
-            strokeWidth="12"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            initial={{ opacity: 0.6, scale: 1 }}
-            animate={{ opacity: 0, scale: 1.08 }}
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-        )}
-      </svg>
+    <div className="rounded-2xl border border-black/10 bg-white p-4">
+      <div className="flex items-center justify-between text-xs text-black/55">
+        <span>Индикатор</span>
+        {icon}
+      </div>
+      <div className="mt-2 text-3xl font-bold text-blue-600">{value}%</div>
+      <p className="mt-1.5 text-sm leading-snug text-black/75">{title}</p>
     </div>
   );
 }

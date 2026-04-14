@@ -37,7 +37,7 @@ function safeGetAllCookies(cookieStore) {
 }
 
 export async function supabaseServer() {
-  // ✅ ВАЖНО: Next 16 требует await
+  //  ВАЖНО: Next 16 требует await
   const cookieStore = await cookies();
 
   return createServerClient(

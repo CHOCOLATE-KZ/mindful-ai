@@ -5,6 +5,7 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useProfileData } from "@/features/profile/useProfileData";
 import { useAppSettings } from "@/components/AppShell";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { LogOut, Sparkles, Bell, Shield, MessageCircle, Sliders } from "lucide-react";
 
 import ProfileHeroCard from "./_components/ProfileHeroCard";
 import SummaryCard from "./_components/SummaryCard";
@@ -95,54 +96,72 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-black dark:text-white">
-            {t("title")} <span className="align-middle">⚙️</span>
-          </h1>
-          <p className="mt-2 text-black/60 dark:text-white/60">{t("subtitle")}</p>
-          {!!msg && <p className="mt-3 text-sm text-rose-600">{msg}</p>}
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto max-w-5xl px-4 py-10">
+
+        {/* ── PAGE HEADER ── */}
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              {t("title")} <span className="align-middle text-2xl">️</span>
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">{t("subtitle")}</p>
+            {!!msg && <p className="mt-2 text-sm text-rose-600">{msg}</p>}
+          </div>
+
+          <button
+            onClick={safeActions.signOut}
+            className="flex items-center gap-2 cursor-pointer rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition"
+          >
+            <LogOut className="h-4 w-4" />
+            {t("signout")}
+          </button>
         </div>
 
-        <button
-          onClick={safeActions.signOut}
-          className="cursor-pointer rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium hover:bg-black/[0.03] dark:bg-white/10 dark:border-white/10 dark:text-white dark:hover:bg-white/15"
-        >
-          {t("signout")}
-        </button>
-      </div>
-
-      <div className="mt-8">
+        {/* ── HERO ── */}
         <ProfileHeroCard
           user={user}
           profile={safeProfile}
           stats={safeStats}
           onEdit={() => safeUi.setEditOpen(true)}
           onSecurity={() => safeUi.setSecurityOpen(true)}
-        />
-      </div>
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <SummaryCard stats={safeStats} t={t} />
-        <AppearanceCard
-          theme={mergedSettings.theme}
-          language={mergedSettings.language}
-          onChange={updateAllSettings}
           t={t}
         />
-      </div>
 
-      <div className="mt-8 space-y-6">
-        <ProfileAIReportCard settings={mergedSettings} t={t} />
-        <NotificationsCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
-        <AiPersonalizationCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
-        <TelegramLinkCard />
+        {/* ── OVERVIEW ROW ── */}
+        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          <SummaryCard stats={safeStats} t={t} />
+          <AppearanceCard
+            theme={mergedSettings.theme}
+            language={mergedSettings.language}
+            onChange={updateAllSettings}
+            t={t}
+          />
+        </div>
+
+        {/* ── AI SECTION ── */}
+        <SectionHeader icon={<Sparkles className="h-4 w-4" />} label="AI" />
+        <div className="space-y-5">
+          <ProfileAIReportCard settings={mergedSettings} t={t} />
+          <AiPersonalizationCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
+        </div>
+
+        {/* ── NOTIFICATIONS & INTEGRATIONS ── */}
+        <SectionHeader icon={<Bell className="h-4 w-4" />} label={t("notifications")} />
+        <div className="space-y-5">
+          <NotificationsCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
+          <SectionHeader icon={<MessageCircle className="h-4 w-4" />} label="Telegram" inner />
+          <TelegramLinkCard />
+        </div>
+
+        {/* ── PRIVACY ── */}
+        <SectionHeader icon={<Shield className="h-4 w-4" />} label={t("privacy")} />
         <PrivacyDataCard
           onOpenPrivacy={() => safeUi.setPrivacyOpen(true)}
           onExport={() => safeActions.exportMyData()}
           t={t}
         />
+
       </div>
 
       <EditProfileModal
@@ -173,6 +192,22 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
         onChangePassword={safeActions.changePassword}
         t={t}
       />
+    </div>
+  );
+}
+
+function SectionHeader({ icon, label, inner = false }) {
+  return (
+    <div className={`flex items-center gap-2 ${inner ? "mt-5 mb-3" : "mt-10 mb-4"}`}>
+      <span className={`flex items-center justify-center rounded-lg p-1.5 ${
+        inner ? "bg-slate-100 text-slate-500" : "bg-blue-50 text-blue-600"
+      }`}>
+        {icon}
+      </span>
+      <span className={`font-semibold ${
+        inner ? "text-sm text-slate-500" : "text-base text-slate-800"
+      }`}>{label}</span>
+      <div className="flex-1 h-px bg-slate-200/80" />
     </div>
   );
 }

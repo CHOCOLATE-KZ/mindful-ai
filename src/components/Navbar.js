@@ -7,10 +7,15 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAppSettings } from "@/components/AppShell";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { ChevronDown, User } from "lucide-react";
+import { ChevronDown, User, Sun, Moon } from "lucide-react";
 
 export default function Navbar() {
-  const { user, settings } = useAppSettings();
+  const { user, settings, updateSettings } = useAppSettings();
+  const isDark = settings?.theme === "dark";
+
+  function toggleTheme() {
+    updateSettings?.({ theme: isDark ? "light" : "dark" });
+  }
   const lang = settings?.language || "ru";
   const t = useTranslation("nav", lang);
 
@@ -109,14 +114,14 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-[100] border-b border-gray-200 bg-white shadow-sm">
+    <header className="sticky top-0 z-[100] border-b border-gray-200 dark:border-white/[0.08] bg-white dark:bg-[rgb(33_33_46)] shadow-sm dark:shadow-[0_1px_0_rgb(255_255_255_/_0.06)] backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-xl tracking-tight text-gray-800 hover:text-blue-600 transition-colors duration-300"
+          className="flex items-center gap-2 font-bold text-xl tracking-tight text-gray-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-300"
         >
           <Image
-            src="/gradient-logo.png"
+            src="/mindfullailogo.svg"
             alt="MindfulAI logo"
             width={28}
             height={28}
@@ -134,13 +139,13 @@ export default function Navbar() {
                   href={l.href}
                   className={`px-3 py-2 rounded-md transition-all duration-300 ${
                     active
-                      ? "text-blue-600 font-semibold"
-                      : "text-gray-700 hover:text-gray-900"
+                      ? "text-blue-600 dark:text-blue-400 font-semibold"
+                      : "text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100"
                   }`}
                 >
                   {l.label}
                   <span
-                    className={`absolute left-0 -bottom-1 h-[2px] w-0 bg-blue-600 transition-all duration-300 group-hover:w-full ${
+                    className={`absolute left-0 -bottom-1 h-[2px] w-0 bg-blue-600 dark:bg-blue-400 transition-all duration-300 group-hover:w-full ${
                       active ? "w-full" : ""
                     }`}
                   ></span>
@@ -156,8 +161,8 @@ export default function Navbar() {
                 onClick={() => setToolsOpen(!toolsOpen)}
                 className={`flex items-center gap-1 px-3 py-2 rounded-md transition-all duration-300 ${
                   toolsLinks.some(l => pathname === l.href)
-                    ? "text-blue-600 font-semibold"
-                    : "text-gray-700 hover:text-gray-900"
+                    ? "text-blue-600 dark:text-blue-400 font-semibold"
+                    : "text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100"
                 }`}
               >
                 {t("tools")}
@@ -165,7 +170,7 @@ export default function Navbar() {
               </button>
               
               {toolsOpen && (
-                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2">
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white dark:bg-[rgb(42_42_58)] rounded-xl shadow-xl dark:shadow-[0_20px_60px_rgb(0_0_0_/_0.6)] border border-gray-200 dark:border-white/[0.08] py-2">
                   {toolsLinks.map((link) => (
                     <Link
                       key={link.href}
@@ -173,8 +178,8 @@ export default function Navbar() {
                       onClick={() => setToolsOpen(false)}
                       className={`block px-4 py-2 text-sm transition-colors ${
                         pathname === link.href
-                          ? "bg-blue-50 text-blue-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
+                          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-medium"
+                          : "text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/[0.05]"
                       }`}
                     >
                       {link.label}
@@ -187,11 +192,19 @@ export default function Navbar() {
         </ul>
 
         <div className="flex items-center gap-3">
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="flex items-center justify-center w-9 h-9 rounded-full border border-gray-300 dark:border-white/[0.12] text-gray-600 dark:text-slate-300 hover:border-[#74AA9C] hover:text-[#74AA9C] dark:hover:border-[#74AA9C] dark:hover:text-[#74AA9C] transition-all duration-200"
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
           {!user ? (
             <>
               <Link
                 href="/auth/sign-in?next=/chat"
-                className="px-4 py-2 rounded-full border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white transition-transform duration-200 transform hover:scale-105"
+                className="px-4 py-2 rounded-full border border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white transition-transform duration-200 transform hover:scale-105"
               >
                 {t("signin")}
               </Link>
@@ -207,11 +220,11 @@ export default function Navbar() {
             <div ref={profileRef} className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 hover:border-blue-600 transition-all duration-200"
+                className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 dark:border-white/[0.12] text-gray-700 dark:text-slate-300 hover:border-blue-600 dark:hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
               >
                 <User className="w-4 h-4" />
                 {userName && (
-                  <span className="text-sm font-medium text-gray-700 max-w-[120px] truncate">
+                  <span className="text-sm font-medium max-w-[120px] truncate">
                     {userName}
                   </span>
                 )}
@@ -219,9 +232,9 @@ export default function Navbar() {
               </button>
               
               {profileOpen && (
-                <div className="absolute top-full right-0 mt-2 w-52 bg-white rounded-lg shadow-xl border border-gray-200 py-2">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-800 truncate">
+                <div className="absolute top-full right-0 mt-2 w-52 bg-white dark:bg-[rgb(42_42_58)] rounded-xl shadow-xl dark:shadow-[0_20px_60px_rgb(0_0_0_/_0.6)] border border-gray-200 dark:border-white/[0.08] py-2">
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-white/[0.06]">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-slate-200 truncate">
                       {userName || t("user")}
                     </p>
                   </div>
@@ -230,14 +243,14 @@ export default function Navbar() {
                       setProfileOpen(false);
                       router.push("/profile");
                     }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors flex items-center gap-2"
                   >
                     <User className="w-4 h-4" />
                     {t("profile")}
                   </button>
                   <button
                     onClick={requestSignOut}
-                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100 mt-1"
+                    className="w-full text-left px-4 py-2.5 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-gray-100 dark:border-white/[0.06] mt-1"
                   >
                     {t("signout")}
                   </button>
@@ -250,23 +263,23 @@ export default function Navbar() {
 
       {confirmOpen && (
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 dark:bg-black/60 backdrop-blur-sm"
           onClick={() => setConfirmOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white shadow-2xl border border-gray-200 p-6"
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-[rgb(42_42_58)] shadow-2xl dark:shadow-[0_24px_64px_rgb(0_0_5_/_0.70)] border border-gray-200 dark:border-white/[0.08] p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
               {t("confirmLogout")}
             </h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
               {t("confirmLogoutText")}
             </p>
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 onClick={() => setConfirmOpen(false)}
-                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 rounded-xl border border-gray-300 dark:border-white/[0.12] text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors"
               >
                 {t("stay")}
               </button>
@@ -275,7 +288,7 @@ export default function Navbar() {
                   setConfirmOpen(false);
                   signOut();
                 }}
-                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors"
               >
                 {t("logout")}
               </button>

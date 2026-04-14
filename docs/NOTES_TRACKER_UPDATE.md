@@ -28,7 +28,7 @@
 ### Шаг 1: Обновить БД
 Запустите миграцию в Supabase SQL Editor:
 ```bash
-sql/notes_add_activities.sql
+# Выполните SQL для добавления полей activities в таблицу notes
 ```
 
 ### Шаг 2: Проверить RLS политики

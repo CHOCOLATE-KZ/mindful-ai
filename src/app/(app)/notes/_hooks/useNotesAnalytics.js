@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 
 /**
- * 🎯 Хук для аналитики заметок с поддержкой ИИ-анализа
+ *  Хук для аналитики заметок с поддержкой ИИ-анализа
  * Обеспечивает все необходимые вычисления и данные для анализа
  */
 export function useNotesAnalytics(notes) {
-  // 🔹 Разделение на типы заметок
+  //  Разделение на типы заметок
   const fullNotes = useMemo(() => 
     notes.filter(n => n.mood != null || n.sleep != null), 
     [notes]
@@ -16,21 +16,21 @@ export function useNotesAnalytics(notes) {
     [notes]
   );
 
-  // 🔹 Среднее настроение
+  //  Среднее настроение
   const avgMood = useMemo(() => {
     const moodNotes = fullNotes.filter(n => n.mood != null);
     if (!moodNotes.length) return 0;
     return (moodNotes.reduce((sum, n) => sum + n.mood, 0) / moodNotes.length).toFixed(1);
   }, [fullNotes]);
 
-  // 🔹 Средний сон (в минутах)
+  //  Средний сон (в минутах)
   const avgSleep = useMemo(() => {
     const sleepNotes = fullNotes.filter(n => n.sleep != null);
     if (!sleepNotes.length) return 0;
     return Math.round(sleepNotes.reduce((sum, n) => sum + n.sleep, 0) / sleepNotes.length);
   }, [fullNotes]);
 
-  // 🔹 Тренд настроения (последних 7 дней)
+  //  Тренд настроения (последних 7 дней)
   const moodTrend = useMemo(() => {
     return fullNotes
       .filter(n => n.mood != null)
@@ -42,7 +42,7 @@ export function useNotesAnalytics(notes) {
       }));
   }, [fullNotes]);
 
-  // 🔹 Выявление эмоциональных паттернов
+  //  Выявление эмоциональных паттернов
   const emotionalInsights = useMemo(() => {
     if (fullNotes.length === 0) return null;
 
@@ -62,7 +62,7 @@ export function useNotesAnalytics(notes) {
     };
   }, [fullNotes, avgMood]);
 
-  // 🔹 Связь настроения и сна
+  //  Связь настроения и сна
   const moodSleepCorrelation = useMemo(() => {
     const correlatedNotes = fullNotes.filter(n => n.mood != null && n.sleep != null);
     if (correlatedNotes.length < 2) return null;
@@ -92,7 +92,7 @@ export function useNotesAnalytics(notes) {
     };
   }, [fullNotes]);
 
-  // 🔹 Подготовка данных для ИИ-анализа
+  //  Подготовка данных для ИИ-анализа
   const aiAnalysisPayload = useMemo(() => ({
     metadata: {
       totalNotes,

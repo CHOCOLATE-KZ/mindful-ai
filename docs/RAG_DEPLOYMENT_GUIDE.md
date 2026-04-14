@@ -45,8 +45,7 @@ Supabase уже поддерживает `pgvector` расширение (обы
 ### Step 1: Run Database Migration / Запустить миграцию БД
 
 1. Откройте Supabase SQL Editor
-2. Скопируйте содержимое файла: `sql/psychology_embeddings.sql`
-3. Выполните SQL скрипт
+2. Выполните SQL для создания таблицы `psychology_knowledge`, индексов и функции `search_psychology_knowledge`
 
 **Что создаст:**
 - Таблица `psychology_knowledge` с полями: id, title, section, content_chunk, embedding (vector), category, keywords
@@ -151,8 +150,7 @@ getTextEmbedding() → попытка Ollama → фалбэк на random vector
 ```
 Решение: Запустите SQL миграцию в Supabase
 - Откройте Supabase SQL Editor
-- Скопируйте sql/psychology_embeddings.sql
-- Выполните скрипт
+- Выполните SQL для `psychology_knowledge` и `search_psychology_knowledge`
 ```
 
 ### ❌ "Embedding service недоступен"
@@ -267,8 +265,7 @@ SELECT
 │   ├── load-psychology-embeddings.js  ← Загрузка в БД
 │   └── test-knowledge-search.js       ← Тестирование
 │
-├── 📂 sql/
-│   └── psychology_embeddings.sql      ← БД миграция
+├── 🗄️ Supabase SQL Editor             ← БД миграция
 │
 ├── 📂 src/
 │   ├── lib/

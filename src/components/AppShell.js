@@ -48,6 +48,16 @@ export default function AppShell({ children }) {
     return () => sub?.subscription?.unsubscribe?.();
   }, [supabase, load]);
 
+  // Sync theme class on <html> so Tailwind dark: variants and CSS vars stay in sync
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [settings.theme]);
+
 
   const updateSettings = useCallback(
     async (patch) => {

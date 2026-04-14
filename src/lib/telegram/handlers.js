@@ -12,16 +12,16 @@ import { getBot } from './botConfig.js';
 export async function showMainMenu(ctx) {
   const keyboard = {
     keyboard: [
-      [{ text: '📝 Записать заметку' }, { text: '📋 Мои заметки' }],
-      [{ text: '📊 Анализ' }, { text: '📈 Статистика' }],
-      [{ text: '⏰ Напоминание' }, { text: '🤖 Помощь' }]
+      [{ text: ' Записать заметку' }, { text: ' Мои заметки' }],
+      [{ text: ' Анализ' }, { text: ' Статистика' }],
+      [{ text: '⏰ Напоминание' }, { text: ' Помощь' }]
     ],
     resize_keyboard: true,
     one_time_keyboard: false
   };
   
   return ctx.reply(
-    '👋 Добро пожаловать в MindfulAI!\n\n' +
+    ' Добро пожаловать в MindfulAI!\n\n' +
     'Выберите действие:',
     { reply_markup: keyboard }
   );
@@ -33,7 +33,7 @@ export async function showMainMenu(ctx) {
 export async function handleCallbackQuery(ctx) {
   try {
     await ctx.answerCbQuery();
-    return ctx.reply('❌ Используйте меню кнопок ниже');
+    return ctx.reply(' Используйте меню кнопок ниже');
   } catch (error) {
     console.error('Ошибка в handleCallbackQuery:', error);
   }
@@ -62,7 +62,7 @@ export async function handleStart(ctx) {
           });
 
           return ctx.reply(
-            '🔐 Код для входа: `' + code + '`\n\n' +
+            ' Код для входа: `' + code + '`\n\n' +
             '1️⃣ Откройте сайт в браузере:\n' +
             `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/sign-in\n\n` +
             '2️⃣ Нажмите "Log in with Telegram"\n' +
@@ -72,18 +72,18 @@ export async function handleStart(ctx) {
           );
         } catch (dbError) {
           console.error('Error saving login token:', dbError);
-          return ctx.reply('❌ Ошибка при генерации кода.\n\nПопробуйте еще раз.');
+          return ctx.reply(' Ошибка при генерации кода.\n\nПопробуйте еще раз.');
         }
       }
 
       if (!isValidUser(args)) {
-        return ctx.reply('❌ Ошибка: неверный идентификатор пользователя.');
+        return ctx.reply(' Ошибка: неверный идентификатор пользователя.');
       }
 
       await linkTelegramAccount(args, telegramId, telegramUsername);
 
       return ctx.reply(
-        '✅ Аккаунт успешно связан!\n\n' +
+        ' Аккаунт успешно связан!\n\n' +
         'Теперь все ваши данные синхронизированы между сайтом и ботом.',
         { reply_markup: { remove_keyboard: true } }
       );
@@ -92,7 +92,7 @@ export async function handleStart(ctx) {
     }
   } catch (error) {
     console.error('Ошибка в handleStart:', error);
-    ctx.reply('❌ Произошла ошибка. Попробуйте позже.');
+    ctx.reply(' Произошла ошибка. Попробуйте позже.');
   }
 }
 
@@ -101,21 +101,21 @@ export async function handleStart(ctx) {
  */
 export async function handleHelp(ctx) {
   return ctx.reply(
-    '📖 *Справка по командам*\n\n' +
-    '🎯 *Основно*\n' +
+    ' *Справка по командам*\n\n' +
+    ' *Основно*\n' +
     '/start - главное меню\n' +
     '/help - эта справка\n' +
     '/link - связать аккаунт\n\n' +
-    '📝 *Дневник*\n' +
+    ' *Дневник*\n' +
     '/today - добавить заметку за сегодня\n' +
     '/notes - ваши последние заметки\n\n' +
-    '📊 *Анализ*\n' +
+    ' *Анализ*\n' +
     '/analyze - анализ ваших данных\n' +
     '/stats - статистика\n\n' +
     '⏰ *Напоминания*\n' +
     '/remind - установить напоминание\n\n' +
-    '💬 *AI-ассистент*\n' +
-    'Просто напишите сообщение - я помогу! 🤖',
+    ' *AI-ассистент*\n' +
+    'Просто напишите сообщение - я помогу! ',
     { parse_mode: 'Markdown' }
   );
 }
@@ -125,12 +125,12 @@ export async function handleHelp(ctx) {
  */
 export async function handleLink(ctx) {
   return ctx.reply(
-    '🔗 *Для связи аккаунта*\n\n' +
+    ' *Для связи аккаунта*\n\n' +
     '1. Откройте сайт\n' +
     '2. Перейдите в профиль → Telegram\n' +
     '3. Нажмите "Связать с ботом"\n' +
     '4. Перейдите по ссылке мессенджера\n\n' +
-    'Если уже прошли по ссылке с сайта, то аккаунт уже связан! ✅',
+    'Если уже прошли по ссылке с сайта, то аккаунт уже связан! ',
     { parse_mode: 'Markdown' }
   );
 }
@@ -143,7 +143,7 @@ export async function handleNotes(ctx) {
     const userId = await getUserIdByTelegramId(ctx.from.id);
 
     if (!userId) {
-      return ctx.reply('⚠️ Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
+      return ctx.reply(' Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
     }
 
     const { data: notes } = await supabaseAdmin
@@ -154,14 +154,14 @@ export async function handleNotes(ctx) {
       .limit(5);
 
     if (!notes || notes.length === 0) {
-      return ctx.reply('📝 У вас еще нет заметок.\n\nДобавьте первую заметку через /today!');
+      return ctx.reply(' У вас еще нет заметок.\n\nДобавьте первую заметку через /today!');
     }
 
-    let text = '📝 *Ваши последние заметки*:\n\n';
+    let text = ' *Ваши последние заметки*:\n\n';
     notes.forEach((note, i) => {
       const date = new Date(note.date).toLocaleDateString('ru-RU');
       text += `${i + 1}. ${date}\n`;
-      if (note.mood) text += `   Настроение: ${'😊'.repeat(Math.min(note.mood, 10))}\n`;
+      if (note.mood) text += `   Настроение: ${''.repeat(Math.min(note.mood, 10))}\n`;
       if (note.sleep) text += `   Сон: ${Math.round(note.sleep / 60)}ч\n`;
       if (note.comment) text += `   "${note.comment}"\n\n`;
     });
@@ -169,7 +169,7 @@ export async function handleNotes(ctx) {
     return ctx.reply(text, { parse_mode: 'Markdown' });
   } catch (error) {
     console.error('Ошибка в handleNotes:', error);
-    ctx.reply('❌ Ошибка при получении заметок.');
+    ctx.reply(' Ошибка при получении заметок.');
   }
 }
 
@@ -181,7 +181,7 @@ export async function handleToday(ctx) {
     const userId = await getUserIdByTelegramId(ctx.from.id);
 
     if (!userId) {
-      return ctx.reply('⚠️ Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
+      return ctx.reply(' Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
     }
 
     const today = new Date();
@@ -195,7 +195,7 @@ export async function handleToday(ctx) {
       .single();
 
     if (existing) {
-      return ctx.reply('✅ Вы уже добавили заметку за сегодня!\n\nОткройте сайт для редактирования.');
+      return ctx.reply(' Вы уже добавили заметку за сегодня!\n\nОткройте сайт для редактирования.');
     }
 
     ctx.session = ctx.session || {};
@@ -211,22 +211,22 @@ export async function handleToday(ctx) {
 
     const keyboard = {
       keyboard: [
-        [{ text: '1 😢' }, { text: '2' }, { text: '3' }, { text: '4' }, { text: '5' }],
-        [{ text: '6' }, { text: '7' }, { text: '8' }, { text: '9' }, { text: '10 😊' }]
+        [{ text: '1 ' }, { text: '2' }, { text: '3' }, { text: '4' }, { text: '5' }],
+        [{ text: '6' }, { text: '7' }, { text: '8' }, { text: '9' }, { text: '10 ' }]
       ],
       resize_keyboard: true,
       one_time_keyboard: false
     };
 
     return ctx.reply(
-      '📝 *Добавление заметки за сегодня*\n\n' +
+      ' *Добавление заметки за сегодня*\n\n' +
       '1️⃣ Как ваше настроение? (от 1 до 10)\n' +
-      '  1-3: плохо 😞 | 4-6: нейтрально 😐 | 7-10: хорошо 😊',
+      '  1-3: плохо  | 4-6: нейтрально  | 7-10: хорошо ',
       { parse_mode: 'Markdown', reply_markup: keyboard }
     );
   } catch (error) {
     console.error('Ошибка в handleToday:', error);
-    ctx.reply('❌ Ошибка при добавлении заметки.');
+    ctx.reply(' Ошибка при добавлении заметки.');
   }
 }
 
@@ -246,12 +246,12 @@ export async function handleNoteInput(ctx) {
 
     // Поддержка текстового ввода настроения (если пользователь не нажал кнопку)
     if (note.step === 'mood') {
-      // Парсим из кнопки ("1 😢" -> 1) или прямой ввод (8 -> 8)
+      // Парсим из кнопки ("1 " -> 1) или прямой ввод (8 -> 8)
       const moodMatch = input.match(/^(\d+)/);
       const mood = moodMatch ? parseInt(moodMatch[1], 10) : NaN;
       
       if (isNaN(mood) || mood < 1 || mood > 10) {
-        return ctx.reply('❌ Пожалуйста, выберите кнопку или введите число от 1 до 10');
+        return ctx.reply(' Пожалуйста, выберите кнопку или введите число от 1 до 10');
       }
 
       note.mood = mood;
@@ -276,7 +276,7 @@ export async function handleNoteInput(ctx) {
       const sleep = sleepMatch ? parseFloat(sleepMatch[1]) : NaN;
       
       if (isNaN(sleep) || sleep < 0 || sleep > 24) {
-        return ctx.reply('❌ Пожалуйста, выберите кнопку или введите число часов (0-24)');
+        return ctx.reply(' Пожалуйста, выберите кнопку или введите число часов (0-24)');
       }
 
       note.sleep = Math.round(sleep * 60);
@@ -314,10 +314,10 @@ export async function handleNoteInput(ctx) {
       delete ctx.session.addingNote;
 
       await ctx.reply(
-        `✅ *Заметка сохранена!*\n\n` +
-        `😊 Настроение: ${note.mood}/10\n` +
-        `😴 Сон: ${(note.sleep / 60).toFixed(1)}ч\n` +
-        `${note.comment ? `📝 "${note.comment}"` : ''}\n\n` +
+        ` *Заметка сохранена!*\n\n` +
+        ` Настроение: ${note.mood}/10\n` +
+        ` Сон: ${(note.sleep / 60).toFixed(1)}ч\n` +
+        `${note.comment ? ` "${note.comment}"` : ''}\n\n` +
         'Данные синхронизированы с вашим профилем!',
         { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
       );
@@ -326,7 +326,7 @@ export async function handleNoteInput(ctx) {
     }
   } catch (error) {
     console.error('Ошибка в handleNoteInput:', error);
-    ctx.reply('❌ Ошибка при сохранении заметки.');
+    ctx.reply(' Ошибка при сохранении заметки.');
     delete ctx.session?.addingNote;
   }
 }
@@ -339,7 +339,7 @@ export async function handleAnalyze(ctx) {
     const userId = await getUserIdByTelegramId(ctx.from.id);
 
     if (!userId) {
-      return ctx.reply('⚠️ Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
+      return ctx.reply(' Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
     }
 
     await ctx.sendChatAction('typing');
@@ -352,13 +352,13 @@ export async function handleAnalyze(ctx) {
       .limit(10);
 
     if (!notes || notes.length === 0) {
-      return ctx.reply('📊 Нет заметок для анализа.\n\nСначала добавьте заметки через /today!');
+      return ctx.reply(' Нет заметок для анализа.\n\nСначала добавьте заметки через /today!');
     }
 
     const summaryText = notes
       .map((n) => {
         const date = new Date(n.date).toLocaleDateString('ru-RU');
-        let line = `📅 ${date}`;
+        let line = ` ${date}`;
         if (n.mood) line += ` • Настроение: ${n.mood}/10`;
         if (n.sleep) line += ` • Сон: ${Math.round(n.sleep / 60)}ч`;
         if (n.comment) line += ` • "${n.comment}"`;
@@ -393,13 +393,13 @@ export async function handleAnalyze(ctx) {
     }
 
     return ctx.reply(
-      `📊 *AI Анализ ваших данных*\n\n${aiResponse}\n\n` +
+      ` *AI Анализ ваших данных*\n\n${aiResponse}\n\n` +
       '_Подробный анализ доступен на сайте в разделе Аналитика_',
       { parse_mode: 'Markdown' }
     );
   } catch (error) {
     console.error('Ошибка в handleAnalyze:', error);
-    ctx.reply('❌ Ошибка при анализе данных.');
+    ctx.reply(' Ошибка при анализе данных.');
   }
 }
 
@@ -411,7 +411,7 @@ export async function handleStats(ctx) {
     const userId = await getUserIdByTelegramId(ctx.from.id);
 
     if (!userId) {
-      return ctx.reply('⚠️ Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
+      return ctx.reply(' Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
     }
 
     const { data: stats } = await supabaseAdmin
@@ -421,22 +421,22 @@ export async function handleStats(ctx) {
       .limit(30);
 
     if (!stats || stats.length === 0) {
-      return ctx.reply('📊 Нет данных для статистики.\n\nДобавьте несколько заметок!');
+      return ctx.reply(' Нет данных для статистики.\n\nДобавьте несколько заметок!');
     }
 
     const avgMood = Math.round(stats.reduce((a, n) => a + (n.mood || 0), 0) / stats.length);
     const avgSleep = Math.round(stats.reduce((a, n) => a + (n.sleep || 0), 0) / stats.length / 60);
 
-    let text = `📊 *Ваша статистика (последние 30 заметок)*:\n\n`;
-    text += `📈 Всего заметок: ${stats.length}\n`;
-    text += `😊 Среднее настроение: ${avgMood}/10\n`;
-    text += `😴 Средний сон: ${avgSleep}ч\n\n`;
+    let text = ` *Ваша статистика (последние 30 заметок)*:\n\n`;
+    text += ` Всего заметок: ${stats.length}\n`;
+    text += ` Среднее настроение: ${avgMood}/10\n`;
+    text += ` Средний сон: ${avgSleep}ч\n\n`;
     text += 'Подробней смотрите на сайте!';
 
     return ctx.reply(text, { parse_mode: 'Markdown' });
   } catch (error) {
     console.error('Ошибка в handleStats:', error);
-    ctx.reply('❌ Ошибка при получении статистики.');
+    ctx.reply(' Ошибка при получении статистики.');
   }
 }
 
@@ -448,7 +448,7 @@ export async function handleRemind(ctx) {
     const userId = await getUserIdByTelegramId(ctx.from.id);
 
     if (!userId) {
-      return ctx.reply('⚠️ Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
+      return ctx.reply(' Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
     }
 
     ctx.session = ctx.session || {};
@@ -475,7 +475,7 @@ export async function handleRemind(ctx) {
     );
   } catch (error) {
     console.error('Ошибка в handleRemind:', error);
-    ctx.reply('❌ Ошибка при установке напоминания.');
+    ctx.reply(' Ошибка при установке напоминания.');
   }
 }
 
@@ -493,7 +493,7 @@ export async function handleReminderInput(ctx) {
     if (reminder.step === 'time') {
       const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
       if (!timeRegex.test(input)) {
-        return ctx.reply('❌ Неверный формат. Используйте HH:MM (например 09:00)');
+        return ctx.reply(' Неверный формат. Используйте HH:MM (например 09:00)');
       }
 
       reminder.time = input;
@@ -501,15 +501,15 @@ export async function handleReminderInput(ctx) {
 
       const keyboard = {
         keyboard: [
-          [{ text: '📅 Каждый день' }],
-          [{ text: '💼 Будни (Пн-Пт)' }, { text: '🏝️ Выходные (Сб-Вс)' }]
+          [{ text: ' Каждый день' }],
+          [{ text: ' Будни (Пн-Пт)' }, { text: '️ Выходные (Сб-Вс)' }]
         ],
         resize_keyboard: true,
         one_time_keyboard: false
       };
 
       return ctx.reply(
-        '📅 В какие дни получать напоминание?',
+        ' В какие дни получать напоминание?',
         { reply_markup: keyboard }
       );
     }
@@ -540,9 +540,9 @@ export async function handleReminderInput(ctx) {
       delete ctx.session.settingReminder;
 
       await ctx.reply(
-        `✅ *Напоминание установлено!*\n\n` +
+        ` *Напоминание установлено!*\n\n` +
         `⏰ Время: ${reminder.time}\n` +
-        `📅 Дни: ${reminder.days}\n\n` +
+        ` Дни: ${reminder.days}\n\n` +
         `Вы будете получать напоминание добавлять заметку в эти дни.`,
         { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
       );
@@ -551,7 +551,7 @@ export async function handleReminderInput(ctx) {
     }
   } catch (error) {
     console.error('Ошибка в handleReminderInput:', error);
-    ctx.reply('❌ Ошибка при установке напоминания.');
+    ctx.reply(' Ошибка при установке напоминания.');
     delete ctx.session?.settingReminder;
   }
 }
@@ -565,18 +565,18 @@ export async function handleMessage(ctx) {
 
   try {
     // Проверяем если это нажатие на кнопку главного меню
-    if (message === '📝 Записать заметку') return handleToday(ctx);
-    if (message === '📋 Мои заметки') return handleNotes(ctx);
-    if (message === '📊 Анализ') return handleAnalyze(ctx);
-    if (message === '📈 Статистика') return handleStats(ctx);
+    if (message === ' Записать заметку') return handleToday(ctx);
+    if (message === ' Мои заметки') return handleNotes(ctx);
+    if (message === ' Анализ') return handleAnalyze(ctx);
+    if (message === ' Статистика') return handleStats(ctx);
     if (message === '⏰ Напоминание') return handleRemind(ctx);
-    if (message === '🤖 Помощь') return handleHelp(ctx);
+    if (message === ' Помощь') return handleHelp(ctx);
 
     const userId = await getUserIdByTelegramId(telegramId);
 
     if (!userId) {
       return ctx.reply(
-        '⚠️ Ваш аккаунт не связан с сайтом.\n\nДля использования AI-ассистента свяжите аккаунт через /link'
+        ' Ваш аккаунт не связан с сайтом.\n\nДля использования AI-ассистента свяжите аккаунт через /link'
       );
     }
 
@@ -615,7 +615,7 @@ export async function handleMessage(ctx) {
     console.error('Ошибка в handleMessage:', error);
     
     if (error.message && error.message.includes('LM Studio')) {
-      return ctx.reply('⚠️ AI-ассистент временно недоступен.\n\nПопробуйте позже или используйте команды: /help');
+      return ctx.reply(' AI-ассистент временно недоступен.\n\nПопробуйте позже или используйте команды: /help');
     }
 
     return ctx.reply('Извините, произошла ошибка. Попробуйте позже.\n\nИли используйте команды: /help');
@@ -643,7 +643,7 @@ export async function sendTelegramNotification(telegramId, message) {
 
     const bot = getBot();
     await bot.telegram.sendMessage(telegramId, message, { parse_mode: 'Markdown' });
-    console.log(`📤 Notification sent to ${telegramId}`);
+    console.log(` Notification sent to ${telegramId}`);
   } catch (error) {
     console.error('Failed to send telegram notification:', error);
   }

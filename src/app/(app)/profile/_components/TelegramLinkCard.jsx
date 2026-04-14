@@ -6,15 +6,18 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { supabaseBrowser } from '@/lib/supabase/browser';
+import { useLanguage } from '@/lib/i18n/useLanguage';
 
 export default function TelegramLinkCard() {
   const supabase = supabaseBrowser();
+  const { t } = useLanguage('profile');
   const [user, setUser] = useState(null);
   const [isTelegramLinked, setIsTelegramLinked] = useState(false);
   const [telegramUsername, setTelegramUsername] = useState(null);
   const [deepLink, setDeepLink] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('info');
 
   useEffect(() => {
     (async () => {
@@ -43,6 +46,7 @@ export default function TelegramLinkCard() {
 
     setLoading(true);
     setMessage('');
+    setMessageType('info');
 
     try {
       const response = await fetch('/api/telegram/deep-link', {
@@ -58,10 +62,12 @@ export default function TelegramLinkCard() {
       }
 
       setDeepLink(data.deepLink);
-      setMessage('✅ Ссылка сгенерирована! Нажмите кнопку ниже или скопируйте ссылку.');
+      setMessage('Ссылка сгенерирована! Нажмите кнопку ниже или скопируйте ссылку.');
+      setMessageType('success');
     } catch (error) {
       console.error('Ошибка:', error);
-      setMessage(`❌ ${error.message}`);
+      setMessage(`${error.message}`);
+      setMessageType('error');
     } finally {
       setLoading(false);
     }
@@ -72,10 +78,12 @@ export default function TelegramLinkCard() {
 
     try {
       await navigator.clipboard.writeText(deepLink);
-      setMessage('✅ Ссылка скопирована в буфер обмена!');
+      setMessage('Ссылка скопирована в буфер обмена!');
+      setMessageType('success');
       setTimeout(() => setMessage(''), 3000);
     } catch {
-      setMessage('❌ Ошибка при копировании');
+      setMessage('Ошибка при копировании');
+      setMessageType('error');
     }
   };
 
@@ -100,8 +108,8 @@ export default function TelegramLinkCard() {
           </h3>
           <p className="text-sm text-black/60">
             {isTelegramLinked
-              ? '✅ Аккаунт связан'
-              : 'Свяжите Telegram для синхронизации данных'}
+              ? t('tgLinked')
+              : t('tgNotLinked')}
           </p>
         </div>
       </div>
@@ -110,7 +118,7 @@ export default function TelegramLinkCard() {
         <div className="space-y-3">
           <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
             <p className="text-sm text-green-700">
-              ✅ Ваш Telegram аккаунт связан с профилем
+              {t('tgLinkedDesc')}
               {telegramUsername && (
                 <>
                   :{' '}
@@ -118,7 +126,7 @@ export default function TelegramLinkCard() {
                 </>
               )}
               <br />
-              Все данные синхронизируются автоматически между сайтом и ботом.
+              {t('tgSyncDesc')}
             </p>
           </div>
 
@@ -128,7 +136,7 @@ export default function TelegramLinkCard() {
             rel="noopener noreferrer"
             className="block rounded-xl bg-blue-600 px-4 py-2.5 text-center text-white font-medium hover:bg-blue-700 transition"
           >
-            💬 Открыть бота
+            {t('tgOpenBot')}
           </a>
         </div>
       )}
@@ -137,19 +145,19 @@ export default function TelegramLinkCard() {
         <>
           <div className="mb-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm font-medium text-blue-700">
-              💡 Свяжите Telegram аккаунт, чтобы:
+              {t('tgBenefitsTitle')}
             </p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-blue-600">
-              <li>Управлять заметками через бота</li>
-              <li>Получать уведомления в Telegram</li>
-              <li>Синхронизировать все данные</li>
+              <li>{t('tgBenefit1')}</li>
+              <li>{t('tgBenefit2')}</li>
+              <li>{t('tgBenefit3')}</li>
             </ul>
           </div>
 
           {deepLink ? (
             <div className="space-y-3">
               <p className="text-xs font-medium text-black/70">
-                Ваша ссылка для связи:
+                {t('tgYourLink')}
               </p>
               <div className="flex gap-2">
                 <input
@@ -162,7 +170,7 @@ export default function TelegramLinkCard() {
                   onClick={copyToClipboard}
                   className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-medium text-black hover:bg-black/5"
                 >
-                  📋 Копировать
+                  {t('tgCopy')}
                 </button>
               </div>
 
@@ -172,7 +180,7 @@ export default function TelegramLinkCard() {
                 rel="noopener noreferrer"
                 className="block rounded-xl bg-blue-600 px-4 py-2.5 text-center text-white font-medium hover:bg-blue-700 transition"
               >
-                🤖 Перейти к боту
+                {t('tgGoBot')}
               </a>
             </div>
           ) : (
@@ -181,7 +189,7 @@ export default function TelegramLinkCard() {
               disabled={loading}
               className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-white font-medium hover:bg-blue-700 disabled:opacity-50 transition"
             >
-              {loading ? '⏳ Генерируется...' : '🔗 Сгенерировать ссылку'}
+              {loading ? t('tgGenerating') : t('tgGenerate')}
             </button>
           )}
         </>
@@ -190,7 +198,7 @@ export default function TelegramLinkCard() {
       {message && (
         <p
           className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
-            message.startsWith('✅')
+            messageType === 'success'
               ? 'border-green-200 bg-green-50 text-green-700'
               : 'border-red-200 bg-red-50 text-red-700'
           }`}

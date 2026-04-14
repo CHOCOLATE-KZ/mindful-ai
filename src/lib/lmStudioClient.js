@@ -5,6 +5,7 @@ import { SYSTEM_PROMPT } from "../data/systemPrompt.js";
 
 const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
 const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
+const LMSTUDIO_TIMEOUT_MS = Number(process.env.LMSTUDIO_TIMEOUT_MS || 15000);
 
 /**
  * Вызов LM Studio API для генерации ответа
@@ -13,10 +14,14 @@ const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
  * @returns {Promise<Object>} { reply, error }
  */
 export async function callLmStudio(messages, options = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), LMSTUDIO_TIMEOUT_MS);
+
   try {
     const resp = await fetch(`${LMSTUDIO_BASE_URL}/v1/chat/completions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         model: options.model || LMSTUDIO_MODEL,
         messages,
@@ -42,7 +47,13 @@ export async function callLmStudio(messages, options = {}) {
     const reply = (json?.choices?.[0]?.message?.content || "").trim();
     return { reply };
   } catch (error) {
+    if (error?.name === 'AbortError') {
+      return { error: `LM Studio request timeout after ${LMSTUDIO_TIMEOUT_MS}ms` };
+    }
+
     return { error: error.message };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

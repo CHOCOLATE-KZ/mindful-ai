@@ -25,8 +25,8 @@ bot.command('today', handleToday);
 bot.command('stats', handleStats);
 bot.on('message', handleMessage);
 
-console.log('🤖 Telegram бот запущен в режиме polling...');
-console.log('📱 Откройте Telegram и отправьте /start в бота: @' + (process.env.TELEGRAM_BOT_USERNAME || 'IITUpsychologyAIbot'));
+console.log(' Telegram бот запущен в режиме polling...');
+console.log(' Откройте Telegram и отправьте /start в бота: @' + (process.env.TELEGRAM_BOT_USERNAME || 'IITUpsychologyAIbot'));
 console.log('⏹️  Нажмите Ctrl+C для остановки');
 
 // Запускаем в режиме polling

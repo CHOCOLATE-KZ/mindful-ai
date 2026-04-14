@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import Card from "@/components/ui/Card";
+import { Lightbulb, HeartPulse, Moon, Battery, CalendarDays, Users, Flame } from "lucide-react";
 
 /**
  * Компонент для показа insights и корреляций
@@ -21,7 +22,6 @@ export default function NotesInsights({ notes, fullNotes }) {
         
         if (Math.abs(diff) > 0.5) {
           result.push({
-            icon: "😴",
             type: diff > 0 ? "positive" : "neutral",
             title: "Сон и настроение",
             text: diff > 0 
@@ -45,7 +45,6 @@ export default function NotesInsights({ notes, fullNotes }) {
         
         if (diff > 0.5) {
           result.push({
-            icon: "🏃",
             type: "positive",
             title: "Физическая активность",
             text: `Спорт улучшает ваше настроение в среднем на ${diff.toFixed(1)} балла`,
@@ -64,7 +63,6 @@ export default function NotesInsights({ notes, fullNotes }) {
       
       if (correlation < -0.3) {
         result.push({
-          icon: "⚡",
           type: "insight",
           title: "Энергия и стресс",
           text: `Чем выше стресс, тем ниже энергия (корреляция ${(correlation * 100).toFixed(0)}%)`,
@@ -91,7 +89,6 @@ export default function NotesInsights({ notes, fullNotes }) {
       const bestDay = dayAverages.reduce((best, curr) => curr.avg > best.avg ? curr : best);
       if (bestDay.count >= 2) {
         result.push({
-          icon: "📅",
           type: "positive",
           title: "Лучший день недели",
           text: `Ваше настроение лучше всего по ${dayNames[bestDay.day].toLowerCase()}ам (${bestDay.avg.toFixed(1)}/10)`,
@@ -114,7 +111,6 @@ export default function NotesInsights({ notes, fullNotes }) {
           
           if (diff > 0.5) {
             result.push({
-              icon: "👥",
               type: "positive",
               title: "Общение важно",
               text: `Активное общение повышает настроение на ${diff.toFixed(1)} балла`,
@@ -145,7 +141,6 @@ export default function NotesInsights({ notes, fullNotes }) {
         
         if (diff > 1) {
           result.push({
-            icon: "🎨",
             type: "warning",
             title: "Активности снижают стресс",
             text: `В дни без спорта/хобби стресс выше на ${diff.toFixed(1)} балла`,
@@ -176,11 +171,21 @@ export default function NotesInsights({ notes, fullNotes }) {
 
   const getInsightColor = (type) => {
     switch (type) {
-      case "positive": return "from-emerald-50 to-green-50 border-emerald-200/60";
-      case "warning": return "from-orange-50 to-yellow-50 border-orange-200/60";
-      case "insight": return "from-blue-50 to-violet-50 border-blue-200/60";
-      default: return "from-gray-50 to-white border-gray-200/60";
+      case "positive": return "bg-emerald-50 border-emerald-200/60";
+      case "warning": return "bg-orange-50 border-orange-200/60";
+      case "insight": return "bg-blue-50 border-blue-200/60";
+      default: return "bg-gray-50 border-gray-200/60";
     }
+  };
+
+  const getInsightIcon = (insight) => {
+    if (insight.title.includes("Сон")) return <Moon size={24} className="text-blue-600" />;
+    if (insight.title.includes("Физическая активность")) return <HeartPulse size={24} className="text-emerald-600" />;
+    if (insight.title.includes("Энергия")) return <Battery size={24} className="text-blue-600" />;
+    if (insight.title.includes("день недели")) return <CalendarDays size={24} className="text-blue-600" />;
+    if (insight.title.includes("Общение")) return <Users size={24} className="text-blue-600" />;
+    if (insight.title.includes("стресс")) return <Flame size={24} className="text-orange-600" />;
+    return <Lightbulb size={24} className="text-amber-600" />;
   };
 
   if (insights.length === 0) return null;
@@ -191,14 +196,14 @@ export default function NotesInsights({ notes, fullNotes }) {
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-2xl">💡</span>
+              <Lightbulb size={22} className="text-blue-600" />
               <h2 className="text-2xl font-semibold text-black">Инсайты и паттерны</h2>
             </div>
             <p className="mt-2 text-sm text-black/65 leading-relaxed">
               Автоматический анализ ваших данных для выявления закономерностей
             </p>
           </div>
-          <span className="rounded-full border border-violet-200/60 bg-violet-100/60 px-3.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm">
+          <span className="rounded-full border border-blue-200/60 bg-blue-100/60 px-3.5 py-1.5 text-xs font-semibold text-blue-700 shadow-sm">
             {insights.length} найдено
           </span>
         </div>
@@ -207,10 +212,10 @@ export default function NotesInsights({ notes, fullNotes }) {
           {insights.map((insight, idx) => (
             <div
               key={idx}
-              className={`rounded-2xl border bg-gradient-to-br p-5 shadow-sm hover:shadow-md transition-all ${getInsightColor(insight.type)}`}
+              className={`rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all ${getInsightColor(insight.type)}`}
             >
               <div className="flex items-start gap-3">
-                <span className="text-3xl flex-shrink-0">{insight.icon}</span>
+                <span className="flex-shrink-0">{getInsightIcon(insight)}</span>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-black/80 mb-1">
                     {insight.title}
@@ -226,7 +231,7 @@ export default function NotesInsights({ notes, fullNotes }) {
 
         <div className="mt-5 rounded-xl bg-blue-50/50 border border-blue-200/40 p-4">
           <p className="text-xs text-black/65 leading-relaxed">
-            💡 <b>Совет:</b> Чем больше записей вы ведете, тем точнее инсайты. Заполняйте дополнительные параметры для более глубокого анализа!
+            <span className="inline-flex items-center gap-1.5"><Lightbulb size={14} className="text-blue-600" /> <b>Совет:</b> Чем больше записей вы ведете, тем точнее инсайты. Заполняйте дополнительные параметры для более глубокого анализа!</span>
           </p>
         </div>
       </div>

@@ -1,13 +1,14 @@
+import { CheckCircle2 } from "lucide-react";
+
 export default function LoadMoreButton({ hasMore, loadingMore, onLoadMore }) {
   if (hasMore) {
     return (
       <button
         onClick={onLoadMore}
         disabled={loadingMore}
-        className="group relative rounded-2xl px-8 py-3.5 font-semibold border border-violet-500 bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
+        className="group relative rounded-2xl px-8 py-3.5 font-semibold border border-blue-600 bg-blue-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 overflow-hidden"
       >
         {/* Shine effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
         
         <span className="relative flex items-center gap-2">
           {loadingMore ? (
@@ -32,9 +33,9 @@ export default function LoadMoreButton({ hasMore, loadingMore, onLoadMore }) {
   }
 
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 px-6 py-3">
-      <p className="text-sm font-medium text-emerald-700 flex items-center gap-2">
-        <span className="text-lg">✅</span>
+    <div className="rounded-2xl border border-blue-200 bg-blue-50 px-6 py-3">
+      <p className="text-sm font-medium text-blue-700 flex items-center gap-2">
+        <CheckCircle2 size={18} />
         Это все материалы
       </p>
     </div>

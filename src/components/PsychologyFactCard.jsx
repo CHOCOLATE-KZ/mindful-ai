@@ -25,10 +25,10 @@ export default function PsychologyFactCard() {
   if (!fact) return null;
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-gray-50 p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
-      {/* Gradient Background */}
+    <div className="group relative overflow-hidden rounded-2xl bg-white p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
+      {/* Color accent */}
       <div
-        className={`absolute inset-0 bg-gradient-to-br ${fact.color} opacity-5 group-hover:opacity-10 transition-opacity`}
+        className="absolute inset-0 bg-[#74AA9C]/5 group-hover:bg-[#74AA9C]/10 transition-all"
       />
 
       {/* Category Badge */}

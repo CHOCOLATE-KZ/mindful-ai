@@ -90,7 +90,7 @@ export default function AnalyticsAIReport() {
           </div>
           {/* Анимированная полоса */}
           <div className="mt-3 h-1.5 bg-blue-100 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full animate-pulse" style={{width: "70%"}}></div>
+            <div className="h-full bg-blue-500 rounded-full animate-pulse" style={{width: "70%"}}></div>
           </div>
         </div>
       )}

@@ -69,8 +69,8 @@ export const EmotionKeywords = {
     'стало лучше',
     'помог',
     'работает',
-    '👍',
-    '😊',
+    '',
+    '',
     'отлич',
     'замечател',
   ],
@@ -161,7 +161,7 @@ export function CharacterShowcase() {
         ))}
       </div>
 
-      <div className="relative min-h-[400px] bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-lg p-8 flex items-center justify-center">
+      <div className="relative min-h-[400px] bg-gray-50 dark:from-gray-900 dark:to-gray-800 rounded-lg p-8 flex items-center justify-center">
         <PsychologistCharacter
           emotion={selected}
           isActive={selected === 'thinking'}

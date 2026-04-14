@@ -9,7 +9,7 @@
 - ✅ Установлен webhook endpoint: `POST /api/telegram/webhook`
 - ✅ Создан API для глубокой ссылки: `POST /api/telegram/deep-link`
 - ✅ Добавлена UI компонента в профиль: `TelegramLinkCard.jsx`
-- ✅ Подготовлена SQL миграция: `sql/telegram_migration.sql`
+- ✅ Подготовлены SQL-инструкции для обновления `profiles`
 
 ---
 
@@ -38,7 +38,7 @@ TELEGRAM_BOT_USERNAME=diplomaproject_bot
 
 ### 3️⃣ Выполнить SQL миграцию в Supabase (3 мин)
 
-Откройте Supabase Dashboard → SQL Editor → скопируйте и выполните содержимое файла `sql/telegram_migration.sql`
+Откройте Supabase Dashboard → SQL Editor → выполните SQL ниже
 
 Или выполните вручную:
 ```sql
@@ -85,8 +85,7 @@ src/
 └── (app)/profile/_components/
     └── TelegramLinkCard.jsx 🎨 UI компонента
 
-sql/
-└── telegram_migration.sql  🗄️ Миграция БД
+Supabase SQL Editor  🗄️ Изменения схемы БД
 ```
 
 ---

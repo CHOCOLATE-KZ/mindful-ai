@@ -21,9 +21,9 @@ export default function PsychologyQuote() {
   if (!quote) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-8 border border-indigo-200 shadow-md">
+    <div className="relative overflow-hidden rounded-xl bg-blue-50 p-8 border border-blue-200 shadow-md">
       {/* Quote Icon */}
-      <Quote className="absolute top-4 right-4 w-12 h-12 text-indigo-200" />
+      <Quote className="absolute top-4 right-4 w-12 h-12 text-blue-200" />
 
       {/* Quote Text */}
       <blockquote className="relative text-lg text-gray-800 font-medium leading-relaxed mb-4 italic">
@@ -32,7 +32,7 @@ export default function PsychologyQuote() {
 
       {/* Author & Book */}
       <div className="relative">
-        <p className="text-sm font-semibold text-indigo-700">
+        <p className="text-sm font-semibold text-blue-700">
           — {quote.author}
         </p>
         {quote.book && (

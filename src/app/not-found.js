@@ -5,13 +5,13 @@ import { ArrowLeft, Home, MessageCircle } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-2xl w-full">
         {/* Animated 404 */}
         <div className="relative mb-12">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 blur-3xl opacity-20 rounded-full"></div>
+          <div className="absolute inset-0 bg-blue-500 blur-3xl opacity-20 rounded-full"></div>
           <div className="relative text-center">
-            <div className="text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 drop-shadow-lg">
+            <div className="text-9xl font-extrabold text-transparent bg-clip-text bg-[#5d9088] drop-shadow-lg">
               404
             </div>
           </div>
@@ -32,9 +32,9 @@ export default function NotFound() {
           {/* Home Button */}
           <Link
             href="/"
-            className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            className="group relative overflow-hidden bg-blue-600 text-white rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative flex items-center justify-center gap-3">
               <Home className="h-6 w-6" />
               <div>
@@ -47,14 +47,14 @@ export default function NotFound() {
           {/* Chat Button */}
           <Link
             href="/chat"
-            className="group relative overflow-hidden bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+            className="group relative overflow-hidden bg-blue-600 text-white rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <div className="relative flex items-center justify-center gap-3">
               <MessageCircle className="h-6 w-6" />
               <div>
                 <div className="font-semibold">Чат</div>
-                <div className="text-sm text-purple-100">Поговорить с ИИ</div>
+                <div className="text-sm text-blue-100">Поговорить с ИИ</div>
               </div>
             </div>
           </Link>
@@ -75,7 +75,7 @@ export default function NotFound() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-center py-3 px-4 rounded-lg bg-gradient-to-b from-slate-50 to-white hover:from-blue-50 hover:to-blue-50 text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 ring-1 ring-black/5 hover:ring-blue-300"
+                className="text-center py-3 px-4 rounded-lg bg-white hover:from-blue-50 hover:to-blue-50 text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 ring-1 ring-black/5 hover:ring-blue-300"
               >
                 {link.label}
               </Link>
@@ -86,7 +86,7 @@ export default function NotFound() {
         {/* Motivational Message */}
         <div className="text-center text-gray-600 space-y-2">
           <p className="text-lg font-medium">
-            Помните: каждый шаг ведет вас к лучшему пониманию себя 🧘‍♀️
+            Помните: каждый шаг ведет вас к лучшему пониманию себя ‍️
           </p>
           <p className="text-sm">
             Нужна помощь?{" "}

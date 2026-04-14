@@ -23,7 +23,7 @@ export default function NotesPage() {
     return (
       <div className="py-12">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="rounded-3xl border border-black/10 bg-gradient-to-br from-white via-white to-violet-50/30 p-8 shadow-sm">
+          <div className="rounded-3xl border border-black/10 bg-white p-8 shadow-sm">
             <div className="h-6 w-56 rounded-lg bg-black/[0.06] animate-pulse" />
             <div className="mt-3 h-4 w-96 rounded-lg bg-black/[0.04] animate-pulse" />
             <div className="mt-8 grid gap-6 lg:grid-cols-2">

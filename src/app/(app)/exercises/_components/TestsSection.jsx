@@ -59,7 +59,7 @@ export default function TestsSection({ filter }) {
               className={cn(
                 "rounded-full border px-3.5 py-1.5 text-xs font-medium transition duration-200",
                 active
-                  ? "border-blue-300 bg-gradient-to-r from-blue-50 to-blue-100/80 text-blue-700 shadow-sm"
+                  ? "border-blue-300 bg-blue-50 text-blue-700 shadow-sm"
                   : "border-white/20 bg-white/60 text-slate-600 hover:bg-white/80 hover:text-slate-900 hover:border-white/40 backdrop-blur-sm"
               )}
             >

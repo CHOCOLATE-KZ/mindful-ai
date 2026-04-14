@@ -106,7 +106,7 @@ export default function SignInPage() {
     <AuthFrame>
       <LiquidGlassCard className="w-full max-w-md border-white/70 bg-white/70 shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
         <div className="text-center">
-          <p className="text-xs uppercase tracking-[0.35em] text-sky-600/80">
+          <p className="text-xs uppercase tracking-[0.35em] text-[#74AA9C]">
             MindfulAI
           </p>
           <h1 className="mt-3 text-2xl font-semibold text-slate-900">Вход</h1>
@@ -139,7 +139,7 @@ export default function SignInPage() {
           {!!msg && <p className="text-sm text-rose-600">{msg}</p>}
 
           <Button
-            className="w-full rounded-2xl bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-600 text-white shadow-[0_12px_30px_rgba(37,99,235,0.2)]"
+            className="w-full rounded-2xl bg-blue-600 text-white shadow-[0_12px_30px_rgba(116,170,156,0.25)]"
             disabled={loading}
           >
             {loading ? "Входим..." : "Войти"}
@@ -164,7 +164,7 @@ export default function SignInPage() {
               <svg
                 aria-hidden
                 viewBox="0 0 24 24"
-                className="h-4 w-4 text-sky-600"
+                className="h-4 w-4 text-[#74AA9C]"
                 fill="currentColor"
               >
                 <path d="M13.5 8.25v-2.1c0-.9.6-1.65 1.8-1.65h2.2V2h-2.8C11.7 2 10 3.7 10 6.3v1.95H7.8v2.85H10V22h3.5V11.1h2.6l.4-2.85h-3z" />
@@ -198,7 +198,7 @@ export default function SignInPage() {
                       href="https://t.me/IITUpsychologyAIbot?start=login"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 underline"
+                      className="text-[#74AA9C] underline"
                     >
                       @IITUpsychologyAIbot
                     </a>{" "}
@@ -213,7 +213,7 @@ export default function SignInPage() {
                   }}
                   className="text-slate-400 hover:text-slate-600"
                 >
-                  ✕
+                  
                 </button>
               </div>
 

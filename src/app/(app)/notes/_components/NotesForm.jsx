@@ -3,6 +3,24 @@ import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
 import Button from "@/components/ui/Button";
 import ActivityRating from "./ActivityRating";
+import {
+  FileText,
+  RotateCcw,
+  Smile,
+  Moon,
+  MessageSquare,
+  SlidersHorizontal,
+  Zap,
+  Battery,
+  Flame,
+  Apple,
+  Dumbbell,
+  Gamepad2,
+  Users,
+  StickyNote,
+  Plus,
+  Lightbulb,
+} from "lucide-react";
 
 /**
  * Компонент формы создания/редактирования заметки
@@ -10,13 +28,13 @@ import ActivityRating from "./ActivityRating";
 export default function NotesForm({ editor, quickNotes }) {
   return (
     <Card className="relative overflow-hidden rounded-3xl border border-black/10 bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
-      <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-gradient-to-br from-violet-100 via-blue-100 to-transparent blur-3xl opacity-50" />
+<div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-blue-100/50 blur-3xl opacity-50" />
 
       <div className="relative p-7">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">✍️</span>
+              <FileText size={22} className="text-blue-600" />
               <h2 className="text-2xl font-semibold text-black">
                 {editor.editingId ? "Редактировать запись" : "Новая запись"}
               </h2>
@@ -32,7 +50,7 @@ export default function NotesForm({ editor, quickNotes }) {
               onClick={editor.resetEditor}
               className="rounded-xl border border-black/10 bg-white/80 backdrop-blur-sm px-4 py-2 text-sm font-medium text-black/70 hover:bg-black/[0.04] hover:border-black/20 transition-all shadow-sm"
             >
-              ✕ Сбросить
+              <span className="inline-flex items-center gap-1.5"><RotateCcw size={14} /> Сбросить</span>
             </button>
           )}
         </div>
@@ -41,7 +59,7 @@ export default function NotesForm({ editor, quickNotes }) {
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label className="flex items-center gap-2 text-sm font-medium text-black/70">
-                <span>😊</span>
+                <Smile size={15} className="text-blue-600" />
                 Настроение (1–10)
               </Label>
               <Input
@@ -53,13 +71,13 @@ export default function NotesForm({ editor, quickNotes }) {
                 className="h-11"
               />
               <div className="text-xs text-black/50 leading-relaxed">
-                💡 Оцени по самочувствию, не по событиям
+                <span className="inline-flex items-center gap-1"><Lightbulb size={13} className="text-blue-600" /> Оцени по самочувствию, не по событиям</span>
               </div>
             </div>
 
             <div className="grid gap-2">
               <Label className="flex items-center gap-2 text-sm font-medium text-black/70">
-                <span>😴</span>
+                <Moon size={15} className="text-emerald-600" />
                 Сон (минуты)
               </Label>
               <Input
@@ -69,14 +87,14 @@ export default function NotesForm({ editor, quickNotes }) {
                 className="h-11"
               />
               <div className="text-xs text-black/50 leading-relaxed">
-                💡 Например: 420 = 7 часов
+                <span className="inline-flex items-center gap-1"><Lightbulb size={13} className="text-blue-600" /> Например: 420 = 7 часов</span>
               </div>
             </div>
           </div>
 
           <div className="grid gap-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-black/70">
-              <span>💭</span>
+              <MessageSquare size={15} className="text-blue-600" />
               Комментарий
             </Label>
             <textarea
@@ -84,14 +102,14 @@ export default function NotesForm({ editor, quickNotes }) {
               value={editor.comment}
               onChange={(e) => editor.setComment(e.target.value)}
               className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3.5 text-[15px] text-black/80 outline-none
-                         focus:border-violet-300 focus:ring-4 focus:ring-violet-100/50 transition-all resize-none shadow-sm"
+                         focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 transition-all resize-none shadow-sm"
               placeholder="Как прошёл день? Что было важного или интересного?"
             />
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
             <Button className="w-full sm:w-auto text-base font-medium px-6 py-2.5 shadow-md hover:shadow-lg">
-              {editor.editingId ? "💾 Сохранить изменения" : "✨ Сохранить запись"}
+              {editor.editingId ? " Сохранить изменения" : " Сохранить запись"}
             </Button>
             <div className="text-xs text-black/50">
               Сохранение обновит историю и график
@@ -106,7 +124,7 @@ export default function NotesForm({ editor, quickNotes }) {
               className="flex items-center justify-between w-full group"
             >
               <div className="flex items-center gap-2.5">
-                <span className="text-xl">🎯</span>
+                <SlidersHorizontal size={18} className="text-blue-600" />
                 <h3 className="text-lg font-semibold text-black/80">Дополнительные параметры</h3>
                 <span className="rounded-lg bg-blue-100/70 px-2.5 py-1 text-xs font-semibold text-blue-700">
                   Опционально
@@ -126,7 +144,7 @@ export default function NotesForm({ editor, quickNotes }) {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="grid gap-2">
                     <Label className="flex items-center gap-2 text-sm font-medium text-black/70">
-                      <span>⚡</span>
+                      <Battery size={15} className="text-blue-600" />
                       Энергия (1–10)
                     </Label>
                     <Input
@@ -143,7 +161,7 @@ export default function NotesForm({ editor, quickNotes }) {
 
                   <div className="grid gap-2">
                     <Label className="flex items-center gap-2 text-sm font-medium text-black/70">
-                      <span>😰</span>
+                      <Flame size={15} className="text-orange-600" />
                       Стресс (1–10)
                     </Label>
                     <Input
@@ -160,33 +178,33 @@ export default function NotesForm({ editor, quickNotes }) {
                 </div>
 
                 {/* Activities */}
-                <div className="rounded-2xl border border-black/10 bg-gradient-to-br from-violet-50/30 to-blue-50/20 p-5">
+                <div className="rounded-2xl border border-black/10 bg-blue-50/20 p-5">
                   <h4 className="flex items-center gap-2 text-sm font-semibold text-black/80 mb-4">
-                    <span>📊</span>
+                    <Zap size={15} className="text-blue-600" />
                     Активности дня
                   </h4>
 
                   <div className="grid gap-4">
                     <ActivityRating
-                      icon="🥗"
+                      icon={<Apple size={16} className="text-emerald-600" />}
                       label="Питание"
                       value={editor.nutrition}
                       onChange={editor.setNutrition}
                     />
                     <ActivityRating
-                      icon="🏃"
+                      icon={<Dumbbell size={16} className="text-blue-600" />}
                       label="Физ. активность"
                       value={editor.exercise}
                       onChange={editor.setExercise}
                     />
                     <ActivityRating
-                      icon="🎨"
+                      icon={<Gamepad2 size={16} className="text-blue-600" />}
                       label="Хобби/Развлечения"
                       value={editor.hobbies}
                       onChange={editor.setHobbies}
                     />
                     <ActivityRating
-                      icon="👥"
+                      icon={<Users size={16} className="text-blue-600" />}
                       label="Общение"
                       value={editor.social}
                       onChange={editor.setSocial}
@@ -199,11 +217,11 @@ export default function NotesForm({ editor, quickNotes }) {
         </form>
 
         {/* MINI NOTES */}
-        <div className="mt-8 rounded-3xl border border-dashed border-black/15 bg-gradient-to-br from-blue-50/50 to-white p-6 shadow-sm">
+          <div className="mt-8 rounded-3xl border border-dashed border-black/15 bg-blue-50/50 p-6 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-xl">⚡</span>
+                <StickyNote size={18} className="text-blue-600" />
                 <h3 className="text-lg font-semibold text-black">Мини-заметки</h3>
               </div>
               <p className="mt-1.5 text-sm text-black/65">
@@ -217,7 +235,7 @@ export default function NotesForm({ editor, quickNotes }) {
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Input
-              placeholder="✏️ Быстрая мысль или идея…"
+              placeholder="Быстрая мысль или идея..."
               value={quickNotes.quickNote}
               onChange={(e) => quickNotes.setQuickNote(e.target.value)}
               className="flex-1 h-11"
@@ -227,7 +245,7 @@ export default function NotesForm({ editor, quickNotes }) {
               onClick={quickNotes.addQuickNote}
               className="w-full sm:w-auto px-5 shadow-sm"
             >
-              ➕ Добавить
+              <span className="inline-flex items-center gap-1.5"><Plus size={15} /> Добавить</span>
             </Button>
           </div>
         </div>

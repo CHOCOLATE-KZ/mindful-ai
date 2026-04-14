@@ -1161,11 +1161,7 @@ mindful-ai/
 │   ├── middleware.js
 │   └── telegram-bot-polling.js
 ├── public/
-├── sql/
-│   ├── notes_table.sql
-│   ├── telegram_migration.sql
-│   ├── telegram_reminders.sql
-│   └── telegram_login_tokens.sql
+├── Supabase (schema managed in dashboard)
 └── docker/
     ├── Dockerfile
     └── docker-compose.yml

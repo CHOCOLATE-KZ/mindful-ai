@@ -1,4 +1,5 @@
 import NewsCard from "./NewsCard";
+import { Newspaper } from "lucide-react";
 
 export default function NewsGrid({ items, loading }) {
   if (loading) {
@@ -7,7 +8,7 @@ export default function NewsGrid({ items, loading }) {
         {Array.from({ length: 6 }).map((_, i) => (
           <div 
             key={i} 
-            className="h-96 rounded-3xl bg-gradient-to-br from-violet-100/50 via-blue-100/50 to-white border border-black/10 animate-pulse" 
+            className="h-96 rounded-3xl bg-blue-50/50 border border-black/10 animate-pulse" 
           />
         ))}
       </div>
@@ -16,8 +17,8 @@ export default function NewsGrid({ items, loading }) {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 rounded-3xl border border-dashed border-black/15 bg-gradient-to-br from-gray-50/50 to-white">
-        <div className="text-6xl mb-4 opacity-50">📚</div>
+      <div className="flex flex-col items-center justify-center py-20 rounded-3xl border border-dashed border-black/15 bg-blue-50/30">
+        <Newspaper size={56} className="mb-4 text-blue-300" />
         <p className="text-lg font-semibold text-black/70 mb-2">Материалов не найдено</p>
         <p className="text-sm text-black/50">Попробуйте изменить запрос или выбрать другую категорию</p>
       </div>

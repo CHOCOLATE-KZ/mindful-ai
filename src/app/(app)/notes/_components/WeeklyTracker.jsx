@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import Card from "@/components/ui/Card";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
+import { CalendarRange, Apple, Dumbbell, Gamepad2, Users, Smile, Battery, Circle, CircleDot, CircleDashed, CircleX } from "lucide-react";
 
 /**
  * Компонент недельного трекера активностей
@@ -35,10 +36,10 @@ export default function WeeklyTracker({ notes }) {
   }, [notes]);
 
   const activities = [
-    { key: "nutrition", icon: "🥗", label: "Питание" },
-    { key: "exercise", icon: "🏃", label: "Спорт" },
-    { key: "hobbies", icon: "🎨", label: "Хобби" },
-    { key: "social", icon: "👥", label: "Общение" },
+    { key: "nutrition", icon: <Apple size={16} className="text-emerald-600" />, label: "Питание" },
+    { key: "exercise", icon: <Dumbbell size={16} className="text-blue-600" />, label: "Спорт" },
+    { key: "hobbies", icon: <Gamepad2 size={16} className="text-blue-600" />, label: "Хобби" },
+    { key: "social", icon: <Users size={16} className="text-blue-600" />, label: "Общение" },
   ];
 
   const getRatingColor = (val) => {
@@ -54,10 +55,10 @@ export default function WeeklyTracker({ notes }) {
 
   const getRatingIcon = (val) => {
     switch (val) {
-      case "great": return "⭐";
-      case "fine": return "✓";
+      case "great": return <CircleDot size={12} />;
+      case "fine": return <Circle size={12} />;
       case "ok": return "○";
-      case "poor": return "✗";
+      case "poor": return <CircleX size={12} />;
       default: return "—";
     }
   };
@@ -68,7 +69,7 @@ export default function WeeklyTracker({ notes }) {
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-2xl">📅</span>
+              <CalendarRange size={22} className="text-blue-600" />
               <h2 className="text-2xl font-semibold text-black">Недельный трекер</h2>
             </div>
             <p className="mt-2 text-sm text-black/65 leading-relaxed">
@@ -132,10 +133,10 @@ export default function WeeklyTracker({ notes }) {
               ))}
 
               {/* Mood & Energy row */}
-              <tr className="border-b border-black/10 bg-violet-50/30">
+              <tr className="border-b border-black/10 bg-blue-50/30">
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">😊</span>
+                    <Smile size={16} className="text-blue-600" />
                     <span className="text-sm font-medium text-black/70">Настроение</span>
                   </div>
                 </td>
@@ -144,7 +145,7 @@ export default function WeeklyTracker({ notes }) {
                   return (
                     <td key={day.dateStr} className="text-center py-3 px-2">
                       {mood != null ? (
-                        <div className="inline-flex items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-violet-200 text-violet-800">
+                        <div className="inline-flex items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold bg-blue-200 text-blue-800">
                           {mood}/10
                         </div>
                       ) : (
@@ -158,7 +159,7 @@ export default function WeeklyTracker({ notes }) {
               <tr className="bg-blue-50/30">
                 <td className="py-3 px-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg">⚡</span>
+                    <Battery size={16} className="text-blue-600" />
                     <span className="text-sm font-medium text-black/70">Энергия</span>
                   </div>
                 </td>
@@ -183,19 +184,19 @@ export default function WeeklyTracker({ notes }) {
 
         <div className="mt-5 flex flex-wrap gap-3 items-center justify-center text-xs">
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded bg-emerald-200 flex items-center justify-center text-emerald-800">⭐</div>
+            <div className="w-5 h-5 rounded bg-emerald-200 flex items-center justify-center text-emerald-800"><CircleDot size={12} /></div>
             <span className="text-black/60">Отлично</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded bg-blue-200 flex items-center justify-center text-blue-800">✓</div>
+            <div className="w-5 h-5 rounded bg-blue-200 flex items-center justify-center text-blue-800"><Circle size={12} /></div>
             <span className="text-black/60">Хорошо</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded bg-yellow-200 flex items-center justify-center text-yellow-800">○</div>
+            <div className="w-5 h-5 rounded bg-yellow-200 flex items-center justify-center text-yellow-800"><CircleDashed size={12} /></div>
             <span className="text-black/60">OK</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded bg-red-200 flex items-center justify-center text-red-800">✗</div>
+            <div className="w-5 h-5 rounded bg-red-200 flex items-center justify-center text-red-800"><CircleX size={12} /></div>
             <span className="text-black/60">Плохо</span>
           </div>
         </div>

@@ -1,12 +1,14 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { extractAnchors } from "@/lib/utils/extractAnchors";
+import CrisisAlert from "./CrisisAlert";
 
 export default function ChatMessages({ messages, loading, atBottom, onAnchorSelect }) {
   const endRef = useRef(null);
+  const [dismissedCrisis, setDismissedCrisis] = useState(new Set());
 
   // авто-скролл при новых сообщениях (как у тебя было)
   useEffect(() => {
@@ -33,10 +35,22 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
 
   return (
     <>
-      {/* ✅ чтобы последние сообщения не липли к composer */}
+      {/*  чтобы последние сообщения не липли к composer */}
       <div className="space-y-4 pb-10">
         {messages.map((m, idx) => {
           const isAI = m.role === "assistant";
+
+          // Кризисное сообщение
+          if (isAI && m.crisis && !dismissedCrisis.has(idx)) {
+            return (
+              <CrisisAlert
+                key={idx}
+                onDismiss={() => setDismissedCrisis((s) => new Set([...s, idx]))}
+              />
+            );
+          }
+          if (isAI && m.crisis) return null;
+
           const anchors = isAI
             ? (Array.isArray(m.anchors) && m.anchors.length ? m.anchors : extractAnchors(m.content))
             : [];
@@ -44,9 +58,9 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
           return (
             <div key={idx} className={`flex gap-3 ${isAI ? "justify-start" : "justify-end"}`}>
               {isAI && (
-                <div className="h-10 w-10 rounded-full bg-blue-600/10 ring-1 ring-blue-600/20 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-full bg-[#74AA9C]/15 ring-1 ring-[#74AA9C]/30 flex items-center justify-center flex-shrink-0">
                   <Image
-                    src="/gradient-logo.png"
+                    src="/white-logo.svg"
                     alt="MindfulAI"
                     width={24}
                     height={24}
@@ -58,8 +72,8 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
                 <div
                   className={`rounded-3xl px-5 py-3 shadow-sm ring-1 ${
                     isAI
-                      ? "bg-white/90 ring-black/5 text-slate-900"
-                      : "bg-blue-600 text-white ring-blue-700/20"
+                      ? "bg-white/90 dark:bg-slate-800 ring-black/5 dark:ring-white/10 text-slate-900 dark:text-slate-100"
+                      : "bg-[#74AA9C] text-white ring-[#5d9088]/30"
                   }`}
                 >
                   <div className={`prose prose-sm max-w-none ${isAI ? "prose-slate" : "prose-invert"}`}>
@@ -84,7 +98,7 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
                           key={anchor}
                           type="button"
                           onClick={() => onAnchorSelect?.(anchor)}
-                          className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs text-blue-700 hover:bg-blue-100 transition"
+                          className="rounded-full border border-[#74AA9C]/40 bg-[#74AA9C]/10 px-3 py-1 text-xs text-[#5d9088] hover:bg-[#74AA9C]/20 transition"
                           title="Обсудить тему"
                         >
                           {anchor}
@@ -106,9 +120,9 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
 
         {loading && (
           <div className="flex gap-3 justify-start">
-            <div className="h-10 w-10 rounded-full bg-blue-600/10 ring-1 ring-blue-600/20 flex items-center justify-center flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-[#74AA9C]/15 ring-1 ring-[#74AA9C]/30 flex items-center justify-center flex-shrink-0">
               <Image
-                src="/gradient-logo.png"
+                src="/white-logo.svg"
                 alt="MindfulAI"
                 width={24}
                 height={24}

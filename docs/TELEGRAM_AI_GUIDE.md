@@ -43,7 +43,6 @@ TELEGRAM_BOT_USERNAME=IITUpsychologyAIbot
 Выполните миграцию для добавления поля `source`:
 
 ```sql
--- sql/ai_messages_add_source.sql
 ALTER TABLE ai_messages
 ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'web';
 
@@ -247,7 +246,7 @@ console.log('Ответ AI:', aiResponse);
 
 ### История не сохраняется
 
-- Проверьте что выполнена миграция ai_messages_add_source.sql
+- Проверьте что в таблице `ai_messages` есть колонка `source`
 - Проверьте права insert в таблице ai_messages
 
 ### AI отвечает не по-русски

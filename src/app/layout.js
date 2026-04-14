@@ -7,7 +7,7 @@ export const metadata = {
   title: "MindfulAI - Психологическая поддержка через AI",
   description: "Персональный AI-ассистент для психологической поддержки, медитации и развития осознанности",
   icons: {
-    icon: "/gradient-logo.png",
+    icon: "/mindfullailogo.svg",
   },
 };
 

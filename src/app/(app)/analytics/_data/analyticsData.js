@@ -7,7 +7,7 @@ export const STOPWORDS = new Set([
   "жана","жоқ","үшін","мен","сен","ол","біз","сіз","олар","қазір","өте","бүгін","кеше","ертең"
 ]);
 
-export const COLORS = ["#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EF4444"];
+export const COLORS = ["#74AA9C", "#5d9088", "#10B981", "#F59E0B", "#EF4444"];
 
 export const TEST_NAMES = {
   uncertainty_tolerance: "Умение выдерживать неопределённость",

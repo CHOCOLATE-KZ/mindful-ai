@@ -16,7 +16,6 @@ curl http://127.0.0.1:1234/v1/models
 Откройте Supabase Dashboard → SQL Editor и выполните:
 
 ```sql
--- sql/ai_messages_add_source.sql
 ALTER TABLE ai_messages
 ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'web';
 

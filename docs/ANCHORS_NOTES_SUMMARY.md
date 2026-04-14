@@ -56,8 +56,8 @@
 
 ## 🔧 Установка
 
-### 1. Выполни миграцию БД
-Скопируй [sql/chat_notes.sql](../sql/chat_notes.sql) в Supabase SQL Editor и выполни.
+### 1. Подготовь таблицу chat_notes в Supabase
+Выполни SQL для создания таблицы `chat_notes` в Supabase SQL Editor.
 
 ### 2. Локально
 ```bash
@@ -78,7 +78,7 @@ npm run dev
 | `src/app/api/chat/notes/route.js` | GET/POST для заметок якорей |
 | `src/app/(app)/chat/page.js` | Левая панель, логика загрузки/сохранения заметок |
 | `src/app/(app)/chat/_components/ChatMessages.jsx` | Использует якоря от API (fallback на извлечение) |
-| `sql/chat_notes.sql` | Таблица с RLS и индексами |
+| `Supabase: chat_notes schema` | Таблица с RLS и индексами |
 | `docs/TESTING_ANCHORS_NOTES.md` | Полная инструкция тестирования |
 
 ---

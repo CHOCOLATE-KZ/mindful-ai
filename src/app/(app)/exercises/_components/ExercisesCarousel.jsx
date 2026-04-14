@@ -19,18 +19,15 @@ export default function ExercisesCarousel({ carousel }) {
       <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-sm shadow-lg p-8">
         {/* background blobs */}
         <div
-          className={cn(
-            "pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-gradient-to-br blur-3xl opacity-50",
-            pickedExercise.accent
-          )}
+          className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-blue-200/30 blur-3xl opacity-50"
         />
-        <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-gradient-to-tl from-indigo-200/30 via-purple-200/20 to-blue-200/30 blur-3xl opacity-50" />
+        <div className="pointer-events-none absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-blue-200/20 blur-3xl opacity-50" />
 
         <div className="relative z-10 space-y-6">
           {/* Header and controls */}
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4 flex-1">
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 text-blue-700 flex-shrink-0">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-blue-100 text-blue-700 flex-shrink-0">
                 <pickedExercise.Icon className="h-7 w-7" />
               </div>
               <div>
@@ -71,7 +68,7 @@ export default function ExercisesCarousel({ carousel }) {
               <button
                 type="button"
                 onClick={pickRandomExercise}
-                className="h-11 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 font-semibold text-white shadow-lg transition hover:shadow-xl hover:opacity-95 active:scale-95 flex items-center gap-2"
+                className="h-11 rounded-2xl bg-blue-500 px-4 font-semibold text-white shadow-lg transition hover:shadow-xl hover:opacity-95 active:scale-95 flex items-center gap-2"
                 aria-label="Случайное упражнение"
               >
                 <Shuffle className="h-4 w-4" />
@@ -98,7 +95,7 @@ export default function ExercisesCarousel({ carousel }) {
                 className="rounded-2xl border border-white/30 bg-white/60 px-5 py-4 text-sm text-slate-700 shadow-sm backdrop-blur-sm hover:bg-white/80 transition"
               >
                 <div className="flex items-center gap-3">
-                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 text-sm font-bold text-blue-700 flex-shrink-0">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-blue-100 text-sm font-bold text-blue-700 flex-shrink-0">
                     {i + 1}
                   </div>
                   <div className="font-medium">{s}</div>
@@ -110,7 +107,7 @@ export default function ExercisesCarousel({ carousel }) {
           {/* Footer hint */}
           <div className="mt-7 flex items-center justify-between gap-3 rounded-2xl border border-blue-200/50 bg-blue-50/60 px-5 py-4 backdrop-blur-sm">
             <div className="text-sm text-slate-700">
-              <span className="font-semibold text-blue-900">💡 Совет:</span> выполняйте {" "}
+              <span className="font-semibold text-blue-900"> Совет:</span> выполняйте {" "}
               <span className="font-semibold text-blue-900">медленно</span> и {" "}
               <span className="font-semibold text-blue-900">без напряжения</span>.
             </div>

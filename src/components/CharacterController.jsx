@@ -56,9 +56,7 @@ export default function CharacterController({
         content.includes('спасибо') ||
         content.includes('хорошо') ||
         content.includes('стало лучше') ||
-        content.includes('помог') ||
-        content.includes('👍') ||
-        content.includes('😊')
+        content.includes('помог')
       ) {
         setEmotion('happy');
         setShowThoughts(false);

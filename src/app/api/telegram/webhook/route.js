@@ -13,6 +13,7 @@ import {
 } from '@/lib/telegram/handlers';
 
 let handlersRegistered = false;
+const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
 
 /**
  * Регистрирует обработчики команд бота
@@ -32,9 +33,30 @@ function registerHandlers(bot) {
   handlersRegistered = true;
 }
 
+function hasValidWebhookSecret(request) {
+  if (!TELEGRAM_WEBHOOK_SECRET) {
+    return false;
+  }
+
+  const secretFromHeader = request.headers.get('x-telegram-bot-api-secret-token')?.trim();
+  return Boolean(secretFromHeader && secretFromHeader === TELEGRAM_WEBHOOK_SECRET);
+}
+
 // Webhook endpoint
 export async function POST(request) {
   try {
+    if (!hasValidWebhookSecret(request)) {
+      const status = TELEGRAM_WEBHOOK_SECRET ? 401 : 500;
+      const message = TELEGRAM_WEBHOOK_SECRET
+        ? 'Unauthorized webhook request'
+        : 'Webhook secret is not configured';
+
+      return new Response(JSON.stringify({ ok: false, error: message }), {
+        status,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Получаем бота (инициализируется при первом использовании)
     const bot = getBot();
 
@@ -42,6 +64,12 @@ export async function POST(request) {
     registerHandlers(bot);
 
     const body = await request.json();
+    if (!body || typeof body !== 'object' || typeof body.update_id !== 'number') {
+      return new Response(JSON.stringify({ ok: false, error: 'Invalid Telegram update payload' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
 
     // Передаем обновление боту
     await bot.handleUpdate(body);
@@ -65,7 +93,8 @@ export async function GET(request) {
   return new Response(
     JSON.stringify({ 
       status: 'Telegram webhook endpoint работает',
-      note: 'Используйте POST для отправки обновлений от Telegram'
+      note: 'Используйте POST для отправки обновлений от Telegram',
+      security: 'Требуется заголовок x-telegram-bot-api-secret-token'
     }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   );

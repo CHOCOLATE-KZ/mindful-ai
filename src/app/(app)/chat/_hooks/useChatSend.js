@@ -28,6 +28,20 @@ export function useChatSend({ setMessages, onBeforeSend }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Chat error");
 
+      // Кризисный ответ — специальный тип сообщения
+      if (data.crisis) {
+        setMessages((messages) => [
+          ...messages,
+          {
+            role: "assistant",
+            content: "",
+            crisis: true,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+        return true;
+      }
+
       setMessages((messages) => [
         ...messages,
         {

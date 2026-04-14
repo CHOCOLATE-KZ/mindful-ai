@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { UserRound } from "lucide-react";
 
 export default function ChatDemo() {
+  const EXTRA_BOT_DELAY_MS = 500;
+
   const script = useMemo(
     () => [
       {
@@ -114,7 +118,7 @@ export default function ChatDemo() {
                         }
                       }, 1800)
                     );
-                  }, 950)
+                  }, 950 + EXTRA_BOT_DELAY_MS)
                 );
               }, 220)
             );
@@ -146,7 +150,7 @@ export default function ChatDemo() {
 
     runTurn(current.user, current.bot, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, [step, EXTRA_BOT_DELAY_MS]);
 
   function onChipClick(text) {
     const fallbackMap = {
@@ -174,9 +178,7 @@ export default function ChatDemo() {
     <div className="rounded-3xl border border-black/10 bg-white p-6 shadow-xl h-[620px] overflow-hidden flex flex-col">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
-            ✦
-          </div>
+          <BotAvatar size="lg" />
           <div>
             <div className="font-semibold text-black leading-tight">MindfulAI</div>
             <div className="text-sm text-black/50">Спокойно • Приватно • С поддержкой</div>
@@ -225,9 +227,7 @@ export default function ChatDemo() {
                 } chat-fade`}
               >
                 {!isUser && (
-                  <div className="h-9 w-9 rounded-full bg-blue-100 grid place-items-center text-blue-700 font-semibold shrink-0">
-                    ✦
-                  </div>
+                  <BotAvatar size="md" />
                 )}
 
                 <div
@@ -242,8 +242,8 @@ export default function ChatDemo() {
                 </div>
 
                 {isUser && (
-                  <div className="h-9 w-9 rounded-full bg-blue-200 grid place-items-center font-semibold text-blue-800 shrink-0">
-                    Я
+                  <div className="h-9 w-9 rounded-full bg-blue-200 grid place-items-center shrink-0">
+                    <UserRound size={16} className="text-blue-800" />
                   </div>
                 )}
               </div>
@@ -252,9 +252,7 @@ export default function ChatDemo() {
 
           {typing && (
             <div className="flex items-end gap-3 justify-start chat-fade">
-              <div className="h-9 w-9 rounded-full bg-blue-100 grid place-items-center text-blue-700 font-semibold shrink-0">
-                ✦
-              </div>
+              <BotAvatar size="md" />
               <div className="rounded-2xl bg-black/[0.03] px-4 py-3 border border-black/10">
                 <TypingDots />
               </div>
@@ -290,6 +288,23 @@ export default function ChatDemo() {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function BotAvatar({ size = "md" }) {
+  const boxSize = size === "lg" ? "h-10 w-10" : "h-9 w-9";
+
+  return (
+    <div className={`${boxSize} rounded-full bg-blue-100 grid place-items-center shrink-0 overflow-hidden border border-blue-200/70`}>
+      <Image
+        src="/mindfullailogo.svg"
+        alt="MindfulAI logo"
+        width={size === "lg" ? 28 : 24}
+        height={size === "lg" ? 28 : 24}
+        className="object-contain"
+        priority={size === "lg"}
+      />
     </div>
   );
 }

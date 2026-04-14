@@ -12,7 +12,7 @@ export default function Modal({ open, title, children, onClose }) {
             className="grid h-9 w-9 place-items-center rounded-full hover:bg-black/[0.04]"
             aria-label="Close"
           >
-            ✕
+            
           </button>
         </div>
         <div className="px-6 py-5">{children}</div>

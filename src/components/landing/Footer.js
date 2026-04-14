@@ -17,7 +17,7 @@ export default function Footer() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="h-10 w-10 rounded-full bg-white/15 grid place-items-center font-bold transition-transform duration-300 group-hover:scale-110">
-                ✿
+                
               </div>
               <div className="text-2xl font-semibold transition-colors duration-300 group-hover:text-blue-200">
                 MindfulAI

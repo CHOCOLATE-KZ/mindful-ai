@@ -10,13 +10,16 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
  */
 async function handleCodeLogin(code) {
   try {
-    // Находим активный токен
+    const now = new Date().toISOString();
+
+    // Атомарно помечаем токен как использованный, если он еще валиден.
     const { data: token, error: tokenError } = await supabaseAdmin
       .from('telegram_login_tokens')
-      .select('*')
+      .update({ used: true })
       .eq('code', code)
       .eq('used', false)
-      .gt('expires_at', new Date().toISOString())
+      .gt('expires_at', now)
+      .select('id, telegram_id')
       .maybeSingle();
 
     if (tokenError || !token) {
@@ -25,12 +28,6 @@ async function handleCodeLogin(code) {
         { status: 401 }
       );
     }
-
-    // Помечаем токен как использованный
-    await supabaseAdmin
-      .from('telegram_login_tokens')
-      .update({ used: true })
-      .eq('id', token.id);
 
     const telegramId = token.telegram_id;
 

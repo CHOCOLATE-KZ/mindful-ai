@@ -31,7 +31,7 @@ export default function DailyTip() {
   if (!tip) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 p-6 border-2 border-amber-200 shadow-md">
+    <div className="relative overflow-hidden rounded-xl bg-amber-50 p-6 border-2 border-amber-200 shadow-md">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

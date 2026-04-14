@@ -60,9 +60,9 @@ export default function NotesAIAnalysis({ notes, avgMood, avgSleep }) {
   }
 
   return (
-    <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+    <Card className="border-2 border-blue-200 bg-blue-50">
       <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-        🤖 ИИ-анализ комментариев
+         ИИ-анализ комментариев
       </h2>
 
       <p className="text-sm text-gray-600 mb-4">
@@ -78,12 +78,12 @@ export default function NotesAIAnalysis({ notes, avgMood, avgSleep }) {
       {analysis ? (
         <div className="space-y-3 text-sm">
           <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-700 font-semibold">✅ Запрос подготовлен</p>
+            <p className="text-green-700 font-semibold"> Запрос подготовлен</p>
             <p className="text-green-600 text-xs mt-1">ID анализа: {analysis.analysisId}</p>
           </div>
 
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg max-h-[200px] overflow-y-auto">
-            <p className="text-blue-700 font-semibold mb-2">📋 Подготовленный запрос:</p>
+            <p className="text-blue-700 font-semibold mb-2"> Подготовленный запрос:</p>
             <p className="text-blue-600 text-xs whitespace-pre-wrap font-mono">
               {analysis.prompt.substring(0, 300)}...
             </p>
@@ -100,9 +100,9 @@ export default function NotesAIAnalysis({ notes, avgMood, avgSleep }) {
         <Button 
           onClick={handleAnalyze}
           disabled={analyzing || comments.length === 0}
-          className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
         >
-          {analyzing ? '⏳ Анализирую...' : '🔍 Проанализировать'}
+          {analyzing ? ' Анализирую...' : ' Проанализировать'}
         </Button>
       )}
     </Card>

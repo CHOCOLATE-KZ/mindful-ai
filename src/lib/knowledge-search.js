@@ -3,6 +3,10 @@
 
 import { supabaseBrowser } from './supabase/browser.js';
 
+const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').trim();
+const OLLAMA_EMBEDDING_MODEL = (process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text').trim();
+const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS || 10000);
+
 /**
  * Получить Supabase клиент
  */
@@ -16,28 +20,44 @@ function getSupabaseClient() {
  * @returns {Promise<number[]>} - вектор embeddings
  */
 async function getTextEmbedding(text) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
+
   try {
-    // Используем Ollama на localhost:11434
-    const response = await fetch('http://localhost:11434/api/embeddings', {
+    // Используем Ollama для генерации embeddings
+    const response = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
-        model: 'nomic-embed-text',
+        model: OLLAMA_EMBEDDING_MODEL,
         prompt: text,
       }),
     });
-    
-    if (response.ok) {
-      const data = await response.json();
-      // Ollama возвращает embedding напрямую в data.embedding
-      return data.embedding || Array(768).fill(0);
+
+    if (!response.ok) {
+      console.warn(`[RAG]  Ollama embeddings API вернул ${response.status}, используем keyword fallback`);
+      return null;
     }
+    
+    const data = await response.json();
+    if (Array.isArray(data.embedding) && data.embedding.length > 0) {
+      return data.embedding;
+    }
+
+    console.warn('[RAG]  Ollama вернул некорректный embedding, используем keyword fallback');
+    return null;
   } catch (error) {
-    console.warn('[RAG] ⚠️ Ollama embeddings недоступны (localhost:11434), используем fallback keyword search');
+    if (error?.name === 'AbortError') {
+      console.warn(`[RAG]  Ollama embeddings timeout после ${OLLAMA_TIMEOUT_MS}ms, используем keyword fallback`);
+      return null;
+    }
+
+    console.warn(`[RAG]  Ollama embeddings недоступны (${OLLAMA_BASE_URL}), используем keyword fallback`);
+    return null;
+  } finally {
+    clearTimeout(timeout);
   }
-  
-  // Фолбэк: возвращаем пустой массив - fallback keyword search заберет на себя поиск
-  return Array(768).fill(0);
 }
 
 /**
@@ -52,19 +72,19 @@ export async function searchPsychologyKnowledge(userMessage, limit = 3) {
   }
   
   try {
-    console.log(`[RAG] 🔍 Поиск знаний для: "${userMessage}"`);
+    console.log(`[RAG]  Поиск знаний для: "${userMessage}"`);
     
     // Получаем embedding для запроса
     const queryEmbedding = await getTextEmbedding(userMessage);
     
-    if (!queryEmbedding || queryEmbedding.every(v => v === 0)) {
+    if (!queryEmbedding) {
       // Если embeddings не работают, используем простой поиск по ключевым словам
-      console.log(`[RAG] 📌 Используем fallback поиск по ключевым словам`);
+      console.log(`[RAG]  Используем fallback поиск по ключевым словам`);
       return await searchByKeywords(userMessage, limit);
     }
     
     // Выполняем semantic search через Supabase
-    console.log(`[RAG] 🎯 Выполняю semantic search в Supabase`);
+    console.log(`[RAG]  Выполняю semantic search в Supabase`);
     const { data, error } = await getSupabaseClient().rpc(
       'search_psychology_knowledge',
       {
@@ -75,16 +95,16 @@ export async function searchPsychologyKnowledge(userMessage, limit = 3) {
     );
     
     if (error) {
-      console.warn('[RAG] ❌ Ошибка semantic search:', error.message);
+      console.warn('[RAG]  Ошибка semantic search:', error.message);
       return await searchByKeywords(userMessage, limit);
     }
     
     if (!data || data.length === 0) {
-      console.log('[RAG] ⚠️  Не найдено документов');
+      console.log('[RAG]   Не найдено документов');
       return '';
     }
     
-    console.log(`[RAG] ✅ Найдено ${data.length} документов`);
+    console.log(`[RAG]  Найдено ${data.length} документов`);
     for (const item of data) {
       console.log(`[RAG]   - ${item.title} (${item.section})`);
     }
@@ -100,10 +120,10 @@ export async function searchPsychologyKnowledge(userMessage, limit = 3) {
       knowledgeContext += `${item.content_chunk}\n\n`;
     }
     
-    console.log(`[RAG] 📦 Контекст ${knowledgeContext.length} символов добавлен в ответ`);
+    console.log(`[RAG]  Контекст ${knowledgeContext.length} символов добавлен в ответ`);
     return knowledgeContext;
   } catch (error) {
-    console.error('[RAG] 🔴 Ошибка при поиске знаний:', error.message);
+    console.error('[RAG]  Ошибка при поиске знаний:', error.message);
     return '';
   }
 }
@@ -116,11 +136,11 @@ export async function searchPsychologyKnowledge(userMessage, limit = 3) {
  */
 async function searchByKeywords(userMessage, limit = 3) {
   try {
-    console.log(`[RAG] 🔑 Fallback поиск по ключевым словам для: "${userMessage}"`);
+    console.log(`[RAG]  Fallback поиск по ключевым словам для: "${userMessage}"`);
     
     // Извлекаем ключевые слова из сообщения
     const keywords = userMessage.toLowerCase().match(/\b\w+\b/g) || [];
-    console.log(`[RAG] 📋 Ключевые слова: ${keywords.slice(0, 5).join(', ')}`);
+    console.log(`[RAG]  Ключевые слова: ${keywords.slice(0, 5).join(', ')}`);
     
     // Создаём SQL запрос для поиска
     let query = getSupabaseClient()
@@ -137,11 +157,11 @@ async function searchByKeywords(userMessage, limit = 3) {
     const { data, error } = await query.limit(limit);
     
     if (error || !data || data.length === 0) {
-      console.log('[RAG] ⚠️  По ключевым словам ничего не найдено');
+      console.log('[RAG]   По ключевым словам ничего не найдено');
       return '';
     }
     
-    console.log(`[RAG] ✅ Найдено ${data.length} документов по ключевым словам`);
+    console.log(`[RAG]  Найдено ${data.length} документов по ключевым словам`);
     
     // Собираем результаты
     let knowledgeContext = 'ПСИХОЛОГИЧЕСКАЯ БАЗА ЗНАНИЙ:\n\n';

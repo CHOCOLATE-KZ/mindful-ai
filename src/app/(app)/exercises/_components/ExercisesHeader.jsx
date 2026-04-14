@@ -3,9 +3,8 @@ import { BarChart3 } from "lucide-react";
 
 export default function ExercisesHeader() {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-white/80 via-white to-blue-50/50 p-8 shadow-lg backdrop-blur-sm">
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5 rounded-3xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-white p-8 shadow-lg backdrop-blur-sm">
+      
       
       <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
@@ -23,7 +22,7 @@ export default function ExercisesHeader() {
 
         <Link
           href="/analytics"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 whitespace-nowrap"
         >
           <BarChart3 className="h-4 w-4" />
           Моя аналитика

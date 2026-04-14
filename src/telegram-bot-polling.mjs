@@ -5,13 +5,13 @@
 
 // Переменные окружения должны быть загружены через -r dotenv/config флаг
 if (!process.env.TELEGRAM_BOT_TOKEN) {
-  console.error('❌ TELEGRAM_BOT_TOKEN не найден в переменных окружения');
+  console.error(' TELEGRAM_BOT_TOKEN не найден в переменных окружения');
   console.error('Убедитесь что .env.local содержит: TELEGRAM_BOT_TOKEN=...');
   process.exit(1);
 }
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-  console.error('❌ NEXT_PUBLIC_SUPABASE_URL не найден в переменных окружения');
+  console.error(' NEXT_PUBLIC_SUPABASE_URL не найден в переменных окружения');
   console.error('Убедитесь что .env.local содержит Supabase переменные');
   process.exit(1);
 }
@@ -71,8 +71,8 @@ bot.on('message', async (ctx, next) => {
   return handleMessage(ctx);
 });
 
-console.log('🤖 Telegram бот запущен в режиме polling...');
-console.log('📱 Откройте Telegram и отправьте /start в бота: @' + (process.env.TELEGRAM_BOT_USERNAME || 'IITUpsychologyAIbot'));
+console.log(' Telegram бот запущен в режиме polling...');
+console.log(' Откройте Telegram и отправьте /start в бота: @' + (process.env.TELEGRAM_BOT_USERNAME || 'IITUpsychologyAIbot'));
 console.log('⏹️  Нажмите Ctrl+C для остановки');
 
 // Запускаем в режиме polling

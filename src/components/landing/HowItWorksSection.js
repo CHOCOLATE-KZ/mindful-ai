@@ -2,34 +2,35 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { MessageCircle, NotebookPen, BarChart3, LineChart, Wind, ShieldCheck, Languages, Zap, Bot } from "lucide-react";
 
 export default function HowItWorksSection() {
   const steps = [
     {
       title: "Поговори с AI",
       desc: "Обсуди то, что волнует. AI выслушает с пониманием и предложит мягкую поддержку.",
-      icon: "💬",
+      icon: <MessageCircle className="h-6 w-6" />,
       isMain: true,
     },
     {
       title: "Запиши заметку",
       desc: "Зафиксируй настроение, сон и состояние. Это основа для анализа.",
-      icon: "📝",
+      icon: <NotebookPen className="h-5 w-5 text-blue-700" />,
     },
     {
       title: "Получи анализ",
       desc: "AI проанализирует твои данные и даст персональные рекомендации.",
-      icon: "🎯",
+      icon: <BarChart3 className="h-5 w-5 text-blue-700" />,
     },
     {
       title: "Видь прогресс",
       desc: "Смотри графики, статистику и отслеживай улучшения со временем.",
-      icon: "📈",
+      icon: <LineChart className="h-5 w-5 text-blue-700" />,
     },
     {
       title: "Практикуй техники",
       desc: "Используй дыхательные упражнения, медитацию и йогу для лучшего самочувствия.",
-      icon: "🧘",
+      icon: <Wind className="h-5 w-5 text-blue-700" />,
     },
   ];
 
@@ -42,9 +43,9 @@ export default function HowItWorksSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#5479F7]/30 bg-[#5479F7]/10 mb-8"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#74AA9C]/30 bg-[#74AA9C]/10 mb-8"
         >
-          <span className="text-sm font-medium text-[#5479F7]">КАК ЭТО РАБОТАЕТ</span>
+          <span className="text-sm font-medium text-[#74AA9C]">КАК ЭТО РАБОТАЕТ</span>
         </motion.div>
 
         {/* Блок заголовка и контента */}
@@ -64,7 +65,7 @@ export default function HowItWorksSection() {
             </p>
 
             <Link href="/signup">
-              <button className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#5479F7] text-white font-semibold hover:bg-blue-600 transition-colors">
+              <button className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#74AA9C] text-white font-semibold hover:bg-blue-600 transition-colors">
                 Начать сейчас
                 <span>→</span>
               </button>
@@ -80,28 +81,28 @@ export default function HowItWorksSection() {
             >
               <div className="flex items-center gap-4 p-4 rounded-xl bg-white border border-blue-100 hover:shadow-md transition-shadow">
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-lg">
-                  🔒
+                  <ShieldCheck className="h-5 w-5 text-blue-700" />
                 </div>
                 <span className="text-black font-medium">100% конфиденциально</span>
               </div>
 
               <div className="flex items-center gap-4 p-4 rounded-xl bg-white border border-blue-100 hover:shadow-md transition-shadow">
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-lg">
-                  ✨
+                  <Languages className="h-5 w-5 text-blue-700" />
                 </div>
                 <span className="text-black font-medium">AI на русском языке</span>
               </div>
 
               <div className="flex items-center gap-4 p-4 rounded-xl bg-white border border-blue-100 hover:shadow-md transition-shadow">
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-lg">
-                  ⚡
+                  <Zap className="h-5 w-5 text-blue-700" />
                 </div>
                 <span className="text-black font-medium">Легко начать, просто использовать</span>
               </div>
 
               <div className="flex items-center gap-4 p-4 rounded-xl bg-white border border-blue-100 hover:shadow-md transition-shadow">
                 <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 text-lg">
-                  💬
+                  <Bot className="h-5 w-5 text-blue-700" />
                 </div>
                 <span className="text-black font-medium">24/7 поддержка в Telegram</span>
               </div>
@@ -116,7 +117,7 @@ export default function HowItWorksSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="rounded-3xl bg-[#5479F7] p-8 text-white shadow-xl"
+              className="rounded-3xl bg-[#74AA9C] p-8 text-white shadow-xl"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-2xl">
@@ -143,7 +144,7 @@ export default function HowItWorksSection() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-xl">
                       {step.icon}
                     </div>
-                    <span className="text-xs font-semibold text-[#5479F7]">0{i + 2}</span>
+                    <span className="text-xs font-semibold text-[#74AA9C]">0{i + 2}</span>
                   </div>
                   <h4 className="font-semibold text-black mb-1">{step.title}</h4>
                   <p className="text-sm text-black">{step.desc}</p>

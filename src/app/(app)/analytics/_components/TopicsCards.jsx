@@ -6,7 +6,7 @@ export default function TopicsCards({ notesStats }) {
         {notesStats.topTopics.length ? (
           <div className="flex flex-wrap gap-2">
             {notesStats.topTopics.map((t) => (
-              <span key={t.word} className="px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs">
+              <span key={t.word} className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs">
                 {t.word} · {t.count}
               </span>
             ))}

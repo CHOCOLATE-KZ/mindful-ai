@@ -26,7 +26,7 @@ export function WelcomingCharacter() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        Добро пожаловать! 👋 <br />
+        Добро пожаловать!  <br />
         Я здесь, чтобы помочь вам.
       </motion.div>
     </motion.div>
@@ -105,7 +105,7 @@ export function CharacterScene({
   const Component = componentMap[type] || WelcomingCharacter;
 
   return (
-    <div className={`relative w-full py-12 ${showBackground ? 'bg-gradient-to-b from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800' : ''}`}>
+    <div className={`relative w-full py-12 ${showBackground ? 'bg-blue-50 dark:bg-gray-900' : ''}`}>
       <div className="relative min-h-[400px] flex items-center justify-center">
         <Component />
       </div>

@@ -1,113 +1,192 @@
 "use client";
 
 import Reveal from "@/components/ui/Reveal";
-import { ShieldCheck, Brain, Sparkles } from "lucide-react";
+import Link from "next/link";
+import {
+  ShieldCheck,
+  Brain,
+  Sparkles,
+  ArrowRight,
+  NotebookPen,
+  HeartPulse,
+  CheckCircle2,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function FeaturesSection() {
   const features = [
     {
       title: "Безопасность с приоритетом приватности",
-      subtitle: "Ваши данные остаются защищёнными и конфиденциальными.",
+      subtitle: "Ваши данные остаются защищенными и конфиденциальными.",
       Icon: ShieldCheck,
-      iconBg: "bg-[#5479F7]",
     },
     {
       title: "Умная память",
       subtitle: "Запоминает то, что действительно важно для вас.",
       Icon: Brain,
-      iconBg: "bg-blue-600",
     },
     {
       title: "Персональная поддержка",
       subtitle: "Помощь, адаптированная под ваши цели.",
       Icon: Sparkles,
-      iconBg: "bg-[#5479F7]",
+    },
+    {
+      title: "Ежедневные практики",
+      subtitle: "Короткие упражнения для снижения стресса.",
+      Icon: HeartPulse,
+    },
+    {
+      title: "Дневник состояния",
+      subtitle: "Фиксируйте динамику настроения и сна.",
+      Icon: NotebookPen,
     },
   ];
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-16">
-      <div className="mx-auto max-w-4xl text-center">
-        <Reveal>
-          <h2 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl">
-            Когда <span className="text-[#5479F7]">MindfulAI</span> на вашей стороне
-          </h2>
-        </Reveal>
-
-        <Reveal delay={0.08}>
-          <p className="mx-auto mt-4 max-w-3xl text-base text-black/60 sm:text-lg">
-            Откройте для себя безопасный способ получить поддержку в сфере ментального
-            здоровья — с надёжной приватностью, памятью и рекомендациями,
-            основанными на доказательных подходах.
-          </p>
-        </Reveal>
-      </div>
-
-      <div className="mt-10 grid gap-6 lg:grid-cols-3 items-stretch">
-        {features.map((f, idx) => (
-          <Reveal key={f.title} delay={0.12 + idx * 0.08}>
-            <FeatureCard {...f} />
+      <div className="rounded-3xl border border-blue-700 bg-blue-600 p-6 shadow-xl sm:p-8 lg:p-10">
+        <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+          <Reveal>
+            <FeatureCollage features={features} />
           </Reveal>
-        ))}
+
+          <div>
+            <Reveal delay={0.05}>
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                <CheckCircle2 size={14} />
+                Why Choose MindfulAI
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                Когда <span className="text-white">MindfulAI</span> на вашей стороне
+              </h2>
+            </Reveal>
+
+            <Reveal delay={0.16}>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
+                Откройте безопасный и современный формат психологической поддержки:
+                приватный чат, персональные рекомендации, ежедневные практики и трекинг
+                состояния в одном месте.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.22}>
+              <ul className="mt-5 space-y-2 text-sm text-white/90">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={16} className="mt-0.5 text-white" />
+                  Приватность и контроль ваших данных
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={16} className="mt-0.5 text-white" />
+                  Поддержка 24/7 без осуждения
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 size={16} className="mt-0.5 text-white" />
+                  Практики и аналитика для реальных изменений
+                </li>
+              </ul>
+            </Reveal>
+
+            <Reveal delay={0.28}>
+              <Link
+                href="/chat"
+                className="group mt-7 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
+              >
+                Попробовать MindfulAI
+                <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Reveal>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-function FeatureCard({ title, subtitle, Icon, iconBg }) {
+function FeatureCollage({ features }) {
+  const [first, second, third, fourth, fifth] = features;
+
   return (
-    <div
-      className="group relative h-full overflow-hidden rounded-2xl border border-black/10 bg-white p-8 shadow-lg
-             transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
-    >
-      <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-blue-100/60 blur-3xl opacity-60 transition-opacity duration-500 group-hover:opacity-90" />
+    <div className="mx-auto w-full max-w-[560px]">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+        className="w-full"
+      >
+        <MainCard feature={first} />
+      </motion.div>
 
-      {/* иконка */}
-      <div className="relative z-10 flex flex-col items-center text-center">
-        <div
-          className={`mb-4 grid h-12 w-12 place-items-center rounded-2xl ${iconBg} text-white shadow-md
-                      transition-transform duration-300 group-hover:rotate-6 group-hover:scale-105`}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.06 }}
         >
-          <Icon className="h-6 w-6" />
-        </div>
+          <MiniCard feature={second} />
+        </motion.div>
 
-        <h3 className="text-lg font-semibold text-black">{title}</h3>
-        <p className="mt-2 text-sm text-black/60">{subtitle}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <MiniCard feature={third} />
+        </motion.div>
+      </div>
 
-        {/* полезный квадрат с анимированными иконками */}
-        <div className="relative mt-8 h-44 w-44 rounded-3xl bg-white/60 shadow-inner backdrop-blur-sm overflow-hidden
-                        flex items-center justify-center transition-transform duration-300 group-hover:scale-[1.03]">
-          {/* несколько анимированных иконок */}
-          <IconPulse Icon={Icon} delay={0} size={6} />
-          <IconPulse Icon={Icon} delay={0.3} size={5} />
-          <IconPulse Icon={Icon} delay={0.6} size={4} />
-        </div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.14 }}
+        >
+          <MiniCard feature={fourth} />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.18 }}
+        >
+          <MiniCard feature={fifth} />
+        </motion.div>
       </div>
     </div>
   );
 }
 
-// Анимированная иконка внутри квадрата
-function IconPulse({ Icon, delay = 0, size = 5 }) {
+function MainCard({ feature }) {
+  const { title, subtitle, Icon } = feature;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5, y: 0 }}
-      animate={{ opacity: 1, scale: 1, y: [-2, 2, -2], rotate: [0, 15, -15, 0] }}
-      transition={{
-        delay,
-        duration: 2,
-        repeat: Infinity,
-        repeatType: "mirror",
-        ease: "easeInOut",
-      }}
-      className="absolute"
-      style={{
-        width: `${size * 15}px`,
-        height: `${size * 15}px`,
-      }}
-    >
-      <Icon className="w-full h-full text-black/20" />
-    </motion.div>
+    <div className="rounded-2xl border border-blue-100 bg-white p-6 text-black shadow-2xl">
+      <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+        <Icon size={21} />
+      </div>
+      <h3 className="mt-4 text-xl font-semibold leading-tight">{title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-black/70">{subtitle}</p>
+    </div>
+  );
+}
+
+function MiniCard({ feature }) {
+  const { title, subtitle, Icon } = feature;
+
+  return (
+    <div className="h-full rounded-2xl border border-black/10 bg-white p-4 shadow-lg">
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+        <Icon size={18} />
+      </div>
+      <h3 className="mt-3 text-sm font-semibold leading-tight text-black">{title}</h3>
+      <p className="mt-1.5 text-xs leading-relaxed text-black/60">{subtitle}</p>
+    </div>
   );
 }

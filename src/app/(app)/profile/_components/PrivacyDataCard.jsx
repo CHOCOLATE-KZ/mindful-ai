@@ -1,40 +1,47 @@
 "use client";
 
+import { ExternalLink, Download } from "lucide-react";
+
 export default function PrivacyDataCard({ onOpenPrivacy, onExport, t }) {
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-black/10 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.06)]">
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-blue-600" />
-
-      <h3 className="text-base font-semibold text-black">{t("privacy")}</h3>
-
-      <div className="mt-4 overflow-hidden rounded-2xl border border-black/10 bg-white">
+    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-md">
+      <div className="divide-y divide-slate-100">
         <RowButton
+          icon={<ExternalLink className="h-4 w-4" />}
           onClick={onOpenPrivacy}
           title={t("privacySettings")}
           hint={t("privacyHint")}
+          color="text-blue-500 bg-blue-50"
         />
-
-        <div className="h-px bg-black/10" />
-
         <RowButton
+          icon={<Download className="h-4 w-4" />}
           onClick={onExport}
           title={t("export")}
           hint={t("exportHint")}
+          color="text-emerald-500 bg-emerald-50"
         />
       </div>
     </div>
   );
 }
 
-function RowButton({ onClick, title, hint }) {
+function RowButton({ onClick, title, hint, icon, color }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full px-4 py-4 text-left transition hover:bg-black/[0.03]"
+      className="flex w-full items-center gap-4 px-6 py-4 text-left transition hover:bg-slate-50 active:bg-slate-100"
     >
-      <div className="font-medium text-black">{title}</div>
-      <div className="text-sm text-black/60">{hint}</div>
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${color}`}>
+        {icon}
+      </div>
+      <div className="flex-1">
+        <div className="font-medium text-slate-800">{title}</div>
+        <div className="text-sm text-slate-500">{hint}</div>
+      </div>
+      <svg className="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
     </button>
   );
 }

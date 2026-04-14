@@ -40,9 +40,9 @@ checkFile('psychology_knowledge/emotional-regulation.md', 'Эмоциональ�
 checkFile('psychology_knowledge/mindfulness-meditation.md', 'Внимательность/медитация');
 checkFile('psychology_knowledge/stress-management.md', 'Управление стрессом');
 
-console.log('\n📚 SQL миграции:');
+console.log('\n📚 Схема БД в Supabase:');
 console.log('---');
-checkFile('sql/psychology_embeddings.sql', 'Миграция БД (embeddings)');
+console.log('ℹ️ Локальные SQL файлы удалены, используйте SQL Editor в Supabase.');
 
 console.log('\n🔧 Скрипты:');
 console.log('---');
@@ -65,7 +65,7 @@ console.log('\n✨ Результат проверки:');
 console.log('---');
 console.log('Все критические файлы RAG системы на месте и интегрированы в код.');
 console.log('\n🚀 Следующие шаги:');
-console.log('1. Запустите SQL миграцию: sql/psychology_embeddings.sql');
+console.log('1. Убедитесь, что схема psychology_knowledge создана в Supabase SQL Editor');
 console.log('2. Запустите загрузку знаний: node scripts/load-psychology-embeddings.js');
 console.log('3. Протестируйте поиск: node scripts/test-knowledge-search.js');
 console.log('4. Проверьте ответы AI в чате или Telegram.');

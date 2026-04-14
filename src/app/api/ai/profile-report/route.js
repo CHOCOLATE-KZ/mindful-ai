@@ -66,10 +66,12 @@ export async function POST(req) {
   }
 
   let mode = "profile";
+  let language = "ru";
   try {
     const body = await req.json();
     if (body?.mode === "weekly") mode = "weekly";
     if (body?.mode === "profile") mode = "profile";
+    if (body?.language) language = body.language;
   } catch {
     // ignore invalid JSON, default to profile
   }
@@ -142,20 +144,48 @@ export async function POST(req) {
     })),
   };
 
+  const langInstructions = {
+    ru: "Отвечай ТОЛЬКО на русском языке. Не используй английский ни в одном слове.",
+    kz: "Тек қана қазақ тілінде жауап бер. Орыс немесе ағылшын тілдерін пайдаланба.",
+    en: "Reply in English only.",
+  };
+  const langNote = langInstructions[language] || langInstructions.ru;
+
   const systemPrompt =
-    "You are MindfulAI, a supportive assistant for emotional well-being. " +
-    "You are not a licensed therapist. Do not diagnose or provide medical advice. " +
-    "Use gentle, non-judgmental language.";
+    "You are MindfulAI — a warm, supportive AI assistant for emotional well-being. " +
+    "You are NOT a licensed therapist. Never diagnose or give medical advice. " +
+    "Use gentle, empathetic, non-judgmental language. " +
+    langNote;
+
+  const sectionLabels = {
+    ru: {
+      weekly: ["Итоги недели", "Изменения", "Сигналы", "Советы"],
+      profile: ["Общее", "Тенденции", "Темы", "Что помогает", "Риски", "Следующие шаги"],
+    },
+    kz: {
+      weekly: ["Апта қорытындысы", "Өзгерістер", "Белгілер", "Кеңестер"],
+      profile: ["Жалпы", "Үрдістер", "Тақырыптар", "Не көмектеседі", "Тәуекелдер", "Келесі қадамдар"],
+    },
+    en: {
+      weekly: ["Summary", "Changes", "Signals", "Tips"],
+      profile: ["Overview", "Trends", "Topics", "What helps", "Risks", "Next steps"],
+    },
+  };
+
+  const labels = (sectionLabels[language] || sectionLabels.ru);
 
   const userPrompt =
     mode === "weekly"
-      ? "Create a WEEKLY SUMMARY based on the data below. " +
-        "Use this structure: Summary, Changes vs previous week (if any), " +
-        "Signals (stress/energy), and 2-3 gentle suggestions. Keep it short.\n\n" +
+      ? `Create a WEEKLY SUMMARY in ${language === "ru" ? "Russian" : language === "kz" ? "Kazakh" : "English"}. ` +
+        `Structure: **${labels.weekly[0]}**, **${labels.weekly[1]}** (if any), ` +
+        `**${labels.weekly[2]}** (stress/energy patterns), **${labels.weekly[3]}** (2-3 gentle suggestions). ` +
+        "Keep it concise and warm. Do NOT repeat user IDs or technical field names in the output.\n\n" +
         `DATA:\n${JSON.stringify(payload, null, 2)}`
-      : "Create a PERSONAL REPORT based on the data below. " +
-        "Use this structure: Summary, Trends, Topics, What helps, Risks, Next steps. " +
-        "Use short paragraphs and bullet points where helpful.\n\n" +
+      : `Create a PERSONAL WELLBEING REPORT in ${language === "ru" ? "Russian" : language === "kz" ? "Kazakh" : "English"}. ` +
+        `Use these sections: **${labels.profile[0]}**, **${labels.profile[1]}**, **${labels.profile[2]}**, ` +
+        `**${labels.profile[3]}**, **${labels.profile[4]}**, **${labels.profile[5]}**. ` +
+        "Use bullet points. Be warm and supportive. " +
+        "Do NOT mention user IDs, technical field names, or raw JSON keys in the output.\n\n" +
         `DATA:\n${JSON.stringify(payload, null, 2)}`;
 
   const lm = await callLmStudio([

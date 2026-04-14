@@ -82,7 +82,7 @@ export function useProfileData(supabase, initial = {}) {
     }
 
     setProfile((p) => ({ ...(p || {}), name }));
-    setMsg("Профиль обновлён ✅");
+    setMsg("Профиль обновлён ");
     setEditOpen(false);
   }
 
@@ -95,7 +95,7 @@ export function useProfileData(supabase, initial = {}) {
     const { error } = await supabase.auth.updateUser({ password: pwd });
     if (error) setMsg(error.message);
     else {
-      setMsg("Пароль обновлён ✅");
+      setMsg("Пароль обновлён ");
       setPasswordDraft("");
       setSecurityOpen(false);
     }
@@ -132,9 +132,44 @@ export function useProfileData(supabase, initial = {}) {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      setMsg("Data exported successfully ✅");
+      setMsg("Data exported successfully ");
     } catch (err) {
       setMsg(err.message || "Error exporting data");
+    }
+  }
+
+  async function onAvatarSelected(file) {
+    if (!user || !file) return;
+
+    try {
+      setMsg("");
+
+      const ext =
+        file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const path = `${user.id}/avatar.${ext}`;
+
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        upsert: true,
+        contentType: file.type,
+      });
+      if (upErr) throw upErr;
+
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = pub?.publicUrl;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("id", user.id)
+        .select("id, name, avatar_url")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      setProfile(data || null);
+      setMsg("Аватар обновлен");
+    } catch (e) {
+      setMsg(e?.message || "Не удалось загрузить аватар");
     }
   }
 
@@ -146,6 +181,6 @@ export function useProfileData(supabase, initial = {}) {
     stats,
     msg,
     ui: { editOpen, setEditOpen, privacyOpen, setPrivacyOpen, securityOpen, setSecurityOpen, nameDraft, setNameDraft, passwordDraft, setPasswordDraft },
-    actions: { updateSettings, saveProfile, changePassword, exportMyData, signOut },
+    actions: { updateSettings, saveProfile, changePassword, exportMyData, signOut, onAvatarSelected },
   };
 }

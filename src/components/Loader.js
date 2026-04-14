@@ -7,7 +7,7 @@ export default function Loader() {
       <div className="absolute inset-0 backdrop-blur-sm bg-white/40" />
       <div className="relative rounded-3xl bg-white/90 px-8 py-6 shadow-card ring-1 ring-black/5">
         <ThreeDot
-          color={["#7c3aed", "#2563eb", "#22c55e", "#f59e0b"]} 
+          color={["#7c3aed", "#74AA9C", "#22c55e", "#f59e0b"]} 
           size="large"
           text="Loading..."
           textColor="#475569"

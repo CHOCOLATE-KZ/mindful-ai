@@ -1,50 +1,57 @@
 "use client";
 
+import { Sun, Moon } from "lucide-react";
+
 export default function AppearanceCard({ theme, language, onChange, t }) {
   const isDark = theme === "dark";
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-black/10 bg-white p-6 shadow-[0_12px_35px_rgba(0,0,0,0.06)]">
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-blue-600" />
+    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 shadow-md">
+      <h3 className="mb-4 text-base font-semibold text-slate-800">{t("appearance")}</h3>
 
-      <h3 className="text-base font-semibold text-black">{t("appearance")}</h3>
-
-      <div className="mt-4 rounded-2xl border border-black/10 bg-white p-4">
-        <div className="flex items-center justify-between gap-4">
+      {/* theme toggle */}
+      <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {isDark ? (
+            <Moon className="h-4 w-4 text-blue-500" />
+          ) : (
+            <Sun className="h-4 w-4 text-amber-500" />
+          )}
           <div>
-            <div className="font-medium text-black">{t("darkMode")}</div>
-            <div className="text-sm text-black/60">{t("darkModeHint")}</div>
+            <div className="text-sm font-medium text-slate-800">{t("darkMode")}</div>
+            <div className="text-xs text-slate-500">{t("darkModeHint")}</div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => onChange({ theme: isDark ? "light" : "dark" })}
-            className={`relative h-8 w-14 rounded-full border border-black/10 p-1 transition ${
-              isDark ? "bg-blue-600/20" : "bg-black/10"
-            }`}
-            aria-label="toggle theme"
-          >
-            <span
-              className={`block h-6 w-6 rounded-full bg-white shadow-sm transition ${
-                isDark ? "translate-x-6" : "translate-x-0"
-              }`}
-            />
-          </button>
         </div>
 
-        <div className="mt-5">
-          <div className="text-sm font-medium text-black/70">{t("language")}</div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <LangBtn active={language === "ru"} onClick={() => onChange({ language: "ru" })}>
-              Russian
-            </LangBtn>
-            <LangBtn active={language === "en"} onClick={() => onChange({ language: "en" })}>
-              English
-            </LangBtn>
-            <LangBtn active={language === "kz"} onClick={() => onChange({ language: "kz" })}>
-              Kazakh
-            </LangBtn>
-          </div>
+        <button
+          type="button"
+          onClick={() => onChange({ theme: isDark ? "light" : "dark" })}
+          className={`relative h-7 w-12 rounded-full p-1 transition-colors ${
+            isDark ? "bg-blue-500" : "bg-slate-200"
+          }`}
+          aria-label="toggle theme"
+        >
+          <span
+            className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+              isDark ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* language */}
+      <div className="mt-4">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{t("language")}</div>
+        <div className="grid grid-cols-3 gap-2">
+          <LangBtn active={language === "ru"} onClick={() => onChange({ language: "ru" })}>
+            {t ? t("langRu") : "Русский"}
+          </LangBtn>
+          <LangBtn active={language === "en"} onClick={() => onChange({ language: "en" })}>
+            {t ? t("langEn") : "English"}
+          </LangBtn>
+          <LangBtn active={language === "kz"} onClick={() => onChange({ language: "kz" })}>
+            {t ? t("langKz") : "Қазақша"}
+          </LangBtn>
         </div>
       </div>
     </div>
@@ -56,10 +63,10 @@ function LangBtn({ active, onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-sm border transition ${
+      className={`rounded-xl py-2 text-sm font-medium transition ${
         active
-          ? "bg-blue-600 text-white border-blue-600"
-          : "bg-white text-black/70 border-black/10 hover:bg-black/[0.03]"
+          ? "bg-blue-600 text-white shadow-sm"
+          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
       }`}
     >
       {children}

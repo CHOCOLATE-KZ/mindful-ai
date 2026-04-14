@@ -1,4 +1,5 @@
 import { TAGS } from "../_data/newsData";
+import { Search, Tags, Star, ArrowUpDown } from "lucide-react";
 
 function Label({ children, className = "" }) {
   return <label className={`text-sm font-medium text-black/70 ${className}`}>{children}</label>;
@@ -13,8 +14,8 @@ function TagChip({ active, children, onClick }) {
         flex items-center gap-1.5 backdrop-blur-sm shadow-sm hover:shadow-md
         ${
           active
-            ? "bg-gradient-to-r from-violet-600 to-blue-600 text-white border-violet-500 shadow-lg scale-105"
-            : "bg-white text-black/70 border-black/10 hover:bg-gradient-to-r hover:from-violet-50 hover:to-blue-50 hover:border-violet-200"
+            ? "bg-blue-600 text-white border-blue-600 shadow-lg scale-105"
+            : "bg-white text-black/70 border-black/10 hover:bg-blue-50 hover:border-blue-200"
         }
       `}
     >
@@ -32,7 +33,7 @@ export default function NewsFilters({ filters }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="flex items-center gap-2">
-            <span className="text-lg">🔍</span>
+            <Search size={16} className="text-blue-600" />
             <span className="text-sm font-medium text-black/70">Поиск материалов</span>
           </Label>
           {q && (
@@ -56,7 +57,7 @@ export default function NewsFilters({ filters }) {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Введите тему или ключевое слово..."
             className="w-full h-12 pl-12 pr-6 rounded-2xl border border-black/10 bg-white text-black/80 placeholder-black/40 outline-none transition-all
-                       focus:border-violet-300 focus:ring-4 focus:ring-violet-100/50 shadow-sm"
+                       focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 shadow-sm"
           />
         </div>
       </div>
@@ -64,13 +65,13 @@ export default function NewsFilters({ filters }) {
       {/* Tags Filter */}
       <div className="space-y-3">
         <Label className="flex items-center gap-2">
-          <span className="text-lg">🏷️</span>
+          <Tags size={16} className="text-blue-600" />
           <span className="text-sm font-medium text-black/70">Категории</span>
         </Label>
 
         <div className="flex flex-wrap gap-2">
           <TagChip active={!tag} onClick={() => setTag("")}>
-            <span className="mr-1.5">⭐</span> Все
+            <Star size={14} className="mr-1.5" /> Все
           </TagChip>
           {TAGS.map((t) => (
             <TagChip key={t} active={tag === t} onClick={() => setTag(t)}>
@@ -83,7 +84,7 @@ export default function NewsFilters({ filters }) {
       {/* Sort */}
       <div className="flex items-center justify-between pt-4 border-t border-black/10">
         <div className="flex items-center gap-2">
-          <span className="text-lg">📊</span>
+          <ArrowUpDown size={16} className="text-blue-600" />
           <span className="text-sm font-medium text-black/70">Сортировка</span>
         </div>
 
@@ -91,7 +92,7 @@ export default function NewsFilters({ filters }) {
           value={sort}
           onChange={(e) => setSort(e.target.value)}
           className="h-10 rounded-xl border border-black/10 bg-white/80 backdrop-blur-sm px-4 text-sm text-black/80 outline-none transition-all
-                     focus:border-violet-300 focus:ring-4 focus:ring-violet-100/50 shadow-sm cursor-pointer"
+                     focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 shadow-sm cursor-pointer"
         >
           <option value="latest">Сначала новые</option>
           <option value="oldest">Сначала старые</option>

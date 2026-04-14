@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+/* Tailwind v4: override blue palette → teal #74AA9C */
+@theme {
+  --color-blue-50: #f0f7f5;
+  --color-blue-100: #d9eeea;
+  --color-blue-200: #b3ddd6;
+  --color-blue-300: #8ecbc2;
+  --color-blue-400: #74AA9C;
+  --color-blue-500: #74AA9C;
+  --color-blue-600: #5d9088;
+  --color-blue-700: #4a7a70;
+  --color-blue-800: #3a6058;
+  --color-blue-900: #2a4842;
+  --color-blue-950: #1a2e2a;
+}
+
+/* Tailwind v4: use .dark class instead of prefers-color-scheme */
+@variant dark (&:is(.dark *));
+
 body {
   top: 0 !important;
 }
@@ -29,9 +47,9 @@ body {
   --muted: 107 114 128;        /* secondary text */
 
   /* Brand */
-  --blue: 37 99 235;           /* blue-600 */
-  --accent-from: 37 99 235;    /* keep consistent (blue) */
-  --accent-to: 37 99 235;
+  --blue: 116 170 156;         /* #74AA9C teal */
+  --accent-from: 116 170 156;  /* teal */
+  --accent-to: 116 170 156;
 
   --radius: 20px;
 
@@ -44,16 +62,17 @@ body {
    .dark is toggled on <html>
    ========================= */
 html.dark {
-  --bg: 10 10 14;
-  --fg: 245 245 255;
-  --card: 18 18 24;
-  --border: 255 255 255 / 0.12;
-  --muted: 160 160 175;
+  /* ChatGPT #212121 = rgb(33,33,33) + синий подтон в B-канале */
+  --bg:    33 33 46;       /* #21212e — почти ChatGPT но +13 на blue */
+  --fg:    236 237 245;    /* #ecedf5 — мягкий белый */
+  --card:  42 42 58;       /* #2a2a3a — карточки чуть светлее bg */
+  --border: 255 255 255 / 0.08;
+  --muted: 140 145 175;    /* #8c91af — slate-blue */
 
   /* brand stays same */
-  --blue: 37 99 235;
-  --accent-from: 37 99 235;
-  --accent-to: 37 99 235;
+  --blue: 116 170 156;  /* #74AA9C teal */
+  --accent-from: 116 170 156;
+  --accent-to: 116 170 156;
 
   color-scheme: dark;
 }
@@ -73,7 +92,7 @@ html, body {
 }
 
 /* =========================
-   CUSTOM SCROLLBAR (BLUE)
+   CUSTOM SCROLLBAR (TEAL)
    ========================= */
 
 /* Webkit browsers (Chrome, Safari, Edge) */
@@ -87,28 +106,28 @@ html, body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(229, 231, 235, 0.5); /* gray-200 */
+  background: rgba(229, 231, 235, 0.5);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2563eb; /* blue-600 */
+  background: #74AA9C;
   border-radius: 10px;
   border: 2px solid rgba(229, 231, 235, 0.5);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #1d4ed8; /* blue-700 */
+  background: #5d9088;
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: #1e40af; /* blue-800 */
+  background: #4a7a70;
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2563eb rgba(229, 231, 235, 0.5);
+  scrollbar-color: #74AA9C rgba(229, 231, 235, 0.5);
 }
 
 /* Dark mode adjustments */
@@ -117,16 +136,16 @@ html.dark ::-webkit-scrollbar-track {
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #3b82f6; /* blue-500 - ярче для dark mode */
+  background: #5d9088;
   border-color: rgba(255, 255, 255, 0.05);
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #2563eb; /* blue-600 */
+  background: #74AA9C;
 }
 
 html.dark * {
-  scrollbar-color: #3b82f6 rgba(255, 255, 255, 0.05);
+  scrollbar-color: #5d9088 rgba(255, 255, 255, 0.05);
 }
 
 /* =========================
@@ -230,35 +249,178 @@ html.dark .glass-card {
 
 
 /* =========================
-   QUICK DARK PATCH (NO REWRITE)
-   Перехватываем самые частые tailwind-классы
+   DARK MODE — ПОЛНОЕ ПОКРЫТИЕ
+   ChatGPT-стиль (#212121) + синий подтон бренда
+   bg: #1a1b2e | card: #22243a | input: #181928
    ========================= */
-html.dark .bg-white { background-color: rgb(var(--card)) !important; }
-html.dark .bg-white\/60 { background-color: rgba(var(--card), 0.60) !important; }
-html.dark .bg-white\/70 { background-color: rgba(var(--card), 0.70) !important; }
-html.dark .bg-white\/80 { background-color: rgba(var(--card), 0.80) !important; }
 
-html.dark .text-black { color: rgb(var(--fg)) !important; }
-html.dark .text-black\/60 { color: rgba(var(--fg), 0.60) !important; }
-html.dark .text-black\/70 { color: rgba(var(--fg), 0.70) !important; }
-html.dark .text-black\/80 { color: rgba(var(--fg), 0.80) !important; }
-
-html.dark .border-black\/10 { border-color: rgba(255,255,255,0.12) !important; }
-html.dark .border-black\/5  { border-color: rgba(255,255,255,0.10) !important; }
-html.dark .bg-black\/10 { background-color: rgba(255,255,255,0.10) !important; }
-html.dark .bg-black\/\[0\.03\] { background-color: rgba(255,255,255,0.06) !important; }
-
-/* Серые фоны, которые часто выжигают dark */
+/* ---- ФОНЫ ---- */
+html.dark .bg-white                  { background-color: rgb(42 42 58) !important; }
+html.dark .bg-white\/90              { background-color: rgb(42 42 58 / 0.93) !important; }
+html.dark .bg-white\/80              { background-color: rgb(42 42 58 / 0.85) !important; }
+html.dark .bg-white\/75              { background-color: rgb(33 33 46 / 0.88) !important; }
+html.dark .bg-white\/70              { background-color: rgb(42 42 58 / 0.78) !important; }
+html.dark .bg-white\/60              { background-color: rgb(42 42 58 / 0.65) !important; }
 html.dark .bg-slate-50,
-html.dark .bg-gray-50 { background-color: rgb(var(--bg)) !important; }
+html.dark .bg-gray-50                { background-color: rgb(26 26 38) !important; }
 html.dark .bg-slate-100,
-html.dark .bg-gray-100 { background-color: rgb(var(--bg)) !important; }
+html.dark .bg-gray-100               { background-color: rgb(33 33 46) !important; }
+html.dark .bg-slate-200,
+html.dark .bg-gray-200               { background-color: rgb(42 42 58) !important; }
+html.dark .bg-slate-800              { background-color: rgb(52 52 70) !important; }
+html.dark .bg-slate-950\/90          { background-color: rgb(26 26 38 / 0.92) !important; }
 
-/* Типичные muted тексты */
+/* Полупрозрачные чёрные оверлеи → светлые */
+html.dark .bg-black\/\[0\.03\]       { background-color: rgb(255 255 255 / 0.03) !important; }
+html.dark .bg-black\/\[0\.04\]       { background-color: rgb(255 255 255 / 0.05) !important; }
+html.dark .bg-black\/\[0\.05\]       { background-color: rgb(255 255 255 / 0.06) !important; }
+html.dark .bg-black\/\[0\.06\]       { background-color: rgb(255 255 255 / 0.07) !important; }
+html.dark .bg-black\/10              { background-color: rgb(255 255 255 / 0.07) !important; }
+
+/* ---- ТЕКСТ ---- */
+html.dark .text-black                { color: rgb(236 237 245) !important; }
+html.dark .text-black\/65            { color: rgb(140 145 175) !important; }
+html.dark .text-black\/60            { color: rgb(140 145 175) !important; }
+html.dark .text-black\/50            { color: rgb(100 104 140) !important; }
+html.dark .text-black\/40            { color: rgb(70 74 110) !important; }
+html.dark .text-slate-900            { color: rgb(236 237 245) !important; }
+html.dark .text-slate-800            { color: rgb(210 212 235) !important; }
+html.dark .text-slate-700            { color: rgb(140 145 175) !important; }
+html.dark .text-slate-600            { color: rgb(140 145 175) !important; }
 html.dark .text-slate-500,
-html.dark .text-gray-500 { color: rgba(var(--fg), 0.60) !important; }
-html.dark .text-slate-600,
-html.dark .text-gray-600 { color: rgba(var(--fg), 0.70) !important; }
+html.dark .text-gray-500             { color: rgb(100 104 140) !important; }
+html.dark .text-slate-400            { color: rgb(100 104 140) !important; }
+html.dark .text-gray-900             { color: rgb(236 237 245) !important; }
+html.dark .text-gray-800             { color: rgb(210 212 235) !important; }
+html.dark .text-gray-700             { color: rgb(140 145 175) !important; }
+html.dark .text-gray-600             { color: rgb(140 145 175) !important; }
+
+/* ---- РАМКИ ---- */
+html.dark .border-black\/10          { border-color: rgb(255 255 255 / 0.08) !important; }
+html.dark .border-black\/5           { border-color: rgb(255 255 255 / 0.05) !important; }
+html.dark .border-gray-200           { border-color: rgb(255 255 255 / 0.08) !important; }
+html.dark .border-gray-100           { border-color: rgb(255 255 255 / 0.05) !important; }
+html.dark .border-gray-300           { border-color: rgb(255 255 255 / 0.10) !important; }
+html.dark .border-slate-100          { border-color: rgb(255 255 255 / 0.06) !important; }
+html.dark .border-slate-200          { border-color: rgb(255 255 255 / 0.08) !important; }
+html.dark .divide-gray-100 > * + *   { border-color: rgb(255 255 255 / 0.05) !important; }
+
+/* ---- RING ---- */
+html.dark .ring-black\/5             { --tw-ring-color: rgb(255 255 255 / 0.04) !important; }
+html.dark .ring-black\/10            { --tw-ring-color: rgb(255 255 255 / 0.08) !important; }
+
+/* ---- ТЕНИ ---- */
+html.dark .shadow-sm                 { box-shadow: 0 1px 6px rgb(0 0 5 / 0.40) !important; }
+html.dark .shadow-md                 { box-shadow: 0 4px 18px rgb(0 0 5 / 0.50) !important; }
+html.dark .shadow-lg                 { box-shadow: 0 8px 32px rgb(0 0 5 / 0.55) !important; }
+html.dark .shadow-xl                 { box-shadow: 0 16px 48px rgb(0 0 5 / 0.60) !important; }
+html.dark .shadow-2xl                { box-shadow: 0 24px 64px rgb(0 0 5 / 0.65) !important; }
+
+/* ---- HOVER ---- */
+html.dark .hover\:bg-gray-50:hover   { background-color: rgb(255 255 255 / 0.05) !important; }
+html.dark .hover\:bg-slate-50:hover  { background-color: rgb(255 255 255 / 0.05) !important; }
+html.dark .hover\:bg-gray-100:hover  { background-color: rgb(255 255 255 / 0.07) !important; }
+html.dark .hover\:bg-black\/\[0\.04\]:hover { background-color: rgb(255 255 255 / 0.05) !important; }
+html.dark .hover\:bg-black\/\[0\.05\]:hover { background-color: rgb(255 255 255 / 0.06) !important; }
+html.dark .hover\:bg-rose-50:hover   { background-color: rgb(120 20 20 / 0.25) !important; }
+html.dark .hover\:bg-red-50:hover    { background-color: rgb(120 20 20 / 0.25) !important; }
+html.dark .hover\:border-blue-600:hover { border-color: rgb(96 165 250) !important; }
+
+/* ---- ГРАДИЕНТЫ ---- */
+html.dark .from-white {
+  --tw-gradient-from: rgb(42 42 58) var(--tw-gradient-from-position) !important;
+}
+html.dark .to-white {
+  --tw-gradient-to: rgb(42 42 58) var(--tw-gradient-to-position) !important;
+}
+html.dark .via-white {
+  --tw-gradient-via: rgb(42 42 58) var(--tw-gradient-via-position) !important;
+}
+html.dark .from-violet-50 {
+  --tw-gradient-from: rgb(50 20 110 / 0.35) var(--tw-gradient-from-position) !important;
+}
+html.dark .via-violet-50\/20 {
+  --tw-gradient-via: transparent var(--tw-gradient-via-position) !important;
+}
+html.dark .to-violet-50 {
+  --tw-gradient-to: rgb(50 20 110 / 0.25) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-blue-50 {
+  --tw-gradient-from: rgb(20 60 52 / 0.50) var(--tw-gradient-from-position) !important;
+}
+html.dark .to-blue-50 {
+  --tw-gradient-to: rgb(20 60 52 / 0.35) var(--tw-gradient-to-position) !important;
+}
+html.dark .from-blue-100 {
+  --tw-gradient-from: rgb(20 60 52 / 0.65) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-blue-50\/50 {
+  --tw-gradient-from: rgb(20 60 52 / 0.30) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-emerald-50 {
+  --tw-gradient-from: rgb(15 50 35 / 0.45) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-purple-50,
+html.dark .from-purple-100 {
+  --tw-gradient-from: rgb(55 10 95 / 0.40) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-orange-50,
+html.dark .from-orange-100 {
+  --tw-gradient-from: rgb(65 22 5 / 0.40) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-red-50,
+html.dark .from-red-100 {
+  --tw-gradient-from: rgb(65 10 10 / 0.40) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-pink-50,
+html.dark .from-pink-100 {
+  --tw-gradient-from: rgb(70 5 70 / 0.35) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-amber-50 {
+  --tw-gradient-from: rgb(55 32 5 / 0.35) var(--tw-gradient-from-position) !important;
+}
+html.dark .from-slate-50 {
+  --tw-gradient-from: rgb(26 26 38) var(--tw-gradient-from-position) !important;
+}
+
+/* ---- ЦВЕТНЫЕ ПИЛЛЫ / БЕЙДЖИ ---- */
+html.dark .bg-violet-50       { background-color: rgb(50 20 110 / 0.28) !important; }
+html.dark .bg-violet-100      { background-color: rgb(50 20 110 / 0.38) !important; }
+html.dark .bg-violet-200      { background-color: rgb(50 20 110 / 0.50) !important; }
+html.dark .bg-blue-50         { background-color: rgb(20 60 52 / 0.35) !important; }
+html.dark .bg-blue-50\/60     { background-color: rgb(20 60 52 / 0.28) !important; }
+html.dark .bg-blue-100        { background-color: rgb(20 60 52 / 0.48) !important; }
+html.dark .bg-emerald-50      { background-color: rgb(15 50 35 / 0.35) !important; }
+html.dark .bg-emerald-100     { background-color: rgb(15 50 35 / 0.48) !important; }
+html.dark .bg-rose-50         { background-color: rgb(65 10 10 / 0.32) !important; }
+html.dark .bg-rose-100        { background-color: rgb(65 10 10 / 0.45) !important; }
+html.dark .bg-red-50          { background-color: rgb(65 10 10 / 0.32) !important; }
+html.dark .bg-amber-50        { background-color: rgb(55 32 5 / 0.30) !important; }
+html.dark .bg-amber-50\/60    { background-color: rgb(55 32 5 / 0.24) !important; }
+
+/* ---- ВВОД (формы) ---- */
+html.dark input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
+  background-color: rgb(28 28 40) !important;
+  color: rgb(236 237 245) !important;
+  border-color: rgb(255 255 255 / 0.10) !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: rgb(100 104 140) !important;
+}
+html.dark input:focus:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+html.dark textarea:focus {
+  border-color: rgb(116 170 156 / 0.55) !important;
+  box-shadow: 0 0 0 3px rgb(116 170 156 / 0.18) !important;
+}
+
+/* ---- СКРОЛЛБАР ---- */
+html.dark ::-webkit-scrollbar-track  { background: rgb(26 26 38); }
+html.dark ::-webkit-scrollbar-thumb  { background: #4a7a70; border-color: rgb(26 26 38); }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #74AA9C; }
+html.dark * { scrollbar-color: #4a7a70 rgb(26 26 38); }
 
 
 .card {
