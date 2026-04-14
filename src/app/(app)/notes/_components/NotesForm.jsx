@@ -1,3 +1,6 @@
+"use client";
+
+import { AnimatePresence, motion } from "framer-motion";
 import Card from "@/components/ui/Card";
 import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
@@ -20,6 +23,10 @@ import {
   StickyNote,
   Plus,
   Lightbulb,
+  CalendarDays,
+  AlertTriangle,
+  Heart,
+  CheckCircle2,
 } from "lucide-react";
 
 /**
@@ -40,7 +47,9 @@ export default function NotesForm({ editor, quickNotes }) {
               </h2>
             </div>
             <p className="mt-2 text-sm text-black/65 leading-relaxed">
-              Заполните настроение и сон (по желанию) и добавьте комментарий.
+              {editor.noteType === "abc"
+                ? "Разберите тревожную ситуацию по методике КПТ: триггер → реакция → последствия"
+                : "Заполните настроение и сон (по желанию) и добавьте комментарий."}
             </p>
           </div>
 
@@ -55,20 +64,190 @@ export default function NotesForm({ editor, quickNotes }) {
           )}
         </div>
 
+        {/* Переключатель типа записи */}
+        <div className="mt-5 flex gap-2 rounded-2xl bg-gray-100/70 p-1">
+          <button
+            type="button"
+            onClick={() => editor.setNoteType("daily")}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+              editor.noteType === "daily"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-black/50 hover:text-black/70"
+            }`}
+          >
+            <CalendarDays size={15} />
+            Ежедневная
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.setNoteType("abc")}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
+              editor.noteType === "abc"
+                ? "bg-white text-purple-600 shadow-sm"
+                : "text-black/50 hover:text-black/70"
+            }`}
+          >
+            <AlertTriangle size={15} />
+            Разбор ситуации
+          </button>
+        </div>
+
         <form onSubmit={editor.saveNote} className="mt-6 space-y-5">
-          <div className="grid gap-5 sm:grid-cols-2">
+
+          <AnimatePresence mode="wait">
+          {/* === ABC ФОРМА === */}
+          {editor.noteType === "abc" && (
+            <motion.div
+              key="abc"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="space-y-3"
+            >
+              {/* Подсказка */}
+              <div className="rounded-2xl border border-purple-100 bg-purple-50/50 px-4 py-3">
+                <p className="text-xs text-purple-700/80 leading-relaxed">
+                  <span className="font-semibold">Методика КПТ (ABC)</span> — разбираем ситуацию по шагам: что случилось → как отреагировал → к чему это привело.
+                </p>
+              </div>
+
+              {/* Вертикальный степпер A → B → C */}
+              <div className="relative">
+                {/* Соединительная линия */}
+                <div className="absolute left-[19px] top-12 bottom-12 w-0.5 bg-gradient-to-b from-red-300 via-orange-300 to-green-300 z-0" />
+
+                <div className="space-y-4 relative z-10">
+
+                  {/* A — Триггер */}
+                  <div className="flex gap-4">
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <div className="relative group cursor-default">
+                        {/* Пульс-кольцо */}
+                        <div className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-25" style={{ animationDuration: "2.5s" }} />
+                        <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-red-500 text-white text-base font-black shadow-md shadow-red-200">
+                          A
+                        </div>
+                        {/* Tooltip */}
+                        <div className="absolute left-12 top-1/2 -translate-y-1/2 z-50 w-56 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="rounded-2xl bg-gray-900 px-3.5 py-2.5 text-xs text-white shadow-xl">
+                            <p className="font-semibold text-red-300 mb-0.5">A — Antecedent</p>
+                            <p className="text-white/80 leading-relaxed">Событие или ситуация, которая <span className="text-white font-medium">запустила</span> вашу реакцию. Триггер, предшествующий эмоции.</p>
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1.5 w-3 h-3 bg-gray-900 rotate-45" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 pb-1">
+                      <div className="mb-1.5">
+                        <span className="text-sm font-semibold text-black/80">Antecedent — Предшествующее</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={editor.abcA}
+                        onChange={(e) => editor.setAbcA(e.target.value)}
+                        className="w-full rounded-2xl border border-red-100 bg-red-50/30 px-4 py-3 text-[14px] text-black/80 outline-none focus:border-red-300 focus:ring-4 focus:ring-red-100/50 transition-all resize-none"
+                        placeholder="Опишите ситуацию, событие или слова, которые запустили сильную эмоцию..."
+                      />
+                      <p className="mt-1 text-[11px] text-black/40">Что случилось? Кто сказал или сделал? Где вы были?</p>
+                    </div>
+                  </div>
+
+                  {/* B — Поведение/реакция */}
+                  <div className="flex gap-4">
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <div className="relative group cursor-default">
+                        <div className="absolute inset-0 rounded-full bg-orange-400 animate-ping opacity-25" style={{ animationDuration: "2.5s", animationDelay: "0.8s" }} />
+                        <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-orange-400 text-white text-base font-black shadow-md shadow-orange-200">
+                          B
+                        </div>
+                        {/* Tooltip */}
+                        <div className="absolute left-12 top-1/2 -translate-y-1/2 z-50 w-56 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="rounded-2xl bg-gray-900 px-3.5 py-2.5 text-xs text-white shadow-xl">
+                            <p className="font-semibold text-orange-300 mb-0.5">B — Behavior</p>
+                            <p className="text-white/80 leading-relaxed">Ваша <span className="text-white font-medium">реакция</span>: эмоции, мысли, телесные ощущения в момент события. Что вы почувствовали?</p>
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1.5 w-3 h-3 bg-gray-900 rotate-45" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 pb-1">
+                      <div className="mb-1.5">
+                        <span className="text-sm font-semibold text-black/80">Behavior — Реакция</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={editor.abcB}
+                        onChange={(e) => editor.setAbcB(e.target.value)}
+                        className="w-full rounded-2xl border border-orange-100 bg-orange-50/30 px-4 py-3 text-[14px] text-black/80 outline-none focus:border-orange-300 focus:ring-4 focus:ring-orange-100/50 transition-all resize-none"
+                        placeholder="Какие эмоции возникли? Что чувствовало тело? Какие мысли промелькнули?"
+                      />
+                      <p className="mt-1 text-[11px] text-black/40">Тревога, злость, обида? Сердцебиение, напряжение?</p>
+                    </div>
+                  </div>
+
+                  {/* C — Последствия */}
+                  <div className="flex gap-4">
+                    <div className="flex flex-col items-center gap-1 shrink-0">
+                      <div className="relative group cursor-default">
+                        <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-25" style={{ animationDuration: "2.5s", animationDelay: "1.6s" }} />
+                        <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white text-base font-black shadow-md shadow-emerald-200">
+                          C
+                        </div>
+                        {/* Tooltip */}
+                        <div className="absolute left-12 top-1/2 -translate-y-1/2 z-50 w-56 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="rounded-2xl bg-gray-900 px-3.5 py-2.5 text-xs text-white shadow-xl">
+                            <p className="font-semibold text-emerald-300 mb-0.5">C — Consequences</p>
+                            <p className="text-white/80 leading-relaxed"><span className="text-white font-medium">Последствия</span> вашей реакции: что вы сделали, к чему это привело и какие выводы можно сделать.</p>
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1.5 w-3 h-3 bg-gray-900 rotate-45" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-1.5">
+                        <span className="text-sm font-semibold text-black/80">Consequences — Последствия</span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        value={editor.abcC}
+                        onChange={(e) => editor.setAbcC(e.target.value)}
+                        className="w-full rounded-2xl border border-emerald-100 bg-emerald-50/30 px-4 py-3 text-[14px] text-black/80 outline-none focus:border-emerald-300 focus:ring-4 focus:ring-emerald-100/50 transition-all resize-none"
+                        placeholder="Что вы сделали? Как отреагировали? Что поняли? Что можно было сделать иначе?"
+                      />
+                      <p className="mt-1 text-[11px] text-black/40">Помогло ли ваше поведение? Что вынесли из этого?</p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* === ЕЖЕДНЕВНАЯ ФОРМА === */}
+          {editor.noteType === "daily" && (
+            <motion.div
+              key="daily"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+          <>
+            <div className="grid gap-5 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label className="flex items-center gap-2 text-sm font-medium text-black/70">
                 <Smile size={15} className="text-blue-600" />
                 Настроение (1–10)
               </Label>
-              <Input
+              <input
                 type="number"
                 min="1"
                 max="10"
                 value={editor.mood}
                 onChange={(e) => editor.setMood(e.target.value)}
-                className="h-11"
+                placeholder="1–10"
+                className="h-11 w-full rounded-xl border-0 bg-black/[0.06] px-4 text-[15px] text-black/80 outline-2 outline-offset-2 outline-blue-400 transition-all duration-250 focus:outline-offset-[5px] focus:bg-white focus:shadow-sm placeholder:text-black/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
               />
               <div className="text-xs text-black/50 leading-relaxed">
                 <span className="inline-flex items-center gap-1"><Lightbulb size={13} className="text-blue-600" /> Оцени по самочувствию, не по событиям</span>
@@ -80,17 +259,18 @@ export default function NotesForm({ editor, quickNotes }) {
                 <Moon size={15} className="text-emerald-600" />
                 Сон (минуты)
               </Label>
-              <Input
+              <input
                 type="number"
                 value={editor.sleep}
                 onChange={(e) => editor.setSleep(e.target.value)}
-                className="h-11"
+                placeholder="минуты"
+                className="h-11 w-full rounded-xl border-0 bg-black/[0.06] px-4 text-[15px] text-black/80 outline-2 outline-offset-2 outline-emerald-400 transition-all duration-250 focus:outline-offset-[5px] focus:bg-white focus:shadow-sm placeholder:text-black/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
               />
               <div className="text-xs text-black/50 leading-relaxed">
                 <span className="inline-flex items-center gap-1"><Lightbulb size={13} className="text-blue-600" /> Например: 420 = 7 часов</span>
               </div>
             </div>
-          </div>
+            </div>
 
           <div className="grid gap-2">
             <Label className="flex items-center gap-2 text-sm font-medium text-black/70">
@@ -105,15 +285,6 @@ export default function NotesForm({ editor, quickNotes }) {
                          focus:border-blue-300 focus:ring-4 focus:ring-blue-100/50 transition-all resize-none shadow-sm"
               placeholder="Как прошёл день? Что было важного или интересного?"
             />
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
-            <Button className="w-full sm:w-auto text-base font-medium px-6 py-2.5 shadow-md hover:shadow-lg">
-              {editor.editingId ? " Сохранить изменения" : " Сохранить запись"}
-            </Button>
-            <div className="text-xs text-black/50">
-              Сохранение обновит историю и график
-            </div>
           </div>
 
           {/* EXPANDABLE: ДОПОЛНИТЕЛЬНО */}
@@ -214,10 +385,22 @@ export default function NotesForm({ editor, quickNotes }) {
               </div>
             )}
           </div>
+          </></motion.div>
+          )}
+          </AnimatePresence>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
+            <Button className="w-full sm:w-auto text-base font-medium px-6 py-2.5 shadow-md hover:shadow-lg">
+              {editor.editingId ? " Сохранить изменения" : " Сохранить запись"}
+            </Button>
+            <div className="text-xs text-black/50">
+              Сохранение обновит историю и график
+            </div>
+          </div>
         </form>
 
         {/* MINI NOTES */}
-          <div className="mt-8 rounded-3xl border border-dashed border-black/15 bg-blue-50/50 p-6 shadow-sm">
+          <div className="mt-8 rounded-3xl border border-black/10 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1">
               <div className="flex items-center gap-2">

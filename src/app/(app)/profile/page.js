@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   if (!user) redirect("/auth/sign-in?next=/profile");
 
   const [{ data: profile }, { data: settings }] = await Promise.all([
-    supabase.from("profiles").select("id, name, avatar_url").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("id, name, avatar_url, telegram_id, telegram_username").eq("id", user.id).maybeSingle(),
     supabase
       .from("user_settings")
       .select("*")

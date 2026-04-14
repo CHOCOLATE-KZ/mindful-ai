@@ -14,7 +14,7 @@ export async function showMainMenu(ctx) {
     keyboard: [
       [{ text: ' Записать заметку' }, { text: ' Мои заметки' }],
       [{ text: ' Анализ' }, { text: ' Статистика' }],
-      [{ text: '⏰ Напоминание' }, { text: ' Помощь' }]
+      [{ text: 'Напоминание' }, { text: ' Помощь' }]
     ],
     resize_keyboard: true,
     one_time_keyboard: false
@@ -76,7 +76,7 @@ export async function handleStart(ctx) {
         }
       }
 
-      if (!isValidUser(args)) {
+      if (!await isValidUser(args)) {
         return ctx.reply(' Ошибка: неверный идентификатор пользователя.');
       }
 
@@ -231,10 +231,7 @@ export async function handleToday(ctx) {
 }
 
 /**
- * Обработчик ввода для заметки
- */
-/**
- * Обработчик ввода для заметки (если пользователь вводит текст вместо кнопок)
+ * Обработчик ввода для заметки (поддерживает кнопки и текстовый ввод)
  */
 export async function handleNoteInput(ctx) {
   const input = ctx.message.text?.trim();
@@ -524,18 +521,20 @@ export async function handleReminderInput(ctx) {
       
       reminder.days = daysText;
 
-      try {
-        await supabaseAdmin.from('reminders').insert({
-          user_id: reminder.userId,
-          telegram_id: reminder.telegramId,
-          time: reminder.time,
-          days: reminder.days,
-          enabled: true,
-          created_at: new Date().toISOString(),
-        });
-      } catch (dbErr) {
-        console.warn('Reminders table not yet created:', dbErr);
-      }
+      // upsert — одно напоминание на пользователя, не создаём дубли
+      const { error: dbErr } = await supabaseAdmin
+        .from('reminders')
+        .upsert(
+          {
+            user_id: reminder.userId,
+            telegram_id: reminder.telegramId,
+            time: reminder.time,
+            days: reminder.days,
+            enabled: true,
+          },
+          { onConflict: 'user_id' }
+        );
+      if (dbErr) console.error('Ошибка сохранения напоминания:', dbErr);
 
       delete ctx.session.settingReminder;
 
@@ -569,7 +568,7 @@ export async function handleMessage(ctx) {
     if (message === ' Мои заметки') return handleNotes(ctx);
     if (message === ' Анализ') return handleAnalyze(ctx);
     if (message === ' Статистика') return handleStats(ctx);
-    if (message === '⏰ Напоминание') return handleRemind(ctx);
+    if (message === 'Напоминание') return handleRemind(ctx);
     if (message === ' Помощь') return handleHelp(ctx);
 
     const userId = await getUserIdByTelegramId(telegramId);
@@ -591,26 +590,33 @@ export async function handleMessage(ctx) {
       .limit(10);
 
     const messageHistory = history ? history.reverse() : [];
-    const userContext = await buildUserContext(supabaseAdmin, userId);
+    const baseContext = await buildUserContext(supabaseAdmin, userId);
+    const userContext = [
+      baseContext,
+      'Платформа: Telegram. Markdown поддерживается (*жирный*, _курсив_, `код`), но НЕ используй таблицы и ## заголовки — они не рендерятся. Не упоминай ссылки на сайт.',
+    ].filter(Boolean).join(' ');
 
     const aiResponse = await askAIWithHistory(message, messageHistory, userContext);
 
-    await supabaseAdmin.from('ai_messages').insert([
-      {
-        user_id: userId,
-        role: 'user',
-        content: message,
-        source: 'telegram',
-      },
-      {
-        user_id: userId,
-        role: 'assistant',
-        content: aiResponse,
-        source: 'telegram',
-      },
-    ]);
+    // Сохраняем только если ответ не является сообщением об ошибке
+    if (aiResponse && !aiResponse.includes('временно недоступен') && !aiResponse.includes('произошла ошибка')) {
+      await supabaseAdmin.from('ai_messages').insert([
+        {
+          user_id: userId,
+          role: 'user',
+          content: message,
+          source: 'telegram',
+        },
+        {
+          user_id: userId,
+          role: 'assistant',
+          content: aiResponse,
+          source: 'telegram',
+        },
+      ]);
+    }
 
-    return ctx.reply(aiResponse);
+    return ctx.reply(aiResponse, { parse_mode: 'Markdown' });
   } catch (error) {
     console.error('Ошибка в handleMessage:', error);
     

@@ -153,7 +153,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
         {/* ── NOTIFICATIONS & INTEGRATIONS ── */}
         <SectionHeader icon={<Bell className="h-4 w-4" />} label={t("notifications")} />
         <div className="space-y-5">
-          <NotificationsCard settings={mergedSettings} onChange={updateAllSettings} t={t} />
+          <NotificationsCard settings={{ ...mergedSettings, telegram_id: safeProfile?.telegram_id }} t={t} />
           <SectionHeader icon={<MessageCircle className="h-4 w-4" />} label="Telegram" inner />
           <TelegramLinkCard />
         </div>

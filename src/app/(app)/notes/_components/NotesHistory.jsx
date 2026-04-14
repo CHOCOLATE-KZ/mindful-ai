@@ -1,4 +1,5 @@
 import Card from "@/components/ui/Card";
+import { useState } from "react";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import {
@@ -33,8 +34,19 @@ import {
  * Компонент истории заметок и аналитики
  */
 export default function NotesHistory({ notes, fullNotes, quickNotes, chartData, avgMood, avgSleep, editNote, removeNote }) {
+  const [tab, setTab] = useState("all");
+
+  const tabs = [
+    { id: "all", label: "Все", count: notes.length },
+    { id: "full", label: "Полные", count: fullNotes.length },
+    { id: "quick", label: "Мини", count: quickNotes.length },
+  ];
+
+  const visibleFull = tab === "quick" ? [] : fullNotes;
+  const visibleQuick = tab === "full" ? [] : quickNotes;
+
   return (
-    <Card className="rounded-3xl border border-black/10 bg-white shadow-md hover:shadow-lg transition-shadow duration-300 lg:sticky lg:top-6">
+    <Card className="rounded-3xl border border-black/10 bg-white shadow-md hover:shadow-lg transition-shadow duration-300">
       <div className="p-7">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -43,7 +55,7 @@ export default function NotesHistory({ notes, fullNotes, quickNotes, chartData, 
               <h2 className="text-2xl font-semibold text-black">История и аналитика</h2>
             </div>
             <p className="mt-2 text-sm text-black/65 leading-relaxed">
-              Полные записи и мини-заметки. Ниже — динамика по дням
+              Записи и динамика по дням
             </p>
           </div>
 
@@ -51,6 +63,28 @@ export default function NotesHistory({ notes, fullNotes, quickNotes, chartData, 
             Всего: {notes.length}
           </span>
         </div>
+
+        {/* Табы */}
+        {notes.length > 0 && (
+          <div className="mt-5 flex gap-1 rounded-2xl bg-gray-100/70 p-1">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                  tab === t.id
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-black/50 hover:text-black/70"
+                }`}
+              >
+                {t.label}
+                <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                  tab === t.id ? "bg-blue-100 text-blue-600" : "bg-black/10 text-black/40"
+                }`}>{t.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {notes.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-dashed border-black/15 bg-gray-50/50 p-8 text-center">
@@ -61,20 +95,19 @@ export default function NotesHistory({ notes, fullNotes, quickNotes, chartData, 
         ) : (
           <>
             {/* FULL NOTES */}
-            {fullNotes.length > 0 && (
-              <div className="mt-7">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="flex items-center gap-2 text-base font-semibold text-black/80">
-                    <FileText size={16} className="text-blue-600" />
-                    Полные записи
-                  </h3>
-                  <span className="rounded-lg bg-blue-100/70 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                    {fullNotes.length} шт.
-                  </span>
-                </div>
+            {visibleFull.length > 0 && (
+              <div className="mt-5">
+                {tab === "all" && (
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-black/60 uppercase tracking-wide">
+                      <FileText size={14} className="text-blue-500" />
+                      Полные записи
+                    </h3>
+                  </div>
+                )}
 
-                <ul className="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-                  {fullNotes.map((n) => (
+                <ul className="space-y-3 max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
+                  {visibleFull.map((n) => (
                     <li
                       key={n.id}
                       className="group rounded-2xl border border-black/10 bg-blue-50/20 p-4 transition-all hover:shadow-md hover:border-blue-200/60"
@@ -167,20 +200,22 @@ export default function NotesHistory({ notes, fullNotes, quickNotes, chartData, 
             )}
 
             {/* QUICK NOTES */}
-            {quickNotes.length > 0 && (
-              <div className="mt-7">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="flex items-center gap-2 text-base font-semibold text-black/80">
-                    <MessageSquare size={16} className="text-blue-600" />
-                    Мини-заметки
-                  </h3>
-                  <span className="rounded-lg bg-blue-100/70 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                    {quickNotes.length} шт.
-                  </span>
-                </div>
+            {visibleQuick.length > 0 && (
+              <div className="mt-5">
+                {tab === "all" && (
+                  <>
+                    <div className="my-4 h-px w-full rounded-full" style={{ background: "linear-gradient(to right, transparent, #6ee7b7, #34d399, #6ee7b7, transparent)" }} />
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="flex items-center gap-2 text-sm font-semibold text-black/60 uppercase tracking-wide">
+                        <MessageSquare size={14} className="text-blue-500" />
+                        Мини-заметки
+                      </h3>
+                    </div>
+                  </>
+                )}
 
                 <div className="grid gap-2.5 max-h-[180px] overflow-y-auto pr-2 custom-scrollbar">
-                  {quickNotes.map((n) => (
+                  {visibleQuick.map((n) => (
                     <div
                       key={n.id}
                       className="group rounded-2xl border border-black/10 bg-blue-50/30 p-3.5 transition-all hover:shadow-md hover:border-blue-200/60"
@@ -276,30 +311,6 @@ export default function NotesHistory({ notes, fullNotes, quickNotes, chartData, 
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-black/10 bg-blue-50/20 p-5 shadow-sm">
-              <div className="grid gap-3 sm:grid-cols-2 text-sm">
-                <div className="flex items-center gap-2.5 rounded-xl bg-white/70 backdrop-blur-sm px-4 py-3 border border-blue-200/50">
-                  <Smile size={18} className="text-blue-600" />
-                  <div>
-                    <div className="text-xs text-black/50 font-medium">Среднее настроение</div>
-                    <div className="text-lg font-bold text-blue-600">{avgMood}/10</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2.5 rounded-xl bg-white/70 backdrop-blur-sm px-4 py-3 border border-emerald-200/50">
-                  <Moon size={18} className="text-emerald-600" />
-                  <div>
-                    <div className="text-xs text-black/50 font-medium">Средний сон</div>
-                    <div className="text-lg font-bold text-emerald-600">
-                      {Math.round(avgSleep / 60)}ч {avgSleep % 60}м
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t border-black/10 text-xs text-black/55 text-center">
-                Полных записей: <b className="text-black/70">{fullNotes.length}</b> • 
-                Мини-заметок: <b className="text-black/70">{quickNotes.length}</b>
-              </div>
-            </div>
           </div>
         )}
       </div>

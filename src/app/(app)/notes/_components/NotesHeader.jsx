@@ -19,9 +19,11 @@ export default function NotesHeader({ avgMood, avgSleep, fullNotesCount, quickNo
             Настроение, сон и мысли
           </h1>
           <p className="mt-3 text-base text-black/65 max-w-2xl leading-relaxed">
-            Записывайте состояние дня и смотрите динамику. Сон указывайте в минутах
-            <span className="inline-flex items-center ml-2 rounded-md bg-blue-100/70 px-2 py-0.5 text-xs font-medium text-blue-700">420 = 7 часов</span>
+            Записывайте состояние дня и смотрите динамику. Сон указывайте в минутах.
           </p>
+          <div className="mt-2">
+            <span className="inline-flex items-center rounded-md bg-blue-100/70 px-2.5 py-1 text-xs font-medium text-blue-700">420 = 7 часов</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-3">

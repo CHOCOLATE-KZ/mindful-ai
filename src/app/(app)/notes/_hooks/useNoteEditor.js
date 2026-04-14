@@ -10,7 +10,10 @@ export function useNoteEditor({ setNotes }) {
   const [comment, setComment] = useState("");
   const [editingId, setEditingId] = useState(null);
 
-  // Дополнительные поля
+  // Тип записи: 'daily' | 'abc'
+  const [noteType, setNoteType] = useState("daily");
+
+  // Дополнительные поля (daily)
   const [energy, setEnergy] = useState("");
   const [stress, setStress] = useState("");
   const [nutrition, setNutrition] = useState("");
@@ -18,6 +21,11 @@ export function useNoteEditor({ setNotes }) {
   const [hobbies, setHobbies] = useState("");
   const [social, setSocial] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // ABC-поля
+  const [abcA, setAbcA] = useState(""); // что произошло / триггер
+  const [abcB, setAbcB] = useState(""); // эмоции и ощущения
+  const [abcC, setAbcC] = useState(""); // последствия и выводы
 
   // Сохранение заметки
   const saveNote = useCallback(async (e) => {
@@ -30,6 +38,7 @@ export function useNoteEditor({ setNotes }) {
 
     const payload = {
       user_id: user.id,
+      note_type: noteType,
       mood: mood ? Number(mood) : null,
       sleep: sleep ? Number(sleep) : null,
       comment: comment || null,
@@ -39,6 +48,9 @@ export function useNoteEditor({ setNotes }) {
       exercise: exercise || null,
       hobbies: hobbies || null,
       social: social || null,
+      abc_a: noteType === "abc" ? (abcA || null) : null,
+      abc_b: noteType === "abc" ? (abcB || null) : null,
+      abc_c: noteType === "abc" ? (abcC || null) : null,
     };
 
     let response;
@@ -47,12 +59,12 @@ export function useNoteEditor({ setNotes }) {
         .from("notes")
         .update(payload)
         .eq("id", editingId)
-        .select("id, date, mood, sleep, comment, energy, stress, nutrition, exercise, hobbies, social");
+        .select("id, date, note_type, mood, sleep, comment, energy, stress, nutrition, exercise, hobbies, social, abc_a, abc_b, abc_c");
     } else {
       response = await supabase
         .from("notes")
         .insert(payload)
-        .select("id, date, mood, sleep, comment, energy, stress, nutrition, exercise, hobbies, social");
+        .select("id, date, note_type, mood, sleep, comment, energy, stress, nutrition, exercise, hobbies, social, abc_a, abc_b, abc_c");
     }
 
     const { data, error } = response;
@@ -75,7 +87,11 @@ export function useNoteEditor({ setNotes }) {
     setExercise("");
     setHobbies("");
     setSocial("");
-  }, [mood, sleep, comment, energy, stress, nutrition, exercise, hobbies, social, editingId, setNotes]);
+    setAbcA("");
+    setAbcB("");
+    setAbcC("");
+    setNoteType("daily");
+  }, [mood, sleep, comment, energy, stress, nutrition, exercise, hobbies, social, abcA, abcB, abcC, noteType, editingId, setNotes]);
 
   // Удаление заметки
   const removeNote = useCallback(async (id) => {
@@ -87,6 +103,7 @@ export function useNoteEditor({ setNotes }) {
 
   // Начало редактирования
   const editNote = useCallback((n) => {
+    setNoteType(n.note_type || "daily");
     setMood(n.mood ?? "");
     setSleep(n.sleep ?? "");
     setComment(n.comment ?? "");
@@ -96,6 +113,9 @@ export function useNoteEditor({ setNotes }) {
     setExercise(n.exercise ?? "");
     setHobbies(n.hobbies ?? "");
     setSocial(n.social ?? "");
+    setAbcA(n.abc_a ?? "");
+    setAbcB(n.abc_b ?? "");
+    setAbcC(n.abc_c ?? "");
     setEditingId(n.id);
     if (n.energy || n.stress || n.nutrition || n.exercise || n.hobbies || n.social) {
       setShowAdvanced(true);
@@ -105,6 +125,7 @@ export function useNoteEditor({ setNotes }) {
   // Сброс формы
   const resetEditor = useCallback(() => {
     setEditingId(null);
+    setNoteType("daily");
     setMood("");
     setSleep("");
     setComment("");
@@ -114,10 +135,14 @@ export function useNoteEditor({ setNotes }) {
     setExercise("");
     setHobbies("");
     setSocial("");
+    setAbcA("");
+    setAbcB("");
+    setAbcC("");
   }, []);
 
   return {
     // State
+    noteType, setNoteType,
     mood, setMood,
     sleep, setSleep,
     comment, setComment,
@@ -128,6 +153,9 @@ export function useNoteEditor({ setNotes }) {
     hobbies, setHobbies,
     social, setSocial,
     showAdvanced, setShowAdvanced,
+    abcA, setAbcA,
+    abcB, setAbcB,
+    abcC, setAbcC,
     editingId,
     
     // Actions

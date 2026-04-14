@@ -1,7 +1,7 @@
 "use client";
 
-import Loader from "@/components/Loader";
 import NotesAIAnalysis from "./_components/NotesAIAnalysis";
+import MoodCalendar from "./_components/MoodCalendar";
 import ReminderBanner from "./_components/ReminderBanner";
 import NotesHeader from "./_components/NotesHeader";
 import NotesForm from "./_components/NotesForm";
@@ -26,10 +26,7 @@ export default function NotesPage() {
           <div className="rounded-3xl border border-black/10 bg-white p-8 shadow-sm">
             <div className="h-6 w-56 rounded-lg bg-black/[0.06] animate-pulse" />
             <div className="mt-3 h-4 w-96 rounded-lg bg-black/[0.04] animate-pulse" />
-            <div className="mt-8 grid gap-6 lg:grid-cols-2">
-              <div className="h-[500px] rounded-3xl bg-black/[0.04] animate-pulse" />
-              <div className="h-[500px] rounded-3xl bg-black/[0.04] animate-pulse" />
-            </div>
+            <div className="mt-8 h-[400px] rounded-3xl bg-black/[0.04] animate-pulse" />
           </div>
         </div>
       </div>
@@ -37,54 +34,52 @@ export default function NotesPage() {
   }
 
   return (
+    <div className="notes-light min-h-screen" style={{ background: "#eaf5f0" }}>
     <div className="mx-auto max-w-6xl px-4 py-8 space-y-8">
       <ReminderBanner hasRecordToday={stats.hasRecordToday} notesLength={notes.length} />
-      
-      <NotesHeader 
+
+      <NotesHeader
         avgMood={stats.avgMood}
         avgSleep={stats.avgSleep}
         fullNotesCount={stats.fullNotes.length}
         quickNotesCount={stats.quickNotes.length}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2 items-start">
-        <NotesForm
-          editor={editor}
-          quickNotes={{
-            ...quickNotesHook,
-            quickNotesCount: stats.quickNotes.length,
-          }}
-        />
+      <NotesForm
+        editor={editor}
+        quickNotes={{
+          ...quickNotesHook,
+          quickNotesCount: stats.quickNotes.length,
+        }}
+      />
 
-        <NotesHistory
-          notes={notes}
-          fullNotes={stats.fullNotes}
-          quickNotes={stats.quickNotes}
-          chartData={stats.chartData}
-          avgMood={stats.avgMood}
-          avgSleep={stats.avgSleep}
-          editNote={editor.editNote}
-          removeNote={editor.removeNote}
-        />
-      </div>
+      <NotesHistory
+        notes={notes}
+        fullNotes={stats.fullNotes}
+        quickNotes={stats.quickNotes}
+        chartData={stats.chartData}
+        avgMood={stats.avgMood}
+        avgSleep={stats.avgSleep}
+        editNote={editor.editNote}
+        removeNote={editor.removeNote}
+      />
 
       {notes.length > 0 && (
-        <div className="mt-6">
-          <NotesAIAnalysis notes={notes} avgMood={stats.avgMood} avgSleep={stats.avgSleep} />
-        </div>
+        <NotesAIAnalysis notes={notes} avgMood={stats.avgMood} avgSleep={stats.avgSleep} />
+      )}
+
+      {notes.length > 0 && (
+        <MoodCalendar notes={notes} />
       )}
 
       {stats.fullNotes.length > 0 && (
-        <div className="mt-8">
-          <WeeklyTracker notes={notes} />
-        </div>
+        <WeeklyTracker notes={notes} />
       )}
 
       {stats.fullNotes.length >= 5 && (
-        <div className="mt-8">
-          <NotesInsights notes={notes} fullNotes={stats.fullNotes} />
-        </div>
+        <NotesInsights notes={notes} fullNotes={stats.fullNotes} />
       )}
+    </div>
     </div>
   );
 }

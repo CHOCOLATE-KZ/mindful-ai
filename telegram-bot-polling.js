@@ -37,8 +37,8 @@ console.log('🤖 Инициализируем Telegram бот...');
       handleNoteInput,
       handleReminderInput,
       handleCallbackQuery,
-      showMainMenu
     } = await import('./src/lib/telegram/handlers.js');
+    const { createClient } = await import('@supabase/supabase-js');
 
     console.log('✅ Модули загружены успешно');
 
@@ -104,6 +104,66 @@ console.log('🤖 Инициализируем Telegram бот...');
       console.log('\n⏹️  Бот остановлен');
       bot.stop('SIGTERM');
     });
+
+    // ───── Планировщик напоминаний ─────
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    console.log('⏰ Планировщик напоминаний запущен (проверка каждую минуту)');
+
+    setInterval(async () => {
+      try {
+        const now = new Date();
+        // Используем локальное время сервера (на котором запущен бот)
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const currentTime = `${hours}:${minutes}`;
+        const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon … 6=Sat
+
+        const { data: reminders } = await supabaseAdmin
+          .from('reminders')
+          .select('id, user_id, telegram_id, time, days')
+          .eq('time', currentTime)
+          .eq('enabled', true);
+
+        if (!reminders?.length) return;
+
+        for (const reminder of reminders) {
+          // Проверяем день недели
+          const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+          if (reminder.days === 'Будни (Пн-Пт)' && !isWeekday) continue;
+          if (reminder.days === 'Выходные (Сб-Вс)' && !isWeekend) continue;
+
+          // Не отправляем если заметка на сегодня уже есть
+          const todayStart = new Date();
+          todayStart.setUTCHours(0, 0, 0, 0);
+          const { data: todayNote } = await supabaseAdmin
+            .from('notes')
+            .select('id')
+            .eq('user_id', reminder.user_id)
+            .gte('date', todayStart.toISOString())
+            .limit(1)
+            .single();
+
+          if (todayNote) {
+            console.log(`[Reminder] ${reminder.telegram_id} уже записал заметку сегодня, пропуск`);
+            continue;
+          }
+
+          await bot.telegram.sendMessage(
+            reminder.telegram_id,
+            `⏰ *Напоминание MindfulAI*\n\nПривет! Не забудьте записать сегодняшний день в дневник 📓\n\nКак настроение? Нажмите /today чтобы добавить запись.`,
+            { parse_mode: 'Markdown' }
+          );
+          console.log(`[Reminder] ✅ Отправлено → ${reminder.telegram_id} в ${currentTime}`);
+        }
+      } catch (err) {
+        console.error('[Reminder] Ошибка планировщика:', err.message);
+      }
+    }, 60 * 1000);
   } catch (error) {
     console.error('❌ Ошибка при запуске бота:', error.message);
     console.error(error);
