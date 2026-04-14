@@ -5,7 +5,7 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useProfileData } from "@/features/profile/useProfileData";
 import { useAppSettings } from "@/components/AppShell";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { LogOut, Sparkles, Bell, Shield, MessageCircle, Sliders } from "lucide-react";
+import { LogOut, Sparkles, Bell, Shield, MessageCircle, Sliders, Trash2, Mail, Send } from "lucide-react";
 
 import ProfileHeroCard from "./_components/ProfileHeroCard";
 import SummaryCard from "./_components/SummaryCard";
@@ -19,6 +19,7 @@ import TelegramLinkCard from "./_components/TelegramLinkCard";
 import EditProfileModal from "./_components/_modals/EditProfileModal";
 import PrivacySettingsModal from "./_components/_modals/PrivacySettingsModal";
 import SecurityModal from "./_components/_modals/SecurityModal";
+import DeleteAccountModal from "./_components/_modals/DeleteAccountModal";
 
 export default function ProfileClient({ initialUser, initialProfile, initialSettings }) {
   const supabase = useMemo(() => supabaseBrowser(), []);
@@ -65,9 +66,11 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
     editOpen: false,
     privacyOpen: false,
     securityOpen: false,
+    deleteOpen: false,
     setEditOpen: () => {},
     setPrivacyOpen: () => {},
     setSecurityOpen: () => {},
+    setDeleteOpen: () => {},
     nameDraft: "",
     setNameDraft: () => {},
     passwordDraft: "",
@@ -81,6 +84,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
     saveProfile: async () => {},
     onAvatarSelected: async () => {},
     changePassword: async () => {},
+    deleteAccount: async () => {},
   };
 
   const safeProfile = profile || { id: user?.id, name: "", avatar_url: "" };
@@ -158,9 +162,67 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
         <SectionHeader icon={<Shield className="h-4 w-4" />} label={t("privacy")} />
         <PrivacyDataCard
           onOpenPrivacy={() => safeUi.setPrivacyOpen(true)}
-          onExport={() => safeActions.exportMyData()}
+          onExport={(format) => safeActions.exportMyData(format)}
           t={t}
         />
+
+        {/* ── CONNECTED ACCOUNTS ── */}
+        <SectionHeader icon={<Sliders className="h-4 w-4" />} label="Методы входа" />
+        <div className="rounded-3xl border border-black/10 bg-white p-5 dark:bg-white/[0.03] dark:border-white/10">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20">
+                <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </span>
+              <div>
+                <div className="text-sm font-medium text-black dark:text-white">Email</div>
+                <div className="text-xs text-black/50 dark:text-white/40">{user?.email || "—"}</div>
+              </div>
+              <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                Подключён
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20">
+                <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </span>
+              <div>
+                <div className="text-sm font-medium text-black dark:text-white">Telegram</div>
+                <div className="text-xs text-black/50 dark:text-white/40">
+                  {safeProfile?.telegram_username ? `@${safeProfile.telegram_username}` : "Не подключён"}
+                </div>
+              </div>
+              {safeProfile?.telegram_username ? (
+                <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  Подключён
+                </span>
+              ) : (
+                <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500 dark:bg-white/10 dark:text-white/40">
+                  Не подключён
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── DANGER ZONE ── */}
+        <SectionHeader icon={<Trash2 className="h-4 w-4 text-rose-500" />} label="Опасная зона" danger />
+        <div className="rounded-3xl border border-rose-200 bg-rose-50/50 p-5 dark:bg-rose-900/10 dark:border-rose-900/40">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-rose-700 dark:text-rose-400">Удалить аккаунт</div>
+              <p className="mt-1 text-xs text-rose-600/70 dark:text-rose-400/60">
+                Удалит все ваши данные — заметки, историю чатов и аккаунт. Это действие нельзя отменить.
+              </p>
+            </div>
+            <button
+              onClick={() => safeUi.setDeleteOpen(true)}
+              className="shrink-0 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-600 hover:text-white dark:bg-transparent dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-700 dark:hover:text-white"
+            >
+              Удалить
+            </button>
+          </div>
+        </div>
 
       </div>
 
@@ -192,22 +254,30 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
         onChangePassword={safeActions.changePassword}
         t={t}
       />
+
+      <DeleteAccountModal
+        open={safeUi.deleteOpen || false}
+        onClose={() => safeUi.setDeleteOpen(false)}
+        onConfirm={safeActions.deleteAccount}
+      />
     </div>
   );
 }
 
-function SectionHeader({ icon, label, inner = false }) {
+function SectionHeader({ icon, label, inner = false, danger = false }) {
   return (
     <div className={`flex items-center gap-2 ${inner ? "mt-5 mb-3" : "mt-10 mb-4"}`}>
       <span className={`flex items-center justify-center rounded-lg p-1.5 ${
+        danger ? "bg-rose-100 text-rose-500 dark:bg-rose-900/30" :
         inner ? "bg-slate-100 text-slate-500" : "bg-blue-50 text-blue-600"
       }`}>
         {icon}
       </span>
       <span className={`font-semibold ${
+        danger ? "text-rose-600 dark:text-rose-400" :
         inner ? "text-sm text-slate-500" : "text-base text-slate-800"
       }`}>{label}</span>
-      <div className="flex-1 h-px bg-slate-200/80" />
+      <div className={`flex-1 h-px ${danger ? "bg-rose-200/80 dark:bg-rose-900/40" : "bg-slate-200/80"}`} />
     </div>
   );
 }

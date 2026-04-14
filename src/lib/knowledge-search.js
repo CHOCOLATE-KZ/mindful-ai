@@ -1,62 +1,57 @@
 // src/lib/knowledge-search.js
-// Функция для поиска относительного психологического знания через embeddings
+// Поиск психологических знаний через embeddings (LM Studio)
 
 import { supabaseBrowser } from './supabase/browser.js';
 
-const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').trim();
-const OLLAMA_EMBEDDING_MODEL = (process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text').trim();
-const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS || 10000);
+const LM_BASE_URL = (process.env.LMSTUDIO_BASE_URL || 'http://127.0.0.1:1234').trim();
+const LM_EMBED_MODEL = (process.env.LMSTUDIO_EMBED_MODEL || 'text-embedding-nomic-embed-text-v1.5').trim();
+const EMBED_TIMEOUT_MS = 15000;
 
-/**
- * Получить Supabase клиент
- */
 function getSupabaseClient() {
   return supabaseBrowser();
 }
 
 /**
- * Получает embedding для текста (используя LM Studio Nomic Embed Text)
- * @param {string} text - текст для получения embeddings
- * @returns {Promise<number[]>} - вектор embeddings
+ * Получает embedding через LM Studio /v1/embeddings (OpenAI-совместимый)
  */
 async function getTextEmbedding(text) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), EMBED_TIMEOUT_MS);
 
   try {
-    // Используем Ollama для генерации embeddings
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
+    const response = await fetch(`${LM_BASE_URL}/v1/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
       body: JSON.stringify({
-        model: OLLAMA_EMBEDDING_MODEL,
-        prompt: text,
+        model: LM_EMBED_MODEL,
+        input: text,
       }),
     });
 
+    clearTimeout(timeout);
+
     if (!response.ok) {
-      console.warn(`[RAG]  Ollama embeddings API вернул ${response.status}, используем keyword fallback`);
+      console.warn(`[RAG]  LM Studio embeddings вернул ${response.status}, keyword fallback`);
       return null;
     }
-    
+
     const data = await response.json();
-    if (Array.isArray(data.embedding) && data.embedding.length > 0) {
-      return data.embedding;
+    const embedding = data?.data?.[0]?.embedding;
+    if (Array.isArray(embedding) && embedding.length > 0) {
+      return embedding;
     }
 
-    console.warn('[RAG]  Ollama вернул некорректный embedding, используем keyword fallback');
+    console.warn('[RAG]  LM Studio вернул некорректный embedding, keyword fallback');
     return null;
   } catch (error) {
-    if (error?.name === 'AbortError') {
-      console.warn(`[RAG]  Ollama embeddings timeout после ${OLLAMA_TIMEOUT_MS}ms, используем keyword fallback`);
-      return null;
-    }
-
-    console.warn(`[RAG]  Ollama embeddings недоступны (${OLLAMA_BASE_URL}), используем keyword fallback`);
-    return null;
-  } finally {
     clearTimeout(timeout);
+    if (error?.name === 'AbortError') {
+      console.warn(`[RAG]  LM Studio embeddings timeout, keyword fallback`);
+    } else {
+      console.warn(`[RAG]  LM Studio embeddings недоступны: ${error.message}`);
+    }
+    return null;
   }
 }
 

@@ -33,29 +33,55 @@ function extractKeywords(texts, limit = 8) {
 }
 
 async function callLmStudio(messages) {
-  const resp = await fetch(`${LMSTUDIO_BASE_URL}/v1/chat/completions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: LMSTUDIO_MODEL,
-      messages,
-      temperature: 0.6,
-      max_tokens: 500,
-    }),
-  });
-
-  const raw = await resp.text();
-  if (!resp.ok) return { error: `LM Studio error (${resp.status}): ${raw}` };
-
-  let json;
   try {
-    json = JSON.parse(raw);
-  } catch {
-    return { error: `LM Studio returned non-JSON: ${raw}` };
+    const resp = await fetch(`${LMSTUDIO_BASE_URL}/v1/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: LMSTUDIO_MODEL,
+        messages,
+        temperature: 0.6,
+        max_tokens: 1024,
+      }),
+    });
+
+    const raw = await resp.text();
+    if (!resp.ok) return { error: `LM Studio error (${resp.status}): ${raw.slice(0, 300)}` };
+
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      return { error: `LM Studio returned non-JSON: ${raw.slice(0, 200)}` };
+    }
+
+    const reply = json?.choices?.[0]?.message?.content || "";
+    return { reply: reply.trim() };
+  } catch (e) {
+    return { error: e?.message || String(e) };
+  }
+}
+
+export async function GET(req) {
+  const supabase = await supabaseServer();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const reply = json?.choices?.[0]?.message?.content || "";
-  return { reply: reply.trim() };
+  const { data, error } = await supabase
+    .from("ai_reports")
+    .select("id, text, mode, generated_at")
+    .eq("user_id", user.id)
+    .order("generated_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    // Table may not exist yet — return empty gracefully
+    return Response.json({ reports: [] });
+  }
+
+  return Response.json({ reports: data || [] });
 }
 
 export async function POST(req) {
@@ -76,7 +102,7 @@ export async function POST(req) {
     // ignore invalid JSON, default to profile
   }
 
-  const [{ data: settings }, { data: notes }, { data: messages }] = await Promise.all([
+  const [{ data: settings }, { data: notes }, { data: messages }, { data: previousReports }] = await Promise.all([
     supabase.from("user_settings").select("data_sharing_ai").eq("user_id", user.id).maybeSingle(),
     supabase
       .from("notes")
@@ -90,6 +116,12 @@ export async function POST(req) {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(80),
+    supabase
+      .from("ai_reports")
+      .select("text, generated_at, mode")
+      .eq("user_id", user.id)
+      .order("generated_at", { ascending: false })
+      .limit(2),
   ]);
 
   if (settings?.data_sharing_ai === false) {
@@ -174,19 +206,32 @@ export async function POST(req) {
 
   const labels = (sectionLabels[language] || sectionLabels.ru);
 
+  // Build previous report context for comparison
+  const prevReports = previousReports || [];
+  let previousContext = "";
+  if (prevReports.length > 0) {
+    const prev = prevReports[0];
+    const prevDate = new Date(prev.generated_at).toLocaleDateString(
+      language === "kz" ? "kk-KZ" : language === "en" ? "en-US" : "ru-RU"
+    );
+    previousContext =
+      `\n\nPREVIOUS REPORT (${prevDate}):\n${prev.text.slice(0, 800)}\n\n` +
+      `IMPORTANT: Compare current data with the previous report. Explicitly mention what improved, what got worse, what stayed the same. This comparison is a key required section.`;
+  }
+
   const userPrompt =
     mode === "weekly"
       ? `Create a WEEKLY SUMMARY in ${language === "ru" ? "Russian" : language === "kz" ? "Kazakh" : "English"}. ` +
         `Structure: **${labels.weekly[0]}**, **${labels.weekly[1]}** (if any), ` +
         `**${labels.weekly[2]}** (stress/energy patterns), **${labels.weekly[3]}** (2-3 gentle suggestions). ` +
         "Keep it concise and warm. Do NOT repeat user IDs or technical field names in the output.\n\n" +
-        `DATA:\n${JSON.stringify(payload, null, 2)}`
+        `DATA:\n${JSON.stringify(payload, null, 2)}${previousContext}`
       : `Create a PERSONAL WELLBEING REPORT in ${language === "ru" ? "Russian" : language === "kz" ? "Kazakh" : "English"}. ` +
         `Use these sections: **${labels.profile[0]}**, **${labels.profile[1]}**, **${labels.profile[2]}**, ` +
         `**${labels.profile[3]}**, **${labels.profile[4]}**, **${labels.profile[5]}**. ` +
         "Use bullet points. Be warm and supportive. " +
         "Do NOT mention user IDs, technical field names, or raw JSON keys in the output.\n\n" +
-        `DATA:\n${JSON.stringify(payload, null, 2)}`;
+        `DATA:\n${JSON.stringify(payload, null, 2)}${previousContext}`;
 
   const lm = await callLmStudio([
     { role: "system", content: systemPrompt },
@@ -197,9 +242,21 @@ export async function POST(req) {
     return Response.json({ error: lm.error }, { status: 502 });
   }
 
+  const generatedAt = new Date().toISOString();
+
+  // Save to history (ignore errors — table may not exist yet in Supabase)
+  try {
+    await supabase
+      .from("ai_reports")
+      .insert({ user_id: user.id, text: lm.reply || "", mode, generated_at: generatedAt });
+  } catch {
+    // silently ignore if table doesn't exist
+  }
+
   return Response.json({
     text: lm.reply || "",
     mode,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
+    hasPreviousComparison: prevReports.length > 0,
   });
 }

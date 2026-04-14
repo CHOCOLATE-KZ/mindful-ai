@@ -68,47 +68,42 @@ function chunkContent(content, chunkSize = 500) {
   return chunks;
 }
 
-// Функция для получения embeddings
-// ВАЖНО: нужно выбрать способ получения embeddings
-// Опция 1: локальный Ollama сервер
-// Опция 2: Hugging Face API
-// Опция 3: OpenAI API (платный)
+// Получаем embeddings через LM Studio (OpenAI-совместимый API)
+const LM_BASE_URL = (process.env.LMSTUDIO_BASE_URL || 'http://127.0.0.1:1234').trim();
+const LM_EMBED_MODEL = (process.env.LMSTUDIO_EMBED_MODEL || 'text-embedding-nomic-embed-text-v1.5').trim();
+
 async function getEmbedding(text) {
   try {
-    // Пример использования Ollama локально
-    // Убедитесь что Ollama запущен с моделью embedding
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 sec timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    // Используем Ollama на localhost:11434
-    const response = await fetch('http://127.0.0.1:11434/api/embeddings', {
+    const response = await fetch(`${LM_BASE_URL}/v1/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'nomic-embed-text',  // 768-dimensional embeddings
-        prompt: text,
+        model: LM_EMBED_MODEL,
+        input: text,
       }),
       signal: controller.signal,
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
-      throw new Error(`Ollama API ошибка: ${response.status}`);
+      throw new Error(`LM Studio API ошибка: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    if (Array.isArray(data.embedding)) {
-      return data.embedding;
-    } else {
-      throw new Error('Ollama вернул неправильный формат');
+    const embedding = data?.data?.[0]?.embedding;
+    if (Array.isArray(embedding) && embedding.length > 0) {
+      return embedding;
     }
+    throw new Error('LM Studio вернул неправильный формат');
   } catch (error) {
-    console.log('⚠️  Ollama embeddings недоступны:', error.message);
-    console.log('   Убедитесь что Ollama запущена на localhost:11434');
-    console.log('   и загружена модель nomic-embed-text');
-    // Возвращаем случайный вектор 768 dimensions как фолбэк
-    return Array(768).fill(0).map(() => Math.random() * 2 - 1);
+    console.error('❌ LM Studio embeddings недоступны:', error.message);
+    console.error(`   Убедитесь что LM Studio запущен на ${LM_BASE_URL}`);
+    console.error('   и загружена модель text-embedding-nomic-embed-text-v1.5');
+    process.exit(1);
   }
 }
 

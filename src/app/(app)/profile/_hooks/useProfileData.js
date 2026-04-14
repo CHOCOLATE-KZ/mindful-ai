@@ -49,6 +49,7 @@ export function useProfileData(supabase) {
   const [editOpen, setEditOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const [nameDraft, setNameDraft] = useState("");
   const [passwordDraft, setPasswordDraft] = useState("");
@@ -94,7 +95,7 @@ export function useProfileData(supabase) {
             theme: "light",
             language: "ru",
             ai_personalization: true,
-            data_sharing_with_ai: true,
+            data_sharing_ai: true,
             anonymous_analytics: true,
             activity_tracking: false,
             push_notifications: false,
@@ -339,36 +340,229 @@ export function useProfileData(supabase) {
     setSecurityOpen(false);
   }
 
+  async function deleteAccount() {
+    setMsg("");
+    try {
+      const res = await fetch("/api/profile/delete", { method: "DELETE" });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json?.error || "Delete failed");
+      }
+      window.location.href = "/";
+    } catch (e) {
+      console.error(e);
+      setMsg(e?.message || "Ошибка при удалении аккаунта");
+    }
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     window.location.href = "/";
   }
 
-  async function exportMyData() {
+  async function exportMyData(format = "json") {
     if (!user) return;
     setMsg("");
 
     try {
-      const [{ data: notes }, { data: messages }, { data: prof }, { data: setts }] =
+      const [{ data: notes }, { data: messages }, { data: prof }, { data: setts }, { data: tests }] =
         await Promise.all([
           supabase.from("notes").select("*").eq("user_id", user.id).order("date", { ascending: true }),
           supabase.from("ai_messages").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
           supabase.from("profiles").select("*").eq("id", user.id).limit(1),
           supabase.from("user_settings").select("*").eq("user_id", user.id).limit(1),
+          supabase.from("tests_log").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
         ]);
 
-      downloadJson(`mindfulai_export_${user.id}.json`, {
+      const exportData = {
         exported_at: new Date().toISOString(),
         user_id: user.id,
         profile: prof?.[0] || null,
         settings: setts?.[0] || null,
         notes: notes || [],
         ai_messages: messages || [],
-      });
+        tests: tests || [],
+      };
+
+      if (format === "pdf") {
+        exportAsPdf(exportData);
+      } else {
+        downloadJson(`mindfulai_export_${new Date().toISOString().slice(0,10)}.json`, exportData);
+      }
     } catch (e) {
       console.error(e);
       setMsg(e?.message || "Export failed");
     }
+  }
+
+  function exportAsPdf(data) {
+    const profile = data.profile || {};
+    const notes = data.notes || [];
+    const messages = data.ai_messages || [];
+    const tests = data.tests || [];
+    const exportedAt = new Date(data.exported_at).toLocaleString("ru-RU");
+
+    const avgMood = notes.filter(n => n.mood).length
+      ? (notes.filter(n => n.mood).reduce((s, n) => s + n.mood, 0) / notes.filter(n => n.mood).length).toFixed(1)
+      : "—";
+    const avgSleep = notes.filter(n => n.sleep).length
+      ? (notes.filter(n => n.sleep).reduce((s, n) => s + n.sleep, 0) / notes.filter(n => n.sleep).length).toFixed(1)
+      : "—";
+
+    const moodColor = (m) => {
+      if (!m) return "#94a3b8";
+      if (m >= 7) return "#10b981";
+      if (m >= 4) return "#f59e0b";
+      return "#ef4444";
+    };
+
+    const notesRows = notes.slice(-30).map(n => `
+      <tr>
+        <td>${n.date || ""}</td>
+        <td style="color:${moodColor(n.mood)};font-weight:600">${n.mood ?? "—"}</td>
+        <td>${n.sleep ?? "—"}ч</td>
+        <td>${n.stress ?? "—"}</td>
+        <td>${n.energy ?? "—"}</td>
+        <td style="color:#64748b;font-size:11px">${(n.comment || "").slice(0, 60)}</td>
+      </tr>
+    `).join("");
+
+    const testsRows = tests.map(t => `
+      <tr>
+        <td>${new Date(t.created_at).toLocaleDateString("ru-RU")}</td>
+        <td>${t.test_key || "—"}</td>
+        <td>${t.result?.score ?? t.result?.level ?? "—"}</td>
+      </tr>
+    `).join("");
+
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<title>MindfulAI — Экспорт данных</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; color: #1e293b; background: #fff; line-height: 1.6; }
+  .page { max-width: 800px; margin: 0 auto; padding: 40px 40px 60px; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 24px; border-bottom: 2px solid #e2e8f0; margin-bottom: 32px; }
+  .logo { font-size: 22px; font-weight: 700; color: #0f172a; }
+  .logo span { color: #74AA9C; }
+  .meta { font-size: 12px; color: #94a3b8; text-align: right; }
+
+  .section { margin-bottom: 36px; }
+  .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #74AA9C; margin-bottom: 14px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat-card { background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center; }
+  .stat-value { font-size: 26px; font-weight: 700; color: #0f172a; }
+  .stat-label { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { background: #f1f5f9; }
+  th { padding: 8px 10px; text-align: left; font-weight: 600; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+  tr:last-child td { border-bottom: none; }
+
+  .chat-list { display: flex; flex-direction: column; gap: 8px; }
+  .chat-msg { padding: 10px 14px; border-radius: 10px; font-size: 12px; line-height: 1.5; }
+  .chat-msg.user { background: #eff6ff; border-left: 3px solid #3b82f6; }
+  .chat-msg.assistant { background: #f0fdf4; border-left: 3px solid #74AA9C; }
+  .chat-role { font-size: 10px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+  .chat-date { font-size: 10px; color: #cbd5e1; float: right; }
+
+  .footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+
+  @media print {
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .section { page-break-inside: avoid; }
+    .no-break { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="logo">Mindful<span>AI</span></div>
+    <div class="meta">
+      Экспорт данных<br/>
+      ${exportedAt}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Профиль</div>
+    <table>
+      <tbody>
+        <tr><td style="width:160px;color:#94a3b8">Имя</td><td>${profile.name || "—"}</td></tr>
+        <tr><td style="color:#94a3b8">Язык</td><td>${data.settings?.language?.toUpperCase() || "RU"}</td></tr>
+        <tr><td style="color:#94a3b8">Аккаунт создан</td><td>${profile.created_at ? new Date(profile.created_at).toLocaleDateString("ru-RU") : "—"}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Общая статистика</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value">${notes.length}</div><div class="stat-label">Записей</div></div>
+      <div class="stat-card"><div class="stat-value">${avgMood}</div><div class="stat-label">Ср. настроение</div></div>
+      <div class="stat-card"><div class="stat-value">${avgSleep}</div><div class="stat-label">Ср. сон (ч)</div></div>
+      <div class="stat-card"><div class="stat-value">${messages.length}</div><div class="stat-label">Сообщений ИИ</div></div>
+    </div>
+  </div>
+
+  ${notes.length > 0 ? `
+  <div class="section">
+    <div class="section-title">Дневник (последние 30 записей)</div>
+    <table>
+      <thead><tr><th>Дата</th><th>Настроение</th><th>Сон</th><th>Стресс</th><th>Энергия</th><th>Комментарий</th></tr></thead>
+      <tbody>${notesRows}</tbody>
+    </table>
+  </div>
+  ` : ""}
+
+  ${tests.length > 0 ? `
+  <div class="section">
+    <div class="section-title">Результаты тестов</div>
+    <table>
+      <thead><tr><th>Дата</th><th>Тест</th><th>Результат</th></tr></thead>
+      <tbody>${testsRows}</tbody>
+    </table>
+  </div>
+  ` : ""}
+
+  ${messages.length > 0 ? `
+  <div class="section">
+    <div class="section-title">История чата (последние 20 сообщений)</div>
+    <div class="chat-list">
+      ${messages.slice(-20).map(m => `
+        <div class="chat-msg ${m.role}">
+          <span class="chat-role">${m.role === "user" ? "Вы" : "MindfulAI"}</span>
+          <span class="chat-date">${new Date(m.created_at).toLocaleDateString("ru-RU")}</span>
+          <div>${(m.content || "").slice(0, 300)}${m.content?.length > 300 ? "…" : ""}</div>
+        </div>
+      `).join("")}
+    </div>
+  </div>
+  ` : ""}
+
+  <div class="footer">
+    Этот документ создан приложением MindfulAI • ${exportedAt} • Данные принадлежат только вам
+  </div>
+</div>
+<script>window.onload = () => { window.print(); };</script>
+</body>
+</html>`;
+
+    const win = window.open("", "_blank");
+    if (!win) {
+      setMsg("Разрешите всплывающие окна в браузере для PDF-экспорта");
+      return;
+    }
+    win.document.write(html);
+    win.document.close();
   }
 
   async function onAvatarSelected(file) {
@@ -418,21 +612,24 @@ export function useProfileData(supabase) {
         editOpen,
         privacyOpen,
         securityOpen,
+        deleteOpen,
         nameDraft,
         passwordDraft,
         setEditOpen,
         setPrivacyOpen,
         setSecurityOpen,
+        setDeleteOpen,
         setNameDraft,
         setPasswordDraft,
       }),
-      [editOpen, privacyOpen, securityOpen, nameDraft, passwordDraft]
+      [editOpen, privacyOpen, securityOpen, deleteOpen, nameDraft, passwordDraft]
     ),
     actions: {
       loadAll,
       updateSettings,
       saveProfile,
       changePassword,
+      deleteAccount,
       signOut,
       exportMyData,
       onAvatarSelected,

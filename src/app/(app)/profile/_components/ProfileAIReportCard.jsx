@@ -1,15 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, RefreshCw, Copy, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, RefreshCw, Copy, Check, ChevronDown, ChevronUp, History } from "lucide-react";
 
 export default function ProfileAIReportCard({ settings, t }) {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
-  const allowed = settings?.data_sharing_with_ai !== false;
+  const allowed = settings?.data_sharing_ai !== false;
+
+  useEffect(() => {
+    if (!allowed) return;
+    fetch("/api/ai/profile-report")
+      .then((r) => r.json())
+      .then((d) => setHistory(d.reports || []))
+      .catch(() => {});
+  }, [allowed]);
 
   async function generate() {
     if (!allowed) return;
@@ -25,6 +36,11 @@ export default function ProfileAIReportCard({ settings, t }) {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Failed to generate report");
       setReport(data);
+      // Reload history after generating
+      fetch("/api/ai/profile-report")
+        .then((r) => r.json())
+        .then((d) => setHistory(d.reports || []))
+        .catch(() => {});
     } catch (e) {
       setError(e?.message || "Failed to generate report");
     } finally {
@@ -69,18 +85,34 @@ export default function ProfileAIReportCard({ settings, t }) {
         </div>
       )}
 
-      {!!error && (
-        <div className="mx-6 mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
+      {loading && (
+        <div className="mx-6 mb-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+          Анализирую ваши данные... Это может занять 20–60 секунд.
         </div>
       )}
 
+      {!!error && (
+        <div className="mx-6 mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="font-medium mb-0.5">Ошибка генерации</div>
+          <div className="text-rose-600/80">{error}</div>
+          <div className="mt-1.5 text-xs text-rose-500">Убедитесь что LM Studio запущен и модель загружена.</div>
+        </div>
+      )}
+
+      {/* Current report */}
       {report?.text && (
         <div className="border-t border-slate-100 bg-slate-50 px-6 pb-6 pt-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              {new Date(report.generatedAt).toLocaleString()}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                {new Date(report.generatedAt).toLocaleString()}
+              </span>
+              {report.hasPreviousComparison && (
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                  с анализом динамики
+                </span>
+              )}
+            </div>
             <button
               onClick={copyReport}
               className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-50 transition"
@@ -90,6 +122,47 @@ export default function ProfileAIReportCard({ settings, t }) {
             </button>
           </div>
           <ReportText text={report.text} />
+        </div>
+      )}
+
+      {/* History */}
+      {history.length > 0 && (
+        <div className="border-t border-slate-100">
+          <button
+            onClick={() => setHistoryOpen((v) => !v)}
+            className="flex w-full items-center justify-between px-6 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
+          >
+            <span className="flex items-center gap-2">
+              <History className="h-4 w-4 text-slate-400" />
+              История отчётов ({history.length})
+            </span>
+            {historyOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+          </button>
+
+          {historyOpen && (
+            <div className="divide-y divide-slate-100 bg-slate-50/50">
+              {history.map((r) => (
+                <div key={r.id} className="px-6 py-3">
+                  <button
+                    onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
+                    className="flex w-full items-center justify-between text-left"
+                  >
+                    <span className="text-xs font-medium text-slate-500">
+                      {new Date(r.generated_at).toLocaleString()}
+                    </span>
+                    {expandedId === r.id
+                      ? <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
+                      : <ChevronDown className="h-3.5 w-3.5 text-slate-400" />}
+                  </button>
+                  {expandedId === r.id && (
+                    <div className="mt-3">
+                      <ReportText text={r.text} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

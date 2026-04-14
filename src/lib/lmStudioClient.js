@@ -158,11 +158,11 @@ export async function askAIWithHistory(userMessage, history = [], userContext = 
 export async function buildUserContext(supabase, userId) {
   const [{ data: profile }, { data: settings }, { data: lastNote }] = await Promise.all([
     supabase.from("profiles").select("name").eq("id", userId).maybeSingle(),
-    supabase.from("user_settings").select("language, data_sharing_with_ai").eq("user_id", userId).maybeSingle(),
+    supabase.from("user_settings").select("language, data_sharing_ai").eq("user_id", userId).maybeSingle(),
     supabase.from("notes").select("date, mood, sleep").eq("user_id", userId).order("date", { ascending: false }).limit(1),
   ]);
 
-  if (settings?.data_sharing_with_ai === false) return "";
+  if (settings?.data_sharing_ai === false) return "";
 
   const parts = [];
   if (profile?.name) parts.push(`Имя: ${profile.name}`);

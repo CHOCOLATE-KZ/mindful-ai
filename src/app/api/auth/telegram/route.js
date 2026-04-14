@@ -329,7 +329,7 @@ export async function POST(request) {
         theme: "light",
         language: "ru",
         notifications_enabled: true,
-        data_sharing_with_ai: true,
+        data_sharing_ai: true,
       });
     }
 

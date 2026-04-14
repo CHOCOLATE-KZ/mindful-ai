@@ -3,5 +3,5 @@ npm run telegram:poll
 в diplomaproject 
 
 !
-Открыть LM Studio запустить gpt-oss-20b
+Открыть LM Studio запустить qwen2.5 -7b
 Открыть Supabase
