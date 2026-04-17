@@ -175,18 +175,10 @@ export default function PsychologistCharacter({
       {/* Основной персонаж */}
       <motion.div
         className={`relative ${sizeMap[size]}`}
-        animate={isActive && animated ? pulseVariants.animate : {}}
-        transition={{ type: 'spring', stiffness: 100 }}
       >
         {/* Дыхание + покачивание */}
-        <motion.div
-          animate={animated && emotion !== 'thinking' ? swayVariants.animate : {}}
-          transition={{ type: 'spring', stiffness: 50 }}
-        >
-          <motion.div
-            animate={animated ? breathingVariants.animate : {}}
-            transition={{ type: 'spring', stiffness: 40 }}
-          >
+        <motion.div>
+          <motion.div>
             <svg
               viewBox="0 0 194 335"
               className={`w-full h-full drop-shadow-2xl ${emotion === 'thinking' ? styles.thinkingBody : ''}`}

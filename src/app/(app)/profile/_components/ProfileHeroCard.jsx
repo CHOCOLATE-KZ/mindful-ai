@@ -5,7 +5,7 @@ import { Pencil, ShieldCheck, Flame, CalendarDays, Trophy } from "lucide-react";
 export default function ProfileHeroCard({ user, profile, stats, onEdit, onSecurity, t }) {
   const name = profile?.name || "User";
   const email = user?.email || "";
-  const initials = (name || "U").slice(0, 2).toUpperCase();
+  const avatarSrc = profile?.avatar_url || "/user.png";
 
   return (
     <div className="relative overflow-hidden rounded-3xl shadow-lg">
@@ -19,17 +19,11 @@ export default function ProfileHeroCard({ user, profile, stats, onEdit, onSecuri
         <div className="flex flex-wrap items-start justify-between gap-4">
           {/* avatar + name */}
           <div className="flex items-center gap-4">
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt="Profile avatar"
-                className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-2 ring-white/30"
-              />
-            ) : (
-              <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/20 text-xl font-bold text-white backdrop-blur-sm ring-2 ring-white/30">
-                {initials}
-              </div>
-            )}
+            <img
+              src={avatarSrc}
+              alt="Profile avatar"
+              className="h-16 w-16 shrink-0 rounded-2xl object-cover ring-2 ring-white/30"
+            />
             <div>
               <div className="text-xl font-bold text-white">{name}</div>
               <div className="mt-0.5 text-sm text-white/70">{email}</div>

@@ -21,7 +21,11 @@ export function useTranslation(section, lang = "ru") {
     }
 
     const langData = sectionData[lang] || sectionData.ru;
-    return langData[key] || key;
+    if (langData[key]) return langData[key];
+
+    // Fallback to common dictionary for shared UI labels like Save/Cancel.
+    const commonData = translations.common?.[lang] || translations.common?.ru;
+    return commonData?.[key] || key;
   };
 }
 

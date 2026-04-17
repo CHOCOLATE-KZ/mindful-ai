@@ -14,8 +14,11 @@ export default function TestSelector({ testResults, selectedTest, setSelectedTes
   const allTestKeys = Object.keys(TEST_NAMES);
 
   return (
-    <div className="rounded-3xl border border-black/10 bg-white/70 backdrop-blur-xl p-6 space-y-4">
-      <h2 className="text-xl font-semibold">{t("selectTestForAnalysis")}</h2>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-slate-900">{t("selectTestForAnalysis")}</h2>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{allTestKeys.length} тестов</span>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {allTestKeys.map((testKey) => {
           const count = testResults.filter((r) => r.test_key === testKey).length;
@@ -25,14 +28,14 @@ export default function TestSelector({ testResults, selectedTest, setSelectedTes
             <button
               key={testKey}
               onClick={() => setSelectedTest(testKey)}
-              className={`p-4 rounded-xl border-2 font-medium text-left transition ${
+              className={`p-4 rounded-2xl border font-medium text-left transition-all ${
                 selectedTest === testKey
-                  ? "border-blue-500 bg-blue-50 text-blue-900"
-                  : "border-gray-200 bg-white text-gray-800 hover:border-gray-300 hover:bg-gray-50"
+                  ? "border-[#8ecbc2] bg-[#e5f3f0] text-[#2a4842] shadow-sm"
+                  : "border-slate-200 bg-slate-50 text-slate-800 hover:border-[#b3ddd6] hover:bg-white"
               } ${!hasResults ? "opacity-60" : ""}`}
             >
-              <div className="font-semibold">{TEST_NAMES[testKey]}</div>
-              <div className="text-sm text-gray-500 mt-1">
+              <div className="font-semibold text-sm leading-snug">{TEST_NAMES[testKey]}</div>
+              <div className="text-xs text-slate-500 mt-2">
                 {hasResults ? (
                   <>
                     {count} {getRussianAttemptsLabel(count)}

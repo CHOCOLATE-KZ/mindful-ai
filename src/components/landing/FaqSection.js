@@ -1,192 +1,250 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
+import {
+  ArrowRight,
+  Brain,
+  HeartHandshake,
+  LockKeyhole,
+  NotebookPen,
+} from "lucide-react";
 
-/* -------------------- FAQ ITEM -------------------- */
-function FaqItem({ f }) {
-  const detailsRef = useRef(null);
-  const contentRef = useRef(null);
-  const animationRef = useRef(null);
-
-  useEffect(() => {
-    const details = detailsRef.current;
-    const content = contentRef.current;
-    if (!details || !content) return;
-
-    const summary = details.querySelector("summary");
-
-    // стартовое состояние
-    content.style.height = details.open ? "auto" : "0px";
-    content.style.opacity = details.open ? "1" : "0";
-    content.style.overflow = "hidden";
-
-    const onClick = (e) => {
-      e.preventDefault(); // полностью контролируем open/close
-
-      const isOpening = !details.open;
-
-      // отменяем текущую анимацию
-      if (animationRef.current) animationRef.current.cancel();
-
-      const startHeight = content.getBoundingClientRect().height;
-
-      if (isOpening) {
-        details.open = true; // нужно открыть, чтобы получить scrollHeight
-      }
-
-      const endHeight = isOpening ? content.scrollHeight : 0;
-
-      // фиксируем стартовую высоту
-      content.style.height = `${startHeight}px`;
-      content.style.opacity = isOpening ? "0" : "1";
-
-      // forced reflow — ОБЯЗАТЕЛЬНО
-      content.offsetHeight;
-
-      animationRef.current = content.animate(
-        [
-          { height: `${startHeight}px`, opacity: isOpening ? 0 : 1 },
-          { height: `${endHeight}px`, opacity: isOpening ? 1 : 0 },
-        ],
-        {
-          duration: 300,
-          easing: "cubic-bezier(0.25, 0.8, 0.25, 1)",
-        }
-      );
-
-      animationRef.current.onfinish = () => {
-        animationRef.current = null;
-
-        if (isOpening) {
-          content.style.height = "auto";
-          content.style.opacity = "1";
-        } else {
-          details.open = false;
-          content.style.height = "0px";
-          content.style.opacity = "0";
-        }
-      };
-    };
-
-    summary.addEventListener("click", onClick);
-    return () => summary.removeEventListener("click", onClick);
-  }, []);
+function CategoryCard({ item, active, onClick }) {
+  const Icon = item.icon;
 
   return (
-    <details
-      ref={detailsRef}
-      className="group rounded-lg bg-white border border-blue-100 transition-all duration-300 hover:shadow-md open:border-2 open:border-blue-300"
+    <button
+      type="button"
+      onClick={onClick}
+      className={`overflow-hidden rounded-2xl border text-left transition-all duration-200 ${
+        active
+          ? "border-[#74AA9C]/45 shadow-md"
+          : "border-black/10 hover:-translate-y-0.5 hover:border-[#74AA9C]/25 hover:shadow-md"
+      }`}
     >
-      <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between font-medium text-black hover:text-[#74AA9C] transition-colors">
-        <span className="text-base">{f.q}</span>
-
-        <span className="flex-shrink-0 text-blue-400 transition-all duration-300 group-hover:text-[#74AA9C] group-open:text-[#74AA9C]">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </summary>
-
-      <div
-        ref={contentRef}
-        className="overflow-hidden"
-        style={{ height: "0px", opacity: 0 }}
-      >
-        <p className="px-6 pb-4 text-black leading-relaxed border-t border-blue-200 pt-4">
-          {f.a}
-        </p>
+      <div className={`h-36 px-6 py-5 ${item.surface}`}>
+        <div className="flex h-full items-end justify-between">
+          <div className="max-w-[70%]">
+            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-black/45">
+              {item.kicker}
+            </div>
+            <div className="mt-2 text-xl font-semibold leading-tight text-black">
+              {item.title}
+            </div>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
+            <Icon className="h-6 w-6 text-[#5d9088]" />
+          </div>
+        </div>
       </div>
-    </details>
+      <div className="border-t border-black/8 bg-white px-5 py-4">
+        <div className="text-sm text-black/60">{item.description}</div>
+      </div>
+    </button>
   );
 }
 
-/* -------------------- FAQ SECTION -------------------- */
+function ArticleCard({ item }) {
+  return (
+    <article className="group py-1">
+      <div className="flex items-start gap-2.5">
+        <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center text-[#5d9088]">
+          <item.icon className="h-3.5 w-3.5" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-[18px] font-semibold leading-snug text-black transition-colors duration-200 group-hover:text-[#5d9088]">
+            {item.q}
+          </h3>
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-black/55">{item.a}</p>
+          <button
+            type="button"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#5d9088] transition-colors hover:text-[#74AA9C]"
+          >
+            Подробнее
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function FaqSection() {
-  const faqs = [
+  const [activeCategory, setActiveCategory] = useState("support");
+
+  const categories = [
     {
-      q: "Mindful AI — это настоящий психолог?",
-      a: "Нет. Mindful AI — это помощник для поддержки и самопознания, а не лицензированный психолог. Мы можем помочь вам размышлять и развивать здоровые привычки, но не заменяем профессиональную помощь. При серьёзных проблемах обратитесь к специалисту.",
-      icon: "",
+      key: "support",
+      kicker: "Support",
+      title: "Поддержка и границы ИИ",
+      description: "Что умеет MindfulAI и в каких рамках он работает.",
+      icon: HeartHandshake,
+      surface: "bg-[linear-gradient(135deg,#dff4ec,#f8fbfa)]",
     },
     {
-      q: "Моя информация конфиденциальна?",
-      a: "Да. Мы храним только минимально необходимые данные. Все заметки, диалоги и личная информация защищены и не передаются третьим лицам.",
-      icon: "",
+      key: "trust",
+      kicker: "Privacy",
+      title: "Конфиденциальность и безопасность",
+      description: "Как хранятся данные и что можно удалить.",
+      icon: LockKeyhole,
+      surface: "bg-[linear-gradient(135deg,#eef7ff,#f9fbff)]",
     },
     {
-      q: "Могу ли я удалить свои данные?",
-      a: "Полностью. Вы можете удалить заметки, историю чатов и даже весь аккаунт. Также доступен экспорт данных.",
-      icon: "️",
+      key: "practice",
+      kicker: "Practice",
+      title: "Дневник и практики",
+      description: "Как получать пользу от заметок и упражнений.",
+      icon: NotebookPen,
+      surface: "bg-[linear-gradient(135deg,#f7f2ff,#fcfaff)]",
     },
     {
-      q: "Как работают дыхательные практики?",
-      a: "Практики основаны на научных методах: диафрагмальное дыхание, техника 4-7-8 и другие. Они помогают снизить стресс и стабилизировать нервную систему.",
-      icon: "️",
-    },
-    {
-      q: "Как часто использовать приложение?",
-      a: "Даже 5–10 минут в день дают эффект. Лучше коротко, но регулярно, чем редко и долго.",
-      icon: "",
-    },
-    {
-      q: "Какой язык поддерживается?",
-      a: "Сейчас приложение полностью на русском языке. В будущем появится английский и другие языки.",
-      icon: "",
-    },
-    {
-      q: "Можно ли использовать без интернета?",
-      a: "Некоторые функции доступны офлайн, но для синхронизации и ИИ требуется интернет.",
-      icon: "",
-    },
-    {
-      q: "Безопасен ли ИИ-ассистент?",
-      a: "Да. Ассистент не ставит диагнозы и не назначает лечение. Он работает в рамках этических и безопасных ограничений.",
-      icon: "",
+      key: "product",
+      kicker: "Product",
+      title: "Как устроен сервис",
+      description: "Язык, доступность и повседневное использование.",
+      icon: Brain,
+      surface: "bg-[linear-gradient(135deg,#fff5ea,#fffaf5)]",
     },
   ];
 
+  const articles = [
+    {
+      category: "support",
+      icon: HeartHandshake,
+      q: "MindfulAI — это настоящий психолог?",
+      a: "Нет. Это цифровой помощник для поддержки и саморефлексии. Он помогает структурировать мысли, вести дневник и использовать простые практики, но не заменяет лицензированного специалиста.",
+    },
+    {
+      category: "support",
+      icon: HeartHandshake,
+      q: "Безопасен ли ИИ-ассистент?",
+      a: "Ассистент работает в безопасных рамках: не ставит диагнозы, не назначает лечение и не выдает себя за врача. Его роль — поддержка, навигация и помощь в самоанализе.",
+    },
+    {
+      category: "support",
+      icon: HeartHandshake,
+      q: "Что делать, если мне нужна срочная помощь?",
+      a: "MindfulAI не предназначен для кризисных ситуаций. Если пользователь находится в состоянии острого риска, ему важно немедленно обратиться к живому специалисту, экстренным службам или доверенному взрослому.",
+    },
+    {
+      category: "trust",
+      icon: LockKeyhole,
+      q: "Моя информация конфиденциальна?",
+      a: "Да. Хранятся только данные, необходимые для работы сервиса. Личные записи, ответы и история использования не должны использоваться вне контекста приложения.",
+    },
+    {
+      category: "trust",
+      icon: LockKeyhole,
+      q: "Могу ли я удалить свои данные?",
+      a: "Да. Пользователь должен иметь возможность удалить заметки, отдельные записи, историю чата и при необходимости сам аккаунт. Это важно для доверия к продукту.",
+    },
+    {
+      category: "trust",
+      icon: LockKeyhole,
+      q: "Кто может видеть мои записи и заметки?",
+      a: "Дневник и персональные заметки должны быть доступны только самому пользователю в рамках его аккаунта. Это ключевая часть доверия и приватности в продукте психологической поддержки.",
+    },
+    {
+      category: "practice",
+      icon: NotebookPen,
+      q: "Как работают дыхательные практики?",
+      a: "Практики основаны на простых техниках саморегуляции. Они помогают снизить напряжение, замедлить дыхание и вернуть внимание в тело, когда человек чувствует перегрузку или тревогу.",
+    },
+    {
+      category: "practice",
+      icon: NotebookPen,
+      q: "Как часто использовать приложение?",
+      a: "Оптимальный формат — короткие регулярные сессии. Даже 5–10 минут в день дают больше пользы, чем редкое, но длинное использование.",
+    },
+    {
+      category: "practice",
+      icon: NotebookPen,
+      q: "Зачем вести дневник настроения?",
+      a: "Дневник помогает заметить повторяющиеся триггеры, изменения настроения и связь между событиями, мыслями и реакциями. Это делает самонаблюдение более осознанным и полезным.",
+    },
+    {
+      category: "product",
+      icon: Brain,
+      q: "Какой язык поддерживается?",
+      a: "Сейчас основной язык интерфейса — русский. В будущем сервис можно расширять на другие языки, не меняя основную логику продукта.",
+    },
+    {
+      category: "product",
+      icon: Brain,
+      q: "Можно ли использовать без интернета?",
+      a: "Часть интерфейса и заранее загруженные материалы могут быть доступны локально, но для синхронизации, аналитики и ИИ-функций требуется подключение к сети.",
+    },
+    {
+      category: "product",
+      icon: Brain,
+      q: "Подойдет ли сервис для ежедневного использования?",
+      a: "Да. Логика продукта строится вокруг коротких, регулярных действий: чек-ин настроения, заметка, небольшая практика или разговор с ассистентом. Это помогает встроить сервис в повседневную жизнь.",
+    },
+  ];
+
+  const visibleArticles = useMemo(
+    () => articles.filter((item) => item.category === activeCategory),
+    [activeCategory]
+  );
+
   return (
     <section className="mx-auto max-w-7xl px-6 py-20">
-      {/* Header with Image */}
-      <div className="mb-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <div>
-          <h2 className="text-4xl font-bold text-black mb-4">
-            Часто задаваемые вопросы
-          </h2>
-          <p className="text-xl text-black">
-            Найдите ответы на популярные вопросы о Mindful AI
-          </p>
-        </div>
-        <div className="flex justify-center md:justify-end">
-          <img 
-            src="/faq-illustration.png" 
-            alt="FAQ Illustration" 
-            className="w-full max-w-sm h-auto rounded-xl shadow-lg"
-          />
-        </div>
+      <div>
+        <h2 className="text-4xl font-semibold tracking-tight text-black sm:text-5xl">
+          Чем мы можем помочь?
+        </h2>
+        <p className="mt-3 max-w-2xl text-lg leading-relaxed text-black/60">
+          Собрали самые важные ответы о MindfulAI: как работает ассистент, что с конфиденциальностью и как использовать сервис с пользой.
+        </p>
       </div>
 
-      {/* FAQ Grid */}
-      <div className="mx-auto max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {faqs.map((f, i) => (
-            <FaqItem key={i} f={f} />
+      <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {categories.map((item) => (
+          <CategoryCard
+            key={item.key}
+            item={item}
+            active={activeCategory === item.key}
+            onClick={() => setActiveCategory(item.key)}
+          />
+        ))}
+      </div>
+
+      <div className="mt-14">
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <h3 className="text-2xl font-semibold text-black">Популярные вопросы</h3>
+            <p className="mt-1 text-sm text-black/55">
+              Короткие ответы на вопросы, которые чаще всего возникают у пользователя.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-x-8 gap-y-8 border-t border-black/8 pt-6 md:grid-cols-2 xl:grid-cols-4">
+          {visibleArticles.map((item, index) => (
+            <ArticleCard key={`${item.q}-${index}`} item={item} />
           ))}
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="mt-16 rounded-2xl bg-[#74AA9C] p-12 text-center text-white">
-        <h3 className="text-2xl font-bold mb-3">Не нашли ответ?</h3>
-        <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-          Свяжитесь с нами, если у вас остались вопросы
+      <div className="mt-14 rounded-3xl border border-black/8 bg-[#f7fbf9] px-6 py-10 text-center sm:px-10">
+        <h3 className="text-2xl font-semibold text-black">Не нашли нужный ответ?</h3>
+        <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-black/60">
+          Если нужной информации нет в разделе FAQ, пользователь может перейти к контактам или открыть чат и продолжить взаимодействие внутри сервиса.
         </p>
-        <a
-          href="/contacts"
-          className="inline-block bg-white text-[#74AA9C] font-semibold px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors duration-200"
-        >
-          Связаться с нами
-        </a>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <a
+            href="/contacts"
+            className="inline-flex items-center justify-center rounded-full bg-[#74AA9C] px-6 py-3 font-semibold text-white transition hover:bg-[#5d9088]"
+          >
+            Связаться с нами
+          </a>
+          <a
+            href="/chat"
+            className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-6 py-3 font-semibold text-black/75 transition hover:border-[#74AA9C]/30 hover:text-[#5d9088]"
+          >
+            Открыть чат
+          </a>
+        </div>
       </div>
     </section>
   );

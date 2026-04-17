@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import { extractAnchors } from "@/lib/utils/extractAnchors";
 import CrisisAlert from "./CrisisAlert";
 
-export default function ChatMessages({ messages, loading, atBottom, onAnchorSelect }) {
+export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, onAnchorSelect }) {
   const endRef = useRef(null);
   const [dismissedCrisis, setDismissedCrisis] = useState(new Set());
 
@@ -36,7 +36,7 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
   return (
     <>
       {/*  чтобы последние сообщения не липли к composer */}
-      <div className="space-y-4 pb-10">
+      <div className="space-y-4 pb-2">
         {messages.map((m, idx) => {
           const isAI = m.role === "assistant";
 
@@ -58,7 +58,7 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
           return (
             <div key={idx} className={`flex gap-3 ${isAI ? "justify-start" : "justify-end"}`}>
               {isAI && (
-                <div className="h-10 w-10 rounded-full bg-[#74AA9C]/15 ring-1 ring-[#74AA9C]/30 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-full bg-[#74AA9C] ring-1 ring-[#5d9088]/40 flex items-center justify-center flex-shrink-0">
                   <Image
                     src="/white-logo.svg"
                     alt="MindfulAI"
@@ -110,8 +110,12 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
               </div>
 
               {!isAI && (
-                <div className="h-10 w-10 rounded-full bg-slate-900/5 ring-1 ring-black/10 flex items-center justify-center flex-shrink-0 text-slate-700 font-medium">
-                  U
+                <div className="h-10 w-10 rounded-full bg-slate-900/5 ring-1 ring-black/10 overflow-hidden flex-shrink-0">
+                  <img
+                    src={userAvatarUrl || "/user.png"}
+                    alt="User avatar"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
               )}
             </div>
@@ -120,7 +124,7 @@ export default function ChatMessages({ messages, loading, atBottom, onAnchorSele
 
         {loading && (
           <div className="flex gap-3 justify-start">
-            <div className="h-10 w-10 rounded-full bg-[#74AA9C]/15 ring-1 ring-[#74AA9C]/30 flex items-center justify-center flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-[#74AA9C] ring-1 ring-[#5d9088]/40 flex items-center justify-center flex-shrink-0">
               <Image
                 src="/white-logo.svg"
                 alt="MindfulAI"

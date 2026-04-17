@@ -74,11 +74,13 @@ export default function HeroSection() {
                 <TypingText
                   texts={[
                     "Почувствуй себя лучше с MindfulAI",
-                    "Спокойная поддержка — в любой момент",
+                    "Спокойная поддержка - в любой момент",
                     "Приватно. Бережно. По делу.",
                   ]}
                   speed={45}
                   pause={1200}
+                  highlight="AI"
+                  highlightClassName="text-[#74AA9C]"
                 />
               </span>
             </h1>

@@ -14,6 +14,7 @@ import { useChatPageModel } from "./_hooks/useChatPageModel";
 export default function ChatPage() {
   const {
     messages,
+    userAvatarUrl,
     input,
     loading,
     atBottom,
@@ -73,7 +74,7 @@ export default function ChatPage() {
         </div>
       ) : (
         <>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto pb-48">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto pb-16">
             <ChatSidebar
               latestAnchors={latestAnchors}
               helpIconRef={helpIconRef}
@@ -89,6 +90,7 @@ export default function ChatPage() {
 
             <ChatConversation
               messages={messages}
+              userAvatarUrl={userAvatarUrl}
               loading={loading}
               atBottom={atBottom}
               onAnchorSelect={applyAnchorToInput}
@@ -96,7 +98,7 @@ export default function ChatPage() {
           </div>
 
           {/* Персонаж фиксирован справа с большим отступом */}
-          <div className="fixed right-32 bottom-48 z-40">
+          <div className="fixed right-32 bottom-38 z-40">
             <CharacterController
               chatMessages={messages}
               isLoading={loading}

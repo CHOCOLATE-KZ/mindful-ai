@@ -22,6 +22,7 @@ export function useChatPageModel() {
   const [voiceModeHeard, setVoiceModeHeard] = useState("");
   const [voiceModeReply, setVoiceModeReply] = useState("");
   const [voiceModeError, setVoiceModeError] = useState("");
+  const [userAvatarUrl, setUserAvatarUrl] = useState("");
 
   const speakingRef = useRef(false);
   const sendingVoiceRef = useRef(false);
@@ -61,6 +62,29 @@ export function useChatPageModel() {
   const getUserId = useCallback(async () => {
     const { data } = await supabase.auth.getUser();
     return data?.user?.id || null;
+  }, [supabase]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
+      if (!user) return;
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+      setUserAvatarUrl(profileData?.avatar_url || "");
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [supabase]);
 
   const {
@@ -331,6 +355,7 @@ export function useChatPageModel() {
 
   return {
     messages,
+    userAvatarUrl,
     input,
     loading,
     atBottom,

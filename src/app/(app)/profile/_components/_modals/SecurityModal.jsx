@@ -18,11 +18,11 @@ export default function SecurityModal({
   function handleSubmit() {
     setError("");
     if ((passwordDraft || "").trim().length < 6) {
-      setError("Пароль должен содержать минимум 6 символов");
+      setError(t("passwordMinLength"));
       return;
     }
     if (passwordDraft !== confirmDraft) {
-      setError("Пароли не совпадают");
+      setError(t("passwordsDoNotMatch"));
       return;
     }
     onChangePassword();
@@ -40,7 +40,7 @@ export default function SecurityModal({
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
       <div className="w-full max-w-lg rounded-3xl border border-black/10 bg-white p-6 shadow-2xl dark:bg-[#0B0B0F] dark:border-white/10">
         <div className="text-lg font-semibold text-black dark:text-white">{t("security")}</div>
-        <p className="mt-1 text-sm text-black/50 dark:text-white/40">Придумайте новый пароль для аккаунта</p>
+        <p className="mt-1 text-sm text-black/50 dark:text-white/40">{t("newPasswordHint")}</p>
 
         <label className="mt-5 block text-sm font-medium text-black/70 dark:text-white/70">
           {t("newPassword")}
@@ -49,18 +49,18 @@ export default function SecurityModal({
             onChange={(e) => setPasswordDraft(e.target.value)}
             type="password"
             className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-[#74AA9C]/30 dark:bg-white/5 dark:border-white/10 dark:text-white"
-            placeholder="Минимум 6 символов"
+            placeholder={t("newPasswordPlaceholder")}
           />
         </label>
 
         <label className="mt-4 block text-sm font-medium text-black/70 dark:text-white/70">
-          Подтвердите пароль
+          {t("confirmPassword")}
           <input
             value={confirmDraft}
             onChange={(e) => setConfirmDraft(e.target.value)}
             type="password"
             className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-[#74AA9C]/30 dark:bg-white/5 dark:border-white/10 dark:text-white"
-            placeholder="Повторите пароль"
+            placeholder={t("confirmPasswordPlaceholder")}
           />
         </label>
 

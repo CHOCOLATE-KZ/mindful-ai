@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAppSettings } from "@/components/AppShell";
 import { useTranslation } from "@/lib/i18n/useTranslation";
-import { ChevronDown, User, Sun, Moon } from "lucide-react";
+import { ChevronDown, User, Sun, Moon, Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const { user, settings, updateSettings } = useAppSettings();
@@ -25,9 +25,11 @@ export default function Navbar() {
   const router = useRouter();
   const supabase = useMemo(() => supabaseBrowser(), []);
   const [userName, setUserName] = useState(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState("");
   const [toolsOpen, setToolsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   
   const toolsRef = useRef(null);
   const profileRef = useRef(null);
@@ -70,16 +72,18 @@ export default function Navbar() {
     (async () => {
       if (!user) {
         setUserName(null);
+        setUserAvatarUrl("");
         return;
       }
       const { data, error } = await supabase
         .from("profiles")
-        .select("name")
+        .select("name, avatar_url")
         .eq("id", user.id)
         .maybeSingle();
 
       if (!mounted) return;
       if (!error && data?.name) setUserName(data.name);
+      if (!error) setUserAvatarUrl(data?.avatar_url || "");
     })();
     return () => (mounted = false);
   }, [supabase, user]);
@@ -97,6 +101,10 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -200,6 +208,17 @@ export default function Navbar() {
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
+
+          <button
+            type="button"
+            onClick={() => setMobileOpen((prev) => !prev)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-full border border-gray-300 dark:border-white/[0.12] text-gray-600 dark:text-slate-300 hover:border-[#74AA9C] hover:text-[#74AA9C] dark:hover:border-[#74AA9C] dark:hover:text-[#74AA9C] transition-all duration-200"
+          >
+            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+
+          <div className="hidden md:flex items-center gap-3">
           {!user ? (
             <>
               <Link
@@ -222,7 +241,11 @@ export default function Navbar() {
                 onClick={() => setProfileOpen(!profileOpen)}
                 className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-300 dark:border-white/[0.12] text-gray-700 dark:text-slate-300 hover:border-blue-600 dark:hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
               >
-                <User className="w-4 h-4" />
+                <img
+                  src={userAvatarUrl || "/user.png"}
+                  alt="User avatar"
+                  className="h-5 w-5 rounded-full object-cover ring-1 ring-gray-300 dark:ring-white/20"
+                />
                 {userName && (
                   <span className="text-sm font-medium max-w-[120px] truncate">
                     {userName}
@@ -258,8 +281,98 @@ export default function Navbar() {
               )}
             </div>
           )}
+          </div>
         </div>
       </nav>
+
+      {mobileOpen && (
+        <div className="md:hidden border-t border-gray-200 dark:border-white/[0.08] bg-white dark:bg-[rgb(33_33_46)] px-4 py-3">
+          <div className="space-y-1">
+            {links.map((l) => {
+              const active = pathname === l.href;
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    active
+                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/[0.05]"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
+
+            {user && (
+              <>
+                <div className="my-2 h-px bg-gradient-to-r from-transparent via-emerald-300/80 to-transparent" />
+                {toolsLinks.map((l) => {
+                  const active = pathname === l.href;
+                  return (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        active
+                          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                          : "text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/[0.05]"
+                      }`}
+                    >
+                      {l.label}
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/[0.08]">
+            {!user ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/auth/sign-in?next=/chat"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex-1 text-center px-3 py-2 rounded-full border border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400"
+                >
+                  {t("signin")}
+                </Link>
+                <Link
+                  href="/auth/sign-up"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex-1 text-center px-3 py-2 rounded-full bg-blue-600 text-white font-semibold"
+                >
+                  {t("signup")}
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    router.push("/profile");
+                  }}
+                  className="w-full text-left rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/[0.05]"
+                >
+                  {t("profile")}
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    requestSignOut();
+                  }}
+                  className="w-full text-left rounded-lg px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  {t("signout")}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {confirmOpen && (
         <div

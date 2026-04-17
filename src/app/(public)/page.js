@@ -1,4 +1,5 @@
 import HeroSection from "@/components/landing/HeroSection";
+import ShowcaseSection from "@/components/landing/ShowcaseSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import DemoSection from "@/components/landing/DemoSection";
@@ -11,6 +12,7 @@ export default function HomePage() {
   return (
     <main className="bg-white">
       <HeroSection />
+      <ShowcaseSection />
       <FeaturesSection />
       <DemoSection />
       <PsychologySection />

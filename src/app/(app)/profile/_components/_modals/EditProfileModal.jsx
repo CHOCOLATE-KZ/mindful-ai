@@ -14,7 +14,7 @@ export default function EditProfileModal({
   if (!open) return null;
 
   const name = profile?.name || user?.email || "User";
-  const initials = (name || "U").slice(0, 2).toUpperCase();
+  const avatarSrc = profile?.avatar_url || "/user.png";
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
@@ -22,20 +22,14 @@ export default function EditProfileModal({
         <div className="text-lg font-semibold text-black dark:text-white">{t("editProfile")}</div>
 
         <div className="mt-4 flex items-center gap-4">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt="Avatar"
-              className="h-16 w-16 rounded-2xl object-cover ring-2 ring-blue-200"
-            />
-          ) : (
-            <div className="grid h-16 w-16 place-items-center rounded-2xl bg-blue-600 text-xl font-bold text-white">
-              {initials}
-            </div>
-          )}
+          <img
+            src={avatarSrc}
+            alt={t("avatarAlt")}
+            className="h-16 w-16 rounded-2xl object-cover ring-2 ring-blue-200"
+          />
 
           <label className="inline-flex cursor-pointer items-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-black/80 transition hover:bg-black/[0.03] dark:bg-white/5 dark:border-white/10 dark:text-white">
-            Загрузить аватар
+            {t("uploadAvatar")}
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
@@ -51,7 +45,7 @@ export default function EditProfileModal({
             value={nameDraft}
             onChange={(e) => setNameDraft(e.target.value)}
             className="mt-2 w-full rounded-2xl border border-black/10 bg-white px-4 py-3 outline-none focus:ring-2 focus:ring-black/10 dark:bg-white/5 dark:border-white/10 dark:text-white"
-            placeholder="Your name..."
+            placeholder={t("yourNamePlaceholder")}
           />
         </label>
 
@@ -64,7 +58,7 @@ export default function EditProfileModal({
           </button>
           <button
             onClick={onSave}
-            className="rounded-full bg-black px-4 py-2 text-sm text-white hover:opacity-90 dark:bg-white dark:text-black"
+            className="rounded-full bg-[#74AA9C] px-4 py-2 text-sm text-white hover:bg-[#5d9088] transition-colors"
           >
             {t("save")}
           </button>
