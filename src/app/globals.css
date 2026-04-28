@@ -18,68 +18,84 @@
 /* Tailwind v4: use .dark class instead of prefers-color-scheme */
 @variant dark (&:is(.dark *));
 
-body {
-  top: 0 !important;
-}
 
-.skiptranslate iframe,
-.goog-te-banner-frame,
-.goog-te-gadget,
-.goog-te-balloon-frame,
-#goog-gt-tt {
-  display: none !important;
-}
-
-@layer base {
-  a, button, [role="button"], input[type="submit"], input[type="button"] { cursor: pointer; }
-  button:disabled, [aria-disabled="true"] { cursor: not-allowed; }
-}
-
-/* =========================
-   THEME TOKENS (LIGHT)
-   ========================= */
+/* Цветовые переменные для светлой темы (пример, можно скорректировать) */
 :root {
-  /* Base */
-  --bg: 247 247 250;           /* page background */
-  --fg: 17 24 39;              /* main text */
-  --card: 255 255 255;         /* cards */
-  --border: 0 0 0 / 0.10;      /* hairline border */
-  --muted: 107 114 128;        /* secondary text */
-
-  /* Brand */
-  --blue: 116 170 156;         /* #74AA9C teal */
-  --accent-from: 116 170 156;  /* teal */
-  --accent-to: 116 170 156;
-
-  --radius: 20px;
-
-  color-scheme: light;
-  --app-nav-offset: 0px; 
+  --background: #fcfbfe;
+  --foreground: #323133;
+  --card: #ffffff;
+  --card-foreground: #323133;
+  --border: #e9e9e9;
+  --muted: #3C3B3D;
+  --muted-foreground: #323133;
+  --accent: #BF263C;
+  --accent-soft: #e9e9e9;
+  --accent-foreground: #323133;
+  --accent-border: #BF263C;
+  --accent-muted: #e9e9e9;
+  --accent-muted-foreground: #3C3B3D;
+  --accent-hover: #BF263C;
+  --accent-active: #BF263C;
+  --accent-disabled: #e9e9e9;
+  --accent-secondary: #3C3B3D;
+  --accent-secondary-foreground: #323133;
+  --accent-secondary-border: #3C3B3D;
+  --accent-secondary-muted: #e9e9e9;
+  --accent-secondary-muted-foreground: #3C3B3D;
+  --accent-secondary-hover: #BF263C;
+  --accent-secondary-active: #3C3B3D;
+  --accent-secondary-disabled: #e9e9e9;
+  --accent-secondary-soft: #e9e9e9;
+  --accent-secondary-soft-foreground: #3C3B3D;
+  --accent-secondary-soft-border: #e9e9e9;
+  --accent-secondary-soft-muted: #e9e9e9;
+  --accent-secondary-soft-muted-foreground: #3C3B3D;
+  --accent-secondary-soft-hover: #BF263C;
+  --accent-secondary-soft-active: #3C3B3D;
+  --accent-secondary-soft-disabled: #e9e9e9;
+  --accent-secondary-soft-secondary: #3C3B3D;
+  --accent-secondary-soft-secondary-foreground: #323133;
+  --accent-secondary-soft-secondary-border: #3C3B3D;
+  --accent-secondary-soft-secondary-muted: #e9e9e9;
+  --card: #222126;
+  --card-foreground: #F5F7FA;
+  --border: #252429;
+  --muted: #E6E9ED;
+  --muted-foreground: #A3B6B6;
+  --accent: #D8334A;
+  --accent-soft: #252429;
+  --accent-foreground: #F5F7FA;
+  --accent-border: #D8334A;
+  --accent-muted: #252429;
+  --accent-muted-foreground: #A3B6B6;
+  --accent-hover: #D8334A;
+  --accent-active: #D8334A;
+  --accent-disabled: #252429;
+  --accent-secondary: #A3B6B6;
+  --accent-secondary-foreground: #F5F7FA;
+  --accent-secondary-border: #A3B6B6;
+  --accent-secondary-muted: #252429;
+  --accent-secondary-muted-foreground: #A3B6B6;
+  --accent-secondary-hover: #D8334A;
+  --accent-secondary-active: #A3B6B6;
+  --accent-secondary-disabled: #252429;
+  --accent-secondary-soft: #252429;
+  --accent-secondary-soft-foreground: #A3B6B6;
+  --accent-secondary-soft-border: #252429;
+  --accent-secondary-soft-muted: #252429;
+  --accent-secondary-soft-muted-foreground: #A3B6B6;
+  --accent-secondary-soft-hover: #D8334A;
+  --accent-secondary-soft-active: #A3B6B6;
+  --accent-secondary-soft-disabled: #252429;
+  --accent-secondary-soft-secondary: #A3B6B6;
+  --accent-secondary-soft-secondary-foreground: #F5F7FA;
+  --accent-secondary-soft-secondary-border: #A3B6B6;
+  --accent-secondary-soft-secondary-muted: #252429;
+  --accent-secondary-soft-secondary-muted-foreground: #A3B6B6;
+  --accent-secondary-soft-secondary-hover: #D8334A;
+  --accent-secondary-soft-secondary-active: #A3B6B6;
+  --accent-secondary-soft-secondary-disabled: #252429;
 }
-
-/* =========================
-   THEME TOKENS (DARK)
-   .dark is toggled on <html>
-   ========================= */
-html.dark {
-  /* ChatGPT #212121 = rgb(33,33,33) + синий подтон в B-канале */
-  --bg:    33 33 46;       /* #21212e — почти ChatGPT но +13 на blue */
-  --fg:    236 237 245;    /* #ecedf5 — мягкий белый */
-  --card:  42 42 58;       /* #2a2a3a — карточки чуть светлее bg */
-  --border: 255 255 255 / 0.08;
-  --muted: 140 145 175;    /* #8c91af — slate-blue */
-
-  /* brand stays same */
-  --blue: 116 170 156;  /* #74AA9C teal */
-  --accent-from: 116 170 156;
-  --accent-to: 116 170 156;
-
-  color-scheme: dark;
-}
-
-/* =========================
-   GLOBAL BASE
-   ========================= */
 * { box-sizing: border-box; }
 
 html, body, :root { height: 100%; }

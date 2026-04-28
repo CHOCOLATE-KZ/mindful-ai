@@ -9,6 +9,39 @@ const EMBED_TIMEOUT_MS = 15000;
 
 function getSupabaseClient() {
   return supabaseBrowser();
+// --- MSSQL подключение ---
+const sql = require('mssql');
+
+const dbConfig = {
+  server: 'localhost', // или 'LILSUS\\SQLEXPRESS'
+  database: 'university', // имя вашей базы данных
+  options: {
+    encrypt: false, // для локального сервера
+    trustServerCertificate: true,
+  },
+  // Если используете SQL Server Authentication, добавьте user и password:
+  // user: 'sa',
+  // password: 'your_password',
+};
+
+/**
+ * Получить все знания из таблицы psychology_knowledge
+ */
+async function getAllKnowledge() {
+  try {
+    let pool = await sql.connect(dbConfig);
+    let result = await pool.request().query('SELECT * FROM psychology_knowledge');
+    await sql.close();
+    return result.recordset;
+  } catch (err) {
+    await sql.close();
+    console.error('Ошибка подключения к MSSQL:', err);
+    return [];
+  }
+}
+
+// Для теста:
+// getAllKnowledge().then(data => console.log(data));
 }
 
 /**

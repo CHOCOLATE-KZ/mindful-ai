@@ -6,9 +6,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import Footer from "@/components/landing/Footer";
 import { PSYCHOLOGY_SECTIONS } from "./constants";
 import { useFilteredFacts, useVideoSelection } from "./usePsychologyData";
-import {
+import { 
   HeroSection,
-  InteractiveSupportSection,
   SectionTabs,
   FactsSection,
   VideosSection,
@@ -36,7 +35,7 @@ export default function PsychologyPage() {
       <HeroSection t={t} />
 
       <main className="mx-auto max-w-7xl px-6 py-16">
-        <InteractiveSupportSection t={t} />
+        {/* <InteractiveSupportSection t={t} /> */}
 
         <SectionTabs
           activeSection={activeSection}
@@ -66,6 +65,8 @@ export default function PsychologyPage() {
         />
 
         <PracticeSection activeSection={activeSection} t={t} />
+
+        {/* <CoursesSection activeSection={activeSection} t={t} /> */}
 
         <EducationalBanner activeSection={activeSection} t={t} />
       </main>

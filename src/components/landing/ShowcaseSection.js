@@ -6,12 +6,12 @@ import { ArrowRight, Bot, Brain, NotebookPen, ShieldCheck } from "lucide-react";
 
 export default function ShowcaseSection() {
   return (
-    <section className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden bg-[radial-gradient(circle_at_14%_86%,rgba(193,245,234,0.56),transparent_38%),radial-gradient(circle_at_86%_90%,rgba(131,191,176,0.56),transparent_34%),linear-gradient(180deg,#0f1e1b_0%,#1a3530_48%,#2f5a51_100%)] py-24 text-white">
-      <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),transparent)]" />
-      <div className="absolute inset-x-0 bottom-0 h-52 bg-[radial-gradient(circle_at_center,rgba(199,249,238,0.42),transparent_62%)]" />
+    <section className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden py-24 text-white">
+      {/* WebGL Shader Background */}
+      <ShaderBackground />
 
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="relative z-10 max-w-xl">
+      <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="max-w-xl">
           <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9fdfd0]">
             MindfulAI everywhere
           </div>
@@ -51,6 +51,112 @@ export default function ShowcaseSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+import { useEffect, useRef } from "react";
+
+function ShaderBackground() {
+  const ref = useRef();
+
+  useEffect(() => {
+    let renderer, scene, camera, uniforms, animationId;
+    let three;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    (async () => {
+      three = await import("three");
+      scene = new three.Scene();
+      camera = new three.Camera();
+      camera.position.z = 1;
+      renderer = new three.WebGLRenderer({ alpha: true });
+      renderer.setSize(width, height);
+      renderer.setClearColor(0x0f172a, 1);
+      ref.current.appendChild(renderer.domElement);
+
+      uniforms = {
+        time: { value: 0 },
+        resolution: { value: new three.Vector2(width, height) },
+      };
+
+      const material = new three.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: `
+          void main() {
+            gl_Position = vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform float time;
+          uniform vec2 resolution;
+          void main() {
+            vec2 uv = gl_FragCoord.xy / resolution.xy;
+            float color =
+              0.5 + 0.5*sin(time + uv.x*8.0) +
+              0.5 + 0.5*sin(time + uv.y*8.0);
+
+            // Мягкая анимация вокруг #74AA9C
+            vec3 base = vec3(0.455, 0.667, 0.612); // #74AA9C
+            vec3 finalColor = base;
+            finalColor.g += 0.06 * sin(time + uv.x * 4.0); // чуть-чуть по зелёному
+            finalColor.b += 0.04 * cos(time + uv.y * 5.0); // чуть-чуть по синему
+            finalColor.r += 0.03 * sin(time + uv.x * 2.0 + uv.y * 2.0); // чуть по красному
+            gl_FragColor = vec4(finalColor, 1.0);
+          }
+        `,
+      });
+
+      const geometry = new three.PlaneGeometry(2, 2);
+      const mesh = new three.Mesh(geometry, material);
+      scene.add(mesh);
+
+      function animate() {
+        animationId = requestAnimationFrame(animate);
+        uniforms.time.value += 0.02;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      function handleResize() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        renderer.setSize(width, height);
+        uniforms.resolution.value.x = width;
+        uniforms.resolution.value.y = height;
+      }
+      window.addEventListener("resize", handleResize);
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        cancelAnimationFrame(animationId);
+        renderer.dispose();
+        ref.current.removeChild(renderer.domElement);
+      };
+    })();
+
+    return () => {
+      if (renderer) {
+        renderer.dispose();
+        if (ref.current && renderer.domElement)
+          ref.current.removeChild(renderer.domElement);
+      }
+      cancelAnimationFrame(animationId);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 0,
+        pointerEvents: "none",
+      }}
+    />
   );
 }
 

@@ -98,15 +98,18 @@ export default function ChatPage() {
           </div>
 
           {/* Персонаж фиксирован справа с большим отступом */}
+          {/* Персонаж временно отключён */}
+          {/*
           <div className="fixed right-32 bottom-38 z-40">
             <CharacterController
               chatMessages={messages}
               isLoading={loading}
               position="center"
               size="medium"
-              showCharacter={true}
+              showCharacter={false}
             />
           </div>
+          */}
 
           <div className="bg-white border-t border-gray-200 p-4">
             <div className="flex-1 max-w-5xl mx-auto">

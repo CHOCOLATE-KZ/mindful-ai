@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { extractAnchors } from "@/lib/utils/extractAnchors";
 import CrisisAlert from "./CrisisAlert";
+import { motion } from "framer-motion";
 
 export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, onAnchorSelect }) {
   const endRef = useRef(null);
@@ -56,7 +57,14 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
             : [];
 
           return (
-            <div key={idx} className={`flex gap-3 ${isAI ? "justify-start" : "justify-end"}`}>
+            <motion.div
+              key={idx}
+              className={`flex gap-3 ${isAI ? "justify-start" : "justify-end"}`}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 32, duration: 0.32 }}
+              layout
+            >
               {isAI && (
                 <div className="h-10 w-10 rounded-full bg-[#74AA9C] ring-1 ring-[#5d9088]/40 flex items-center justify-center flex-shrink-0">
                   <Image
@@ -118,7 +126,7 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                   />
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
 

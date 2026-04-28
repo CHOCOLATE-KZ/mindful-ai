@@ -39,6 +39,7 @@ export default function Navbar() {
       { href: "/", label: t("home") },
       { href: "/about", label: t("about") },
       { href: "/psychology", label: t("psychology") },
+      { href: "/courses", label: "Курсы" },
       { href: "/faq", label: t("faq") },
       { href: "/contacts", label: t("contacts") },
       { href: "/chat", label: t("chat") },
@@ -50,6 +51,7 @@ export default function Navbar() {
     () => [
       { href: "/", label: t("home") },
       { href: "/psychology", label: t("psychology") },
+      { href: "/courses", label: "Курсы" },
       { href: "/chat", label: t("chat") },
       { href: "/news", label: t("news") },
     ],

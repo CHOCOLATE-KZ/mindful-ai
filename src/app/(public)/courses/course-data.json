@@ -1,0 +1,39 @@
+[
+  {
+    "id": "stress-management",
+    "title": "Антистресс за 7 дней",
+    "description": "Снизить напряжение и вернуть чувство контроля",
+    "level": "Легкий",
+    "duration": "10-15 мин в день",
+    "modules": [
+      {
+        "title": "Введение",
+        "lessons": [
+          {
+            "type": "video",
+            "title": "Что такое стресс?",
+            "src": "/videos/stress-intro.mp4",
+            "duration": "5 мин"
+          },
+          {
+            "type": "quiz",
+            "title": "Проверь себя",
+            "questions": [
+              {"q": "Что такое стресс?", "a": ["Ответ 1", "Ответ 2"]}
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Практика",
+        "lessons": [
+          {
+            "type": "practice",
+            "title": "Дыхательная техника",
+            "instructions": "Выполните дыхательную практику 4-7-8."
+          }
+        ]
+      }
+    ]
+  }
+]
