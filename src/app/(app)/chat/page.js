@@ -10,6 +10,8 @@ import ChatConversation from "./_components/ChatConversation";
 import VoiceConversationPanel from "./_components/VoiceConversationPanel";
 import CharacterController from "@/components/CharacterController";
 import { useChatPageModel } from "./_hooks/useChatPageModel";
+import EmotionTracker from "@/components/EmotionTracker";
+
 
 export default function ChatPage() {
   const {
@@ -31,11 +33,13 @@ export default function ChatPage() {
     menuRef,
     voice,
     voiceModeEnabled,
+    sessionModeEnabled,
     voiceModeState,
     voiceModeHeard,
     voiceModeReply,
     voiceModeError,
     toggleVoiceConversation,
+    toggleSessionMode,
     stopVoiceConversation,
     latestAnchors,
     exportMyData,
@@ -49,9 +53,13 @@ export default function ChatPage() {
     scrollToTop,
   } = useChatPageModel();
 
+
+
+
   return (
     <div className="min-h-dvh flex flex-col bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <ChatBackground />
+      <EmotionTracker userId="test-user" />
 
       <ChatHeader
         menuOpen={menuOpen}
@@ -121,6 +129,8 @@ export default function ChatPage() {
                 voice={voice}
                 voiceModeEnabled={voiceModeEnabled}
                 onToggleVoiceMode={toggleVoiceConversation}
+                sessionModeEnabled={sessionModeEnabled}
+                onToggleSessionMode={toggleSessionMode}
               />
             </div>
           </div>

@@ -10,6 +10,8 @@ export default function ChatComposer({
   voice,
   voiceModeEnabled,
   onToggleVoiceMode,
+  sessionModeEnabled,
+  onToggleSessionMode,
 }) {
   const {
     listening,
@@ -85,6 +87,19 @@ export default function ChatComposer({
               </p>
 
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onToggleSessionMode}
+                  className={[
+                    "text-[11px] rounded-full px-3 py-1 transition ring-1",
+                    sessionModeEnabled
+                      ? "bg-blue-50 text-blue-800 ring-blue-300"
+                      : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50",
+                  ].join(" ")}
+                >
+                  {sessionModeEnabled ? "Режим сеанса включен" : "Режим сеанса"}
+                </button>
+
                 <button
                   type="button"
                   onClick={onToggleVoiceMode}

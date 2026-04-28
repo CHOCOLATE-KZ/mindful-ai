@@ -18,6 +18,10 @@ export function useChatPageModel() {
   const [showAnchorTooltip, setShowAnchorTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [voiceModeEnabled, setVoiceModeEnabled] = useState(false);
+  const [sessionModeEnabled, setSessionModeEnabled] = useState(false);
+    const toggleSessionMode = useCallback(() => {
+      setSessionModeEnabled((prev) => !prev);
+    }, []);
   const [voiceModeState, setVoiceModeState] = useState("idle");
   const [voiceModeHeard, setVoiceModeHeard] = useState("");
   const [voiceModeReply, setVoiceModeReply] = useState("");
@@ -372,11 +376,13 @@ export function useChatPageModel() {
     menuRef,
     voice,
     voiceModeEnabled,
+    sessionModeEnabled,
     voiceModeState,
     voiceModeHeard,
     voiceModeReply,
     voiceModeError,
     toggleVoiceConversation,
+    toggleSessionMode,
     stopVoiceConversation,
     latestAnchors,
     exportMyData,

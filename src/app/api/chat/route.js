@@ -178,6 +178,13 @@ async function callLmStudio(messages) {
   }
 }
 
+// Получение последней эмоции пользователя из глобального хранилища
+function getLastUserEmotion(userId) {
+  if (globalThis.userEmotions && globalThis.userEmotions[userId]) {
+    return globalThis.userEmotions[userId].emotion || "neutral";
+  }
+  return "neutral";
+}
 
 export async function POST(req) {
   let body;
@@ -203,6 +210,10 @@ export async function POST(req) {
   if (userError || !user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Получаем последнюю эмоцию пользователя
+  const userEmotion = getLastUserEmotion(user.id);
+  console.log('[CHAT API]  Эмоция пользователя:', userEmotion);
 
   // История сообщений (последние 25)
   const { data: history, error: histErr } = await supabase
@@ -249,10 +260,14 @@ export async function POST(req) {
         `Используй только релевантные части этой базы. Если в чанках нет точного ответа, скажи об этом прямо и дай безопасную общую рекомендацию без выдумывания фактов.`
     });
   }
-  
   if (context) {
     messages.push({ role: "system", content: `User Context: ${context}` });
   }
+  // ВСТАВЛЯЕМ ЭМОЦИЮ ПОЛЬЗОВАТЕЛЯ В КОНТЕКСТ ДЛЯ LLM
+  messages.push({
+    role: "system",
+    content: `User Emotion (detected by camera/voice): ${userEmotion}`
+  });
   for (const m of history || []) {
     const role = m.role === "assistant" ? "assistant" : "user";
     messages.push({ role, content: String(m.content || "") });
