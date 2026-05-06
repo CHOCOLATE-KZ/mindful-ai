@@ -11,7 +11,7 @@ export default function ChatHeader({ menuOpen, setMenuOpen, menuRef, exportMyDat
     <div className="sticky z-20
         top-[var(--app-nav-offset)]
         transition-[top] duration-300 ease-out
-        border-b border-black/10 dark:border-white/10 bg-white/75 dark:bg-slate-950/80 backdrop-blur-xl">
+        border-b border-black/10 dark:border-white/10 bg-white/75 dark:bg-[#131314]/80 backdrop-blur-xl">
       <div className="mx-auto max-w-4xl px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <div className="h-11 w-11 rounded-full bg-[#74AA9C] grid place-items-center shadow-sm ring-1 ring-black/5">
@@ -27,7 +27,7 @@ export default function ChatHeader({ menuOpen, setMenuOpen, menuRef, exportMyDat
             <h1 className="text-[15px] font-semibold text-slate-900 leading-tight truncate">
               MindfulAI Assistant
             </h1>
-            <p className="text-xs text-slate-500 truncate">Спокойно • Приватно • С поддержкой</p>
+            <p className="text-xs text-slate-500 truncate">{t("subtitle")}</p>
           </div>
         </div>
 

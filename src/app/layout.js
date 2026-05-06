@@ -1,6 +1,6 @@
 import "./globals.css";
 import AppShell from "@/components/AppShell";
-import Navbar from "@/components/Navbar";
+import LayoutContent from "@/app/LayoutContent";
 import NavObserver from "@/components/NavObserver";
 
 export const metadata = {
@@ -17,8 +17,7 @@ export default function RootLayout({ children }) {
       <body>
         <AppShell>
           <NavObserver />
-          <Navbar />
-          {children}
+          <LayoutContent>{children}</LayoutContent>
         </AppShell>
       </body>
     </html>

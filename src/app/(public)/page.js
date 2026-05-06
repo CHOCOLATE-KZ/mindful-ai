@@ -10,7 +10,7 @@ import Footer from "@/components/landing/Footer";
 
 export default function HomePage() {
   return (
-    <main className="bg-white">
+    <main className="relative bg-white">
       <HeroSection />
       <ShowcaseSection />
       <FeaturesSection />

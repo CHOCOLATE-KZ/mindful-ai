@@ -5,7 +5,7 @@ const EXPORT_MESSAGES_LIMIT = Number(process.env.EXPORT_MESSAGES_LIMIT || 1000);
 const EXPORT_NOTES_LIMIT = Number(process.env.EXPORT_NOTES_LIMIT || 1000);
 
 export async function GET() {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
 
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth?.user?.id;

@@ -1,20 +1,49 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Mic, Square, Volume2 } from "lucide-react";
 
-function StateIcon({ state }) {
-  if (state === "thinking") return <Loader2 className="h-8 w-8 animate-spin text-blue-600" />;
-  if (state === "speaking") return <Volume2 className="h-8 w-8 text-blue-600" />;
-  return <Mic className="h-8 w-8 text-blue-600" />;
-}
+// Цвета проекта #74AA9C
 
-function StateText({ state }) {
-  if (state === "listening") return "Слушаю вас...";
-  if (state === "thinking") return "Думаю над ответом...";
-  if (state === "speaking") return "Говорю с вами...";
-  return "Готова начать разговор";
-}
+const stateLabel = {
+  listening: "Слушаю...",
+  thinking: "Осмысляю...",
+  speaking: "Говорю...",
+  idle: "MindfulAI",
+};
+
+const blobVariants = {
+  idle: {
+    scale: 1,
+    borderRadius: "50%",
+    rotate: 0,
+    boxShadow: "0 0 40px 8px rgba(116,170,156,0.2), 0 0 80px 20px rgba(116,170,156,0.08)",
+    transition: { duration: 1.2, ease: "easeOut" },
+  },
+  listening: {
+    scale: [1, 1.03, 1],
+    borderRadius: [
+      "42% 58% 50% 50% / 45% 45% 55% 55%",
+      "50% 50% 58% 42% / 55% 55% 45% 45%",
+      "42% 58% 50% 50% / 45% 45% 55% 55%",
+    ],
+    boxShadow: "0 0 55px 10px rgba(116,170,156,0.45), 0 0 110px 25px rgba(116,170,156,0.2)",
+    transition: { duration: 8, repeat: Infinity, ease: "easeInOut" },
+  },
+  thinking: {
+    scale: [1, 0.96, 1],
+    borderRadius: "50%",
+    rotate: [0, 360],
+    boxShadow: "0 0 45px 8px rgba(90,158,143,0.38), 0 0 90px 20px rgba(90,158,143,0.15)",
+    transition: { duration: 4, repeat: Infinity, ease: "linear" },
+  },
+  speaking: {
+    scale: [1, 1.07, 1],
+    borderRadius: "50%",
+    boxShadow: "0 0 65px 12px rgba(116,170,156,0.6), 0 0 120px 30px rgba(116,170,156,0.28)",
+    transition: { duration: 1.2, repeat: Infinity, ease: "easeInOut" },
+  },
+};
 
 export default function VoiceConversationPanel({
   state,
@@ -24,124 +53,125 @@ export default function VoiceConversationPanel({
   error,
   onStop,
 }) {
-  const [voiceBurst, setVoiceBurst] = useState(false);
-  const [wavePhase, setWavePhase] = useState(0);
-
-  useEffect(() => {
-    if (state !== "listening") return;
-    if (!liveText?.trim()) return;
-
-    setVoiceBurst(true);
-    const t = setTimeout(() => setVoiceBurst(false), 180);
-    return () => clearTimeout(t);
-  }, [liveText, state]);
-
-  useEffect(() => {
-    if (state !== "listening") {
-      setWavePhase(0);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setWavePhase((prev) => (prev + 1) % 8);
-    }, 120);
-
-    return () => clearInterval(interval);
-  }, [state]);
-
-  const intensity = useMemo(() => {
-    if (state !== "listening") return 1;
-    const len = (liveText || "").trim().length;
-    const burst = voiceBurst ? 0.14 : 0;
-    const byText = Math.min(0.3, len / 90);
-    return 1 + byText + burst;
-  }, [liveText, state, voiceBurst]);
-
-  const showLiveText = state === "listening" && (liveText || "").trim().length > 0;
-  const showHearingPulse = state === "listening";
+  const themeKey = ["listening", "thinking", "speaking"].includes(state) ? state : "idle";
 
   return (
-    <div className="h-dvh w-full bg-blue-100 backdrop-blur-sm flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-3xl text-center">
-        <div className="relative mx-auto mb-8 h-52 w-52">
-          <div
-            className={`absolute inset-0 rounded-full border border-blue-300/70 ${showHearingPulse ? "animate-ping" : ""}`}
-            style={{ animationDuration: "1400ms", opacity: showHearingPulse ? 1 : 0.35 }}
-          />
-          <div
-            className={`absolute inset-2 rounded-full border border-blue-200/80 ${showHearingPulse ? "animate-ping" : ""}`}
-            style={{ animationDuration: "1050ms", opacity: showHearingPulse ? 1 : 0.35 }}
-          />
-          <div
-            className={`absolute inset-4 rounded-full bg-[radial-gradient(circle_at_35%_25%,#e0f2fe_0%,#7dd3fc_45%,#0284c7_100%)] transition-transform duration-150 ${state === "thinking" ? "animate-pulse" : ""}`}
-            style={{
-              transform: `scale(${voiceBurst ? Math.min(1.08, intensity) : intensity})`,
-              boxShadow:
-                state === "listening"
-                  ? `0 0 0 ${16 + (voiceBurst ? 8 : 2)}px rgba(125,211,252,0.30), 0 0 ${78 + (voiceBurst ? 34 : 0)}px rgba(14,165,233,0.60)`
-                  : "0 0 0 14px rgba(125,211,252,0.22), 0 0 70px rgba(14,165,233,0.42)",
-            }}
-          />
-        </div>
+    <div className="fixed inset-0 flex flex-col items-center justify-between bg-[#f4fdfb] px-6 py-12 overflow-hidden">
+      {/* Фоновые пятна в цветах проекта */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div
+          className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[140px]"
+          style={{ background: "rgba(116,170,156,0.18)" }}
+        />
+        <div
+          className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[140px]"
+          style={{ background: "rgba(77,143,130,0.15)" }}
+        />
+      </div>
 
-        <div className="mx-auto w-fit rounded-full bg-white/85 px-4 py-2 ring-1 ring-blue-200 flex items-center gap-3">
-          <StateIcon state={state} />
-          <span className="text-sm font-medium text-slate-700">
-            <StateText state={state} />
-          </span>
-        </div>
-
-        {state === "listening" && (
-          <div className="mx-auto mt-3 flex h-7 w-36 items-end justify-center gap-1">
-            {[0, 1, 2, 3, 4, 5, 6].map((bar) => (
-              <span
-                key={bar}
-                className="w-1.5 rounded-full bg-blue-500/80"
-                style={{
-                  height: `${10 + ((bar + wavePhase) % 4) * 5 + (voiceBurst ? 7 : 0)}px`,
-                  transform: `scaleY(${voiceBurst ? 1.35 : 0.95})`,
-                  transition: "transform 120ms ease",
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="mt-4 space-y-2">
-          {showLiveText && (
-            <p className="mx-auto max-w-2xl text-sm font-medium text-blue-800">
-              Слышу: "{liveText.trim()}"
-            </p>
-          )}
-
-          {heard && (
-            <p className="text-sm text-slate-600">
-              Вы: "{heard}"
-            </p>
-          )}
-
-          {reply && (
-            <p className="mx-auto max-w-2xl text-sm text-slate-700">
-              Последний ответ: {reply}
-            </p>
-          )}
-
-          {error && (
-            <p className="text-sm text-rose-600">{error}</p>
-          )}
-        </div>
-
-        <div className="mt-10 flex items-center justify-center">
-          <button
-            type="button"
-            onClick={onStop}
-            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700"
+      {/* Заголовок состояния */}
+      <div className="z-10 w-full max-w-lg text-center mt-4">
+        <AnimatePresence mode="wait">
+          <motion.h2
+            key={themeKey}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.3 }}
+            className="text-xl font-medium tracking-wide"
+            style={{ color: "#4d8f82" }}
           >
-            <Square className="h-4 w-4" />
-            Завершить голосовой сеанс
-          </button>
+            {stateLabel[themeKey]}
+          </motion.h2>
+        </AnimatePresence>
+      </div>
+
+      {/* Blob-сфера */}
+      <div className="relative z-10 flex flex-col items-center gap-10">
+        <motion.div
+          layout
+          animate={themeKey}
+          variants={blobVariants}
+          className="w-56 h-56 flex items-center justify-center relative"
+          style={{
+            background: "radial-gradient(circle at 30% 30%, #a2c7be, #74AA9C 50%, #3d8a7c)",
+            filter: "blur(0.5px)",
+          }}
+        >
+          {/* Внутреннее кольцо — глубина */}
+          <div className="absolute inset-4 rounded-[40%] border border-white/20 blur-[1px]" />
+          {/* Блик */}
+          <div
+            className="absolute top-[18%] left-[22%] w-[30%] h-[18%] rounded-full opacity-50"
+            style={{ background: "rgba(255,255,255,0.75)", filter: "blur(5px)" }}
+          />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={themeKey}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.25 }}
+            >
+              {state === "thinking" && <Loader2 className="w-12 h-12 text-white animate-spin" />}
+              {state === "speaking" && <Volume2 className="w-12 h-12 text-white" />}
+              {(state === "listening" || state === "idle") && <Mic className="w-12 h-12 text-white" />}
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Субтитры живого текста */}
+        <div className="min-h-8 flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            {liveText?.trim() ? (
+              <motion.p
+                key={liveText}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-base font-medium italic max-w-sm text-center"
+                style={{ color: "#3d7a6d" }}
+              >
+                &ldquo;{liveText.trim()}&rdquo;
+              </motion.p>
+            ) : (
+              <motion.span key="empty" className="text-sm" style={{ color: "#a0c4bf" }}>
+                {state === "listening" ? "говорите…" : ""}
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
+
+        {reply && (
+          <p className="text-sm max-w-sm text-center" style={{ color: "#5a9e8f" }}>
+            {reply}
+          </p>
+        )}
+        {error && (
+          <p className="text-sm text-rose-500 max-w-sm text-center">{error}</p>
+        )}
+      </div>
+
+      {/* Кнопка завершения */}
+      <div className="z-10 flex flex-col items-center gap-4">
+        <motion.button
+          whileHover={{ scale: 1.07 }}
+          whileTap={{ scale: 0.93 }}
+          type="button"
+          onClick={onStop}
+          className="group flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-xl ring-1 transition-colors hover:bg-rose-50"
+          style={{ "--tw-ring-color": "#74AA9C" }}
+          aria-label="Завершить голосовой сеанс"
+        >
+          <Square className="h-6 w-6 group-hover:text-rose-600 transition-colors" style={{ color: "#74AA9C" }} fill="currentColor" />
+        </motion.button>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: "#a0c4bf" }}>
+          Нажмите, чтобы завершить
+        </p>
       </div>
     </div>
   );
 }
+
+

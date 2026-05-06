@@ -7,15 +7,37 @@ import { extractAnchors } from "@/lib/utils/extractAnchors";
 import CrisisAlert from "./CrisisAlert";
 import { motion } from "framer-motion";
 
-export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, onAnchorSelect }) {
+export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, scrollRef, onAnchorSelect, showAnchors = true }) {
   const endRef = useRef(null);
   const [dismissedCrisis, setDismissedCrisis] = useState(new Set());
 
-  // авто-скролл при новых сообщениях (как у тебя было)
+  // Автоскролл: если пользователь уже у нижней границы, держим ленту внизу на новых сообщениях.
   useEffect(() => {
-    if (!atBottom) return;
-    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, loading, atBottom]);
+    const root = scrollRef?.current;
+
+    if (root && root.scrollHeight - root.clientHeight > 1) {
+      const gap = root.scrollHeight - root.scrollTop - root.clientHeight;
+      const shouldFollow = atBottom || gap <= 120;
+      if (!shouldFollow) return;
+
+      root.scrollTo({ top: root.scrollHeight, behavior: "smooth" });
+
+      // After smooth animation/layout settles, ensure exact bottom position.
+      const settleTimer = window.setTimeout(() => {
+        root.scrollTo({ top: root.scrollHeight, behavior: "auto" });
+      }, 280);
+
+      return () => {
+        window.clearTimeout(settleTimer);
+      };
+
+      return;
+    }
+
+    if (atBottom) {
+      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages, loading, scrollRef]);
 
   const markdownComponents = useMemo(
     () => ({
@@ -76,31 +98,31 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                 </div>
               )}
 
-              <div className="max-w-[78%] lg:max-w-[62%]">
+              <div className={isAI ? "max-w-[90%] lg:max-w-[90%]" : "max-w-[78%] lg:max-w-[62%]"}>
                 <div
-                  className={`rounded-3xl px-5 py-3 shadow-sm ring-1 ${
+                  className={`px-5 py-3 ${
                     isAI
-                      ? "bg-white/90 dark:bg-slate-800 ring-black/5 dark:ring-white/10 text-slate-900 dark:text-slate-100"
-                      : "bg-[#74AA9C] text-white ring-[#5d9088]/30"
+                      ? "text-slate-900 dark:text-slate-100"
+                      : "rounded-3xl bg-[#74AA9C] text-white shadow-sm ring-1 ring-[#5d9088]/30"
                   }`}
                 >
-                  <div className={`prose prose-sm max-w-none ${isAI ? "prose-slate" : "prose-invert"}`}>
+                  <div className={`prose prose-sm max-w-none ${isAI ? "prose-slate dark:prose-invert" : "prose-invert"}`}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                       {m.content}
                     </ReactMarkdown>
                   </div>
 
-                  <p className={`text-xs mt-2 ${isAI ? "text-slate-500" : "text-white/70"}`}>
+                  <p className={`text-xs mt-2 ${isAI ? "text-slate-400 dark:text-slate-500" : "text-white/70"}`}>
                     {m.created_at
                       ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                       : ""}
                   </p>
                 </div>
 
-                {isAI && anchors.length > 0 && (
+                {isAI && anchors.length > 0 && showAnchors && (
                   <div className="mt-2 rounded-2xl border border-black/10 bg-white/70 px-4 py-3 shadow-sm">
-                    <p className="text-xs uppercase tracking-wide text-slate-500">Якоря разговора</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs uppercase tracking-wide text-slate-500 shrink-0">Якоря разговора</p>
                       {anchors.map((anchor) => (
                         <button
                           key={anchor}
@@ -140,7 +162,7 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                 height={24}
               />
             </div>
-            <div className="bg-white/90 rounded-3xl px-5 py-3 shadow-sm ring-1 ring-black/5 text-slate-700">
+            <div className="px-5 py-3 text-slate-700 dark:text-slate-300">
               Думаю…
             </div>
           </div>

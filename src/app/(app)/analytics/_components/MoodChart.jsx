@@ -19,7 +19,7 @@ export default function MoodChart({ series30 }) {
     <div className="h-full rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)]">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xl font-semibold text-slate-900">Динамика состояния</h3>
-        <button className="rounded-full bg-[#d9eeea] px-3 py-1 text-xs font-semibold text-[#2a4842]">Экспорт</button>
+        <button onClick={() => window.print()} className="rounded-full bg-[#d9eeea] px-3 py-1 text-xs font-semibold text-[#2a4842] hover:bg-[#c0e0db] transition-colors">Экспорт PDF</button>
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={series30}>
@@ -28,8 +28,8 @@ export default function MoodChart({ series30 }) {
           <YAxis tick={{ fontSize: 11, fill: "#64748b" }} tickLine={false} axisLine={false} />
           <Tooltip content={<CustomTooltip />} />
           <Legend wrapperStyle={{ fontSize: 13 }} />
-          <Line type="monotone" dataKey="mood" stroke="#74AA9C" strokeWidth={2.5} dot={false} name="Настроение" />
-          <Line type="monotone" dataKey="sleep" stroke="#5d9088" strokeWidth={2.5} dot={false} name="Сон (мин)" />
+          <Line type="basis" dataKey="mood" stroke="#74AA9C" strokeWidth={2.5} dot={false} name="Настроение" />
+          <Line type="basis" dataKey="sleep" stroke="#5d9088" strokeWidth={2.5} dot={false} name="Сон (мин)" />
         </LineChart>
       </ResponsiveContainer>
     </div>

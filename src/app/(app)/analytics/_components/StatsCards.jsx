@@ -18,9 +18,13 @@ export default function StatsCards({ notesStats, testsCount = 0, t }) {
       <div className="rounded-2xl border border-[#8ecbc2] bg-[linear-gradient(135deg,#e5f3f0_0%,#f0f7f5_100%)] p-4 shadow-sm">
         <p className="text-[11px] text-slate-600 font-semibold uppercase tracking-wide">{t("avgSleep")}</p>
         <p className="text-2xl font-bold text-slate-900 mt-2">
-          {notesStats.avgSleep != null ? `${Math.round(notesStats.avgSleep / 60)}h` : "?"}
+          {notesStats.avgSleep != null ? `${Math.round(notesStats.avgSleep / 60)}h` : "—"}
         </p>
-        <p className="text-xs text-slate-500 mt-2">{notesStats.stressSignal}</p>
+        {notesStats.avgSleep == null ? (
+          <p className="text-xs text-[#3a6058] mt-2 leading-snug">Записывайте данные о сне 3+ дня, чтобы увидеть статистику</p>
+        ) : (
+          <p className="text-xs text-slate-500 mt-2">{notesStats.stressSignal}</p>
+        )}
       </div>
       <div className="rounded-2xl border border-[#74AA9C] bg-[linear-gradient(135deg,#5d9088_0%,#4a7a70_100%)] p-4 shadow-sm text-white">
         <p className="text-[11px] text-white/85 font-semibold uppercase tracking-wide">{t("emotionalProfile")}</p>

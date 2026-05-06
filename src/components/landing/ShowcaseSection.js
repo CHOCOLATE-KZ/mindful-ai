@@ -259,78 +259,27 @@ function MiniStat({ value, label }) {
 
 function PhoneMock() {
   return (
-    <div className="relative z-10 h-[902px] w-[436px] max-w-[94vw] rounded-[2.45rem] border border-white/20 bg-[linear-gradient(180deg,#1b2122,#101415)] p-3.5 shadow-[0_40px_90px_rgba(0,0,0,0.52)] lg:absolute lg:right-4 lg:top-14 lg:rotate-[6deg]">
-      <div className="absolute right-0 top-8 h-[72%] w-2 rounded-r-2xl bg-white/12" />
-      <div className="absolute left-1/2 top-2 h-1.5 w-24 -translate-x-1/2 rounded-full bg-white/12" />
-      <div className="h-full overflow-hidden rounded-[1.95rem] bg-[#102736] text-white">
-        <div className="flex items-center gap-3 bg-[#2b2f34] px-4 py-3.5">
-          <Image src="/mindfullailogo.svg" alt="MindfulAI bot" width={38} height={38} className="rounded-full bg-white" />
-          <div>
-            <div className="text-lg font-semibold">MindfulAI</div>
-            <div className="text-sm text-white/55">бот</div>
-          </div>
-        </div>
-
-        <div className="space-y-3 bg-[linear-gradient(180deg,#0f2a39,#122a35)] px-3 pb-4 pt-3">
-          <div className="mx-auto w-fit rounded-full bg-[#0b3450] px-3 py-1 text-xs font-medium text-white/75">
-            15 апреля
-          </div>
-
-          <MessageBubble align="right" time="01:43" accent>
-            Влад мне сказал, что я плесень
-          </MessageBubble>
-          <MessageBubble align="left" time="01:43">
-            Слушаю тебя. Расскажи больше об этом. Что именно он сказал и как это повлияло на твоё отношение к себе?
-          </MessageBubble>
-          <MessageBubble align="right" time="01:44" accent>
-            /start
-          </MessageBubble>
-          <MessageBubble align="left" time="01:44">
-            Добро пожаловать в MindfulAI! Выберите действие:
-          </MessageBubble>
-
-          <div className="rounded-[1.4rem] bg-[#1e2024] p-3">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#3b8dd6] px-3 py-1.5 text-sm font-semibold">
-              <span className="text-lg leading-none">☰</span>
-              Меню
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                "Записать заметку",
-                "Мои заметки",
-                "Анализ",
-                "Статистика",
-                "Напоминание",
-                "Помощь",
-              ].map((item) => (
-                <div key={item} className="rounded-2xl bg-[#2a2b31] px-3 py-3 text-center text-[13px] font-medium text-white/92">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
+    <div className="relative z-10 w-[320px] max-w-[94vw] lg:absolute lg:right-4 lg:top-14 lg:rotate-[6deg]">
+      {/* Phone frame */}
+      <div className="relative rounded-[2.45rem] border border-white/20 bg-[linear-gradient(180deg,#1b2122,#101415)] p-3 shadow-[0_40px_90px_rgba(0,0,0,0.52)]">
+        {/* Side button */}
+        <div className="absolute right-0 top-[18%] h-[28%] w-1.5 rounded-r-xl bg-white/12" />
+        {/* Top notch */}
+        <div className="absolute left-1/2 top-2 h-1.5 w-20 -translate-x-1/2 rounded-full bg-white/12" />
+        {/* Screenshot fills the screen area */}
+        <div className="overflow-hidden rounded-[1.9rem]">
+          <Image
+            src="/phone_mockup.jpg"
+            alt="MindfulAI Telegram chat screenshot"
+            width={600}
+            height={1300}
+            className="w-full object-cover"
+            priority
+          />
         </div>
       </div>
+      {/* Shadow under phone */}
       <div className="absolute -bottom-5 left-[14%] h-10 w-[72%] rounded-full bg-black/40 blur-2xl" />
-    </div>
-  );
-}
-
-function MessageBubble({ children, align = "left", time, accent = false }) {
-  const isRight = align === "right";
-
-  return (
-    <div className={`flex ${isRight ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[88%] rounded-[1.35rem] px-4 py-3 text-[13px] leading-relaxed shadow-sm ${
-          accent
-            ? "rounded-br-md bg-[linear-gradient(135deg,#a24fe5,#5b80ff)] text-white"
-            : "rounded-bl-md bg-[#26282c] text-white/92"
-        }`}
-      >
-        <div>{children}</div>
-        <div className={`mt-1 text-[11px] ${accent ? "text-white/75" : "text-white/45"}`}>{time}</div>
-      </div>
     </div>
   );
 }

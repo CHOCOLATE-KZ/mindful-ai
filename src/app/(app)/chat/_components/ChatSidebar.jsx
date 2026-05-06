@@ -15,8 +15,8 @@ export default function ChatSidebar({
   notesError,
 }) {
   return (
-    <aside className="mt-20 hidden lg:flex lg:flex-col items-start px-4 py-6 sticky top-0 h-fit pointer-events-none lg:fixed lg:left-4 lg:top-[calc(var(--app-nav-offset)+1rem)]">
-      <div className="pointer-events-auto rounded-2xl border border-blue-100/50 dark:border-white/[0.07] bg-blue-50/60 dark:from-[rgb(46_46_62)] dark:to-[rgb(46_46_62)] backdrop-blur p-4 shadow-sm dark:shadow-[0_4px_24px_rgb(0_0_5/0.5)] ring-1 ring-blue-500/10 dark:ring-white/[0.04] w-60 mt-10 max-h-[calc(100dvh-var(--app-nav-offset)-6rem)] overflow-y-auto">
+    <aside className="flex flex-col h-full p-6 overflow-y-auto">
+      <div className="rounded-2xl border border-blue-100/50 dark:border-white/[0.07] bg-blue-50/60 dark:from-[rgb(46_46_62)] dark:to-[rgb(46_46_62)] backdrop-blur p-4 shadow-sm dark:shadow-[0_4px_24px_rgb(0_0_5/0.5)] ring-1 ring-blue-500/10 dark:ring-white/[0.04] w-full">
         <div className="flex items-center gap-2 mb-4">
           <div className="text-xs uppercase tracking-widest font-semibold text-[#74AA9C] dark:text-[#74AA9C]"> Якоря</div>
           <button

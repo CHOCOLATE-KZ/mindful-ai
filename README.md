@@ -6,8 +6,10 @@ AI-powered mental health support platform with personalized psychological assist
 
 ### 💬 AI Chat Assistant
 - Real-time psychological counseling powered by local LM Studio
-- RAG (Retrieval-Augmented Generation) with psychology knowledge base
-- Context-aware responses based on user history
+- 3 response modes: LISTENING, ANALYSIS, GUIDANCE (auto-selected per user intent)
+- Safety pipeline: hard-block filters, crisis trigger detection, and response validation
+- RAG (Retrieval-Augmented Generation) with psychology knowledge base and keyword fallback
+- Consent-aware personalization based on profile, recent notes, and message history
 - Voice input support for accessibility
 
 ### 📊 Analytics Dashboard
@@ -48,9 +50,10 @@ AI-powered mental health support platform with personalized psychological assist
 - Lucide Icons
 
 **Backend & AI:**
-- LM Studio (Local AI inference)
-- Ollama (Embeddings - Nomic Embed Text)
-- RAG System with vector search
+- LM Studio (local OpenAI-compatible inference)
+- Prompt orchestration with dynamic mode classification
+- RAG system via Supabase RPC + keyword fallback
+- Optional Ollama integration (alternative local provider)
 
 **Database:**
 - Supabase (PostgreSQL + Auth)
@@ -70,9 +73,8 @@ AI-powered mental health support platform with personalized psychological assist
 
 1. **Node.js** 18+ installed
 2. **LM Studio** running on `localhost:1234`
-3. **Ollama** running on `localhost:11434` with `nomic-embed-text` model
-4. **Supabase** project created
-5. **Telegram Bot** token (optional)
+3. **Supabase** project created
+4. **Telegram Bot** token (optional)
 
 ### Installation
 
@@ -102,6 +104,26 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 # LM Studio
 LMSTUDIO_BASE_URL=http://127.0.0.1:1234
 LMSTUDIO_MODEL=gpt-oss-20b
+LMSTUDIO_TIMEOUT_MS=15000
+LMSTUDIO_TEMPERATURE=0.6
+
+# Optional chat mode tuning
+LM_MODE_LISTENING_TEMPERATURE=0.78
+LM_MODE_LISTENING_MAX_TOKENS=180
+LM_MODE_ANALYSIS_TEMPERATURE=0.5
+LM_MODE_ANALYSIS_MAX_TOKENS=360
+LM_MODE_GUIDANCE_TEMPERATURE=0.3
+LM_MODE_GUIDANCE_MAX_TOKENS=520
+
+# RAG controls
+ENABLE_PSYCHOLOGY_RAG=true
+RAG_LIMIT=3
+RAG_MIN_QUERY_LENGTH=8
+LMSTUDIO_EMBED_MODEL=text-embedding-nomic-embed-text-v1.5
+
+# Optional Ollama (if used)
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=llama3.1
 
 # Telegram Bot (optional)
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
@@ -169,8 +191,13 @@ diplomaproject/
 ## 🔌 API Endpoints
 
 - `POST /api/chat` - AI chat completion
+- `POST /api/chat/clear` - Clear user chat history
 - `GET /api/chat/notes` - Get anchored notes
+- `POST /api/chat/notes` - Save anchored note
 - `POST /api/notes/analyze` - Analyze note sentiment
+- `POST /api/ai/profile-report` - Generate AI profile/weekly report
+- `GET /api/ai/profile-report` - Get saved AI reports
+- `GET /api/rag-debug` - Debug psychology knowledge retrieval
 - `POST /api/auth/telegram` - Telegram authentication
 - `GET /api/profile/stats` - User statistics
 - `GET /api/news` - Psychology news feed
@@ -180,11 +207,12 @@ diplomaproject/
 **Main Tables:**
 - `profiles` - User profiles
 - `user_settings` - App preferences
-- `chat_messages` - Chat history
+- `ai_messages` - AI chat history
 - `notes` - Daily diary entries
-- `test_results` - Exercise results
+- `tests_log` - Exercise/test results
+- `ai_reports` - Generated profile and weekly reports
 - `telegram_users` - Telegram integration
-- `psychology_embeddings` - RAG knowledge vectors
+- `psychology_knowledge` - RAG knowledge chunks
 
 ## 🧪 Testing
 

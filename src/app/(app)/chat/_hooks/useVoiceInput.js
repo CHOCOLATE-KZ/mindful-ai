@@ -58,7 +58,7 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
     if (!RecognitionCtor) return null;
 
     const recognition = new RecognitionCtor();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = lang;
 
@@ -66,17 +66,36 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
       setListening(true);
     };
 
-    recognition.onresult = (event) => {
-      const text = Array.from(event.results)
-        .map((result) => result?.[0]?.transcript || "")
-        .join(" ")
-        .trim();
+    // When the user stops speaking, stop recognition after a short pause
+    // so the final transcript is committed and the caller can process it.
+    recognition.onspeechend = () => {
+      setTimeout(() => {
+        try { recognition.stop(); } catch { /* ignore */ }
+      }, 600);
+    };
 
-      if (text) setVoiceText(text);
+    recognition.onresult = (event) => {
+      // With continuous=true, accumulate all final results + show latest interim live.
+      let allFinal = "";
+      let currentInterim = "";
+
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result?.[0]?.transcript || "";
+        if (result.isFinal) {
+          allFinal += transcript + " ";
+        } else {
+          currentInterim = transcript;
+        }
+      }
+
+      const liveDisplay = (allFinal + currentInterim).trim();
+      if (liveDisplay) setVoiceText(liveDisplay);
     };
 
     recognition.onend = () => {
       setListening(false);
+      recognitionRef.current = null;
       if (stopTimerRef.current) {
         clearTimeout(stopTimerRef.current);
         stopTimerRef.current = 0;
@@ -84,7 +103,19 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
     };
 
     recognition.onerror = (event) => {
+      // "no-speech" is not a real error — the mic is open but the user didn't speak yet.
+      // Silently reset so the caller can restart naturally.
+      if (event?.error === "no-speech" || event?.error === "audio-capture") {
+        setListening(false);
+        recognitionRef.current = null;
+        if (stopTimerRef.current) {
+          clearTimeout(stopTimerRef.current);
+          stopTimerRef.current = 0;
+        }
+        return;
+      }
       setListening(false);
+      recognitionRef.current = null;
       setLastVoiceError(event?.error ? `speech-error:${event.error}` : "speech-error:unknown");
       if (stopTimerRef.current) {
         clearTimeout(stopTimerRef.current);
@@ -104,6 +135,17 @@ export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
     if (!isSecure) {
       alert("Голосовой ввод работает только на HTTPS или localhost.");
       return false;
+    }
+
+    // Pre-check: verify the microphone actually works before starting recognition
+    if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((t) => t.stop());
+      } catch {
+        setLastVoiceError("mic-permission-denied");
+        return false;
+      }
     }
 
     const recognition = ensureRecognition();

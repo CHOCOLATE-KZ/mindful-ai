@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import {
+  getSessionModeConfirmationRequired,
+  setSessionModeConfirmationRequired,
+} from "@/lib/sessionModeConsent";
 
 export default function PrivacySettingsModal({ open, onClose, settings, onChange, t }) {
   const [clearConfirm, setClearConfirm] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [clearDone, setClearDone] = useState(false);
+  const [sessionConfirmRequired, setSessionConfirmRequired] = useState(true);
+
+  useEffect(() => {
+    if (!open) return;
+    setSessionConfirmRequired(getSessionModeConfirmationRequired());
+  }, [open]);
+
+  const handleToggleSessionConfirm = () => {
+    const next = !sessionConfirmRequired;
+    setSessionConfirmRequired(next);
+    setSessionModeConfirmationRequired(next);
+  };
 
   if (!open) return null;
 
@@ -44,6 +60,12 @@ export default function PrivacySettingsModal({ open, onClose, settings, onChange
             description={t("privacyChatDescription")}
             value={!!settings?.ai_personalization}
             onClick={() => onChange({ ai_personalization: !settings?.ai_personalization })}
+          />
+          <ToggleRow
+            title="Подтверждение режима сеанса"
+            description="Перед включением режима сеанса показывать окно с предупреждением о камере"
+            value={sessionConfirmRequired}
+            onClick={handleToggleSessionConfirm}
           />
 
           {/* Clear chat history */}

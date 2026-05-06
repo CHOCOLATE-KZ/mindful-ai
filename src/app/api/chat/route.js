@@ -1,7 +1,8 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { extractAnchors } from "@/lib/utils/extractAnchors";
 import { searchPsychologyKnowledge } from "@/lib/knowledge-search";
-import { SYSTEM_PROMPT } from "@/data/systemPrompt";
+import { getSystemPrompt } from "@/data/systemPrompt";
+import { replyHasUnwarrantedNegativity, validateAndSanitizeReply } from "@/lib/chat/responseValidator";
 
 const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
 const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
@@ -11,6 +12,59 @@ const ENABLE_PSYCHOLOGY_RAG = (process.env.ENABLE_PSYCHOLOGY_RAG || "true").trim
 const RAG_LIMIT = Number(process.env.RAG_LIMIT || 3);
 const RAG_MIN_QUERY_LENGTH = Number(process.env.RAG_MIN_QUERY_LENGTH || 8);
 
+function readEnvNumber(name, fallback) {
+  const raw = process.env[name];
+  if (raw == null || raw === "") return fallback;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function readEnvInt(name, fallback) {
+  const parsed = Math.round(readEnvNumber(name, fallback));
+  return parsed > 0 ? parsed : fallback;
+}
+
+// Жёсткий фильтр — блокируем ДО отправки в модель.
+// Фокус на ДЕЙСТВИЯХ (провезти, купить, спрятать), а не на словах (я страдаю от зависимости).
+const HARD_BLOCK_PATTERNS = [
+  // Контрабанда / транспортировка
+  /провез(ти|у|ёт|ет)|перевез(ти|у|ёт|ет)|протащ(ить|у)|smuggl|traffic/i,
+  // Покупка/продажа наркотиков
+  /купить\s*(наркотик|героин|кокаин|траву|дурь|дозу|гашиш|спайс|мефедрон)/i,
+  /продать\s*(наркотик|героин|кокаин|траву|дурь|гашиш|спайс)/i,
+  /где\s*(купить|достать|найти)\s*(наркотик|героин|кокаин|траву|дурь|дозу)/i,
+  // Синтез / изготовление
+  /как\s*(сделать|приготовить|синтезировать|изготовить)\s*(наркотик|взрывчат|яд|мет\b|фентанил)/i,
+  // Оружие и взрывчатка
+  /взрывчатк|самодельн.*бомб|бомб.*самодельн/i,
+  // Убийство как инструкция
+  /как\s*убить\s*(человека|кого|кого-то|людей)/i,
+  // Скрытие / обман
+  /как\s*(спрятать|скрыть|протащить|пронести)\s*(товар|наркотик|вещество|груз)/i,
+  // English
+  /how\s*to\s*(make|get|buy|smuggle|hide|sell)\s*(drugs?|heroin|cocaine|meth|fentanyl)/i,
+  // Казахский
+  /есілдеу|нашаны|есірткі\s*(сату|алу|тасу)/i,
+];
+
+// Терапевтический контекст — если есть эти маркеры, блок НЕ применяется.
+// Пользователь говорит о своей боли/зависимости, а не планирует преступление.
+const THERAPEUTIC_CONTEXT_PATTERNS = [
+  /я\s*(употребл|зависим|хочу\s*бросить|не\s*могу\s*бросить|сорвался|принял|использовал)/i,
+  /зависимост|зависим\s*от|наркозависим/i,
+  /мне\s*плохо|мне\s*стыдно|ненавижу\s*себя|помогите\s*мне/i,
+  /хочу\s*бросить|хочу\s*завязать|хочу\s*остановиться/i,
+  /борюсь\s*с|страдаю\s*от|не\s*могу\s*остановиться/i,
+  /addiction|i\s*(used|took|relapsed|want\s*to\s*quit|can.t\s*stop)/i,
+];
+
+function isHardBlocked(text) {
+  const t = String(text || "");
+  // Если есть терапевтический контекст — пропускаем к LLM
+  if (THERAPEUTIC_CONTEXT_PATTERNS.some((p) => p.test(t))) return false;
+  return HARD_BLOCK_PATTERNS.some((pattern) => pattern.test(t));
+}
+
 // Кризисные триггеры — слова, требующие экстренного ответа
 const CRISIS_TRIGGERS = [
   "хочу умереть", "хочу убить себя", "не хочу жить", "покончить с собой",
@@ -19,6 +73,109 @@ const CRISIS_TRIGGERS = [
   "want to die", "kill myself", "end my life", "suicide",
   "өзімді өлтіргім", "өлгім келеді",
 ];
+
+const GREETING_REGEX = /^(привет|здравствуй|здравствуйте|салам|hello|hi|hey|добрый\s*(день|вечер|утро))(?:[!.,\s]*)$/i;
+const POSITIVE_MARKERS = [
+  "отлично",
+  "все хорошо",
+  "всё хорошо",
+  "хорошо",
+  "супер",
+  "классно",
+  "прекрасно",
+  "замечательно",
+  "нормально",
+  "okay",
+  "ok",
+  "good",
+  "great",
+  "fine",
+];
+const NEGATIVE_MARKERS = [
+  "тревог",
+  "нерв",
+  "стресс",
+  "плохо",
+  "ужасно",
+  "паник",
+  "устал",
+  "депресс",
+  "боюсь",
+  "страшно",
+  "не могу",
+];
+const NEUTRAL_HELP_MARKERS = [
+  "подскажи",
+  "как",
+  "помоги",
+  "что делать",
+  "посоветуй",
+  "объясни",
+  "расскажи",
+  "why",
+  "how",
+  "help",
+];
+const GRATITUDE_MARKERS = [
+  "спасибо",
+  "благодарю",
+  "thanks",
+  "thank you",
+  "thx",
+];
+
+function normalizeForIntent(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[.,!?;:()"'`«»]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isGreetingOnly(text) {
+  const normalized = String(text || "").trim();
+  if (!normalized) return false;
+  return GREETING_REGEX.test(normalized);
+}
+
+function isPositiveCheckin(text) {
+  const normalized = normalizeForIntent(text);
+  if (!normalized) return false;
+  return POSITIVE_MARKERS.some((m) => normalized.includes(m));
+}
+
+function hasNegativeSignal(text) {
+  const normalized = normalizeForIntent(text);
+  if (!normalized) return false;
+  return NEGATIVE_MARKERS.some((m) => normalized.includes(m));
+}
+
+function hasPositiveSignal(text) {
+  const normalized = normalizeForIntent(text);
+  if (!normalized) return false;
+  return POSITIVE_MARKERS.some((m) => normalized.includes(m));
+}
+
+function hasNeutralHelpSignal(text) {
+  const normalized = normalizeForIntent(text);
+  if (!normalized) return false;
+  return NEUTRAL_HELP_MARKERS.some((m) => normalized.includes(m));
+}
+
+function isGratitudeMessage(text) {
+  const normalized = normalizeForIntent(text);
+  if (!normalized) return false;
+  return GRATITUDE_MARKERS.some((m) => normalized.includes(m));
+}
+
+function detectAffectClass(text) {
+  if (isGratitudeMessage(text)) return "positive";
+  if (hasNegativeSignal(text)) return "negative";
+  if (hasPositiveSignal(text)) return "positive";
+  if (hasNeutralHelpSignal(text)) return "neutral";
+  return "neutral";
+}
 
 function detectCrisis(text) {
   const lower = text.toLowerCase();
@@ -122,9 +279,12 @@ async function buildUserContext(supabase, userId) {
   return parts.length ? parts.join(". ") : "";
 }
 
-async function callLmStudio(messages) {
+async function callLmStudio(messages, options = {}) {
+  const maxTokens = Number(options?.maxTokens ?? 512);
+  const temperature = Number(options?.temperature ?? LMSTUDIO_TEMPERATURE);
+
   console.log('[LM STUDIO]  Отправляю запрос...');
-  console.log('[LM STUDIO] ️ Model:', LMSTUDIO_MODEL, '| temp:', LMSTUDIO_TEMPERATURE, '| timeoutMs:', LMSTUDIO_TIMEOUT_MS);
+  console.log('[LM STUDIO] ️ Model:', LMSTUDIO_MODEL, '| temp:', temperature, '| timeoutMs:', LMSTUDIO_TIMEOUT_MS);
   console.log('[LM STUDIO]  Messages count:', messages.length);
 
   // Логируем только первый (system) и последний (user) messages для краткости
@@ -144,8 +304,8 @@ async function callLmStudio(messages) {
       body: JSON.stringify({
         model: LMSTUDIO_MODEL,
         messages,
-        temperature: LMSTUDIO_TEMPERATURE,
-        max_tokens: 512,
+        temperature,
+        max_tokens: maxTokens,
         top_p: 0.9,
         frequency_penalty: 0.5,
       }),
@@ -178,6 +338,140 @@ async function callLmStudio(messages) {
   }
 }
 
+const MODES = ["LISTENING", "ANALYSIS", "GUIDANCE"];
+const MODE_LM_CONFIG = {
+  LISTENING: {
+    temperature: readEnvNumber("LM_MODE_LISTENING_TEMPERATURE", 0.78),
+    maxTokens: readEnvInt("LM_MODE_LISTENING_MAX_TOKENS", 180),
+  },
+  ANALYSIS: {
+    temperature: readEnvNumber("LM_MODE_ANALYSIS_TEMPERATURE", 0.5),
+    maxTokens: readEnvInt("LM_MODE_ANALYSIS_MAX_TOKENS", 360),
+  },
+  GUIDANCE: {
+    temperature: readEnvNumber("LM_MODE_GUIDANCE_TEMPERATURE", 0.3),
+    maxTokens: readEnvInt("LM_MODE_GUIDANCE_MAX_TOKENS", 520),
+  },
+};
+
+function getModeLmConfig(mode) {
+  return MODE_LM_CONFIG[mode] || MODE_LM_CONFIG.LISTENING;
+}
+
+function normalizeMode(raw) {
+  const text = String(raw || "").toUpperCase();
+  if (text.includes("GUIDANCE")) return "GUIDANCE";
+  if (text.includes("ANALYSIS")) return "ANALYSIS";
+  if (text.includes("LISTENING")) return "LISTENING";
+  return "LISTENING";
+}
+
+async function classifyMode(userMessage) {
+  const messages = [
+    {
+      role: "system",
+      content:
+        "Выбери режим ответа для ИИ-психолога. Доступны только LISTENING, ANALYSIS, GUIDANCE. " +
+        "Ответь строго одним словом из списка, без пояснений.",
+    },
+    {
+      role: "user",
+      content:
+        "Критерии:\n" +
+        "- LISTENING: человек делится чувствами, просит поддержки, но не просит план действий.\n" +
+        "- ANALYSIS: человек хочет понять причины/механизм ситуации.\n" +
+        "- GUIDANCE: человек просит конкретные шаги, технику, инструкцию.\n\n" +
+        `Сообщение пользователя: ${userMessage}`,
+    },
+  ];
+
+  const lm = await callLmStudio(messages, { temperature: 0, maxTokens: 12 });
+  if (lm.error) return "LISTENING";
+
+  const mode = normalizeMode(lm.reply);
+  return MODES.includes(mode) ? mode : "LISTENING";
+}
+
+function normalizeAnchorList(rawAnchors) {
+  if (!Array.isArray(rawAnchors)) return [];
+
+  const cleaned = rawAnchors
+    .map((a) => String(a || "").replace(/^[-*\d.)\s]+/, "").trim())
+    // Убираем кавычки по краям и лишние знаки
+    .map((a) => a.replace(/^["'«»]+|["'«».,;:!?]+$/g, "").trim())
+    .filter((a) => a.length >= 3 && a.length <= 40)
+    // Фильтруем якоря, похожие на обрезки предложений (много слов)
+    .filter((a) => a.split(/\s+/).length <= 4)
+    .map((a) => (a.length > 40 ? a.slice(0, 40).trim() : a));
+
+  // Deduplicate while preserving order
+  return [...new Set(cleaned)].slice(0, 4);
+}
+
+function parseAnchorsFromText(raw) {
+  const text = String(raw || "").trim();
+  if (!text) return [];
+
+  // Handle fenced JSON like: ```json\n{ "anchors": [...] }\n```
+  const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fencedMatch?.[1]) {
+    const fencedPayload = fencedMatch[1].trim();
+    try {
+      const parsedFenced = JSON.parse(fencedPayload);
+      const anchorsFromFenced = normalizeAnchorList(parsedFenced?.anchors ?? parsedFenced);
+      if (anchorsFromFenced.length) return anchorsFromFenced;
+    } catch {
+      // Continue with other strategies.
+    }
+  }
+
+  // Try strict JSON first
+  try {
+    const parsed = JSON.parse(text);
+    return normalizeAnchorList(parsed?.anchors ?? parsed);
+  } catch {
+    // ignore and try fallback parsing
+  }
+
+  // Fallback: parse newline/bullet list
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l !== "```" && !/^```\w*$/i.test(l))
+    .filter(Boolean);
+
+  return normalizeAnchorList(lines);
+}
+
+async function generateAnchorsWithAI(replyText) {
+  if (!replyText || replyText.length < 20) return [];
+
+  const anchorMessages = [
+    {
+      role: "system",
+      content:
+        "Ты извлекаешь ключевые психологические темы из текста. " +
+        "Верни ТОЛЬКО JSON: { \"anchors\": [\"...\", \"...\"] } — массив из 3 элементов. " +
+        "Каждый якорь: СУЩЕСТВИТЕЛЬНОЕ + ПРИЛАГАТЕЛЬНОЕ или два существительных. " +
+        "Максимум 3 слова на якорь. Никаких цитат предложений. " +
+        "Примеры хороших якорей: \"Страх неудачи\", \"Личные границы\", \"Учебный стресс\", " +
+        "\"Поиск идентичности\", \"Тревога ожидания\", \"Техника дыхания\". " +
+        "Язык якорей должен совпадать с языком текста.",
+    },
+    {
+      role: "user",
+      content:
+        "Текст ответа психолога:\n\n" + replyText +
+        "\n\nВерни только JSON с ключевыми психологическими концепциями из этого текста.",
+    },
+  ];
+
+  const lm = await callLmStudio(anchorMessages, { temperature: 0.2, maxTokens: 80 });
+  if (lm.error) return [];
+
+  return parseAnchorsFromText(lm.reply);
+}
+
 // Получение последней эмоции пользователя из глобального хранилища
 function getLastUserEmotion(userId) {
   if (globalThis.userEmotions && globalThis.userEmotions[userId]) {
@@ -199,6 +493,31 @@ export async function POST(req) {
     return Response.json({ error: "Empty message" }, { status: 400 });
   }
 
+  // Жёсткий блок — криминал/наркотики блокируются ДО LLM, без эмпатии
+  if (isHardBlocked(message)) {
+    console.log('[CHAT API] 🚫 Hard-blocked message');
+    return Response.json(
+      { reply: "Я ИИ-психолог и не помогаю в вопросах, связанных с нарушением закона. Этот запрос вне моей компетенции." },
+      { status: 200 }
+    );
+  }
+
+  const greetingMode = isGreetingOnly(message);
+  const isGratitude = isGratitudeMessage(message);
+  const positiveCheckin = isPositiveCheckin(message);
+  const shouldShortPositiveReply = positiveCheckin && !hasNegativeSignal(message);
+  const userAffectClass = detectAffectClass(message);
+
+  console.log('[CHAT API] intent flags:', {
+    greetingMode,
+    isGratitude,
+    positiveCheckin,
+    hasNegativeSignal: hasNegativeSignal(message),
+    userAffectClass,
+    shouldShortPositiveReply,
+    message: message.slice(0, 80),
+  });
+
   // Кризисный детектор — проверяем ДО обращения к LLM
   if (detectCrisis(message)) {
     console.log('[CHAT API] ⚠️  Обнаружен кризисный сигнал в сообщении');
@@ -211,26 +530,66 @@ export async function POST(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (shouldShortPositiveReply) {
+    const quickReply = "Рад слышать, что у тебя всё хорошо. Что хочешь сделать сегодня для себя, чтобы сохранить это состояние?";
+
+    const [insertUser, insertAssistant] = await Promise.all([
+      supabase.from("ai_messages").insert({
+        user_id: user.id,
+        role: "user",
+        content: message,
+        source: "web",
+      }),
+      supabase.from("ai_messages").insert({
+        user_id: user.id,
+        role: "assistant",
+        content: quickReply,
+        source: "web",
+      }),
+    ]);
+
+    if (insertUser.error) {
+      return Response.json({ error: insertUser.error.message }, { status: 500 });
+    }
+    if (insertAssistant.error) {
+      return Response.json({ error: insertAssistant.error.message }, { status: 500 });
+    }
+
+    return Response.json({
+      reply: quickReply,
+      anchors: extractAnchors(quickReply),
+      debug: body?.debug === true ? { shortcut: "positive-checkin" } : undefined,
+    });
+  }
+
   // Получаем последнюю эмоцию пользователя
   const userEmotion = getLastUserEmotion(user.id);
   console.log('[CHAT API]  Эмоция пользователя:', userEmotion);
 
-  // История сообщений (последние 25)
-  const { data: history, error: histErr } = await supabase
-    .from("ai_messages")
-    .select("role, content")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(25);
+  const isLightweightIntent = greetingMode || isGratitude;
 
-  if (histErr) {
-    return Response.json({ error: histErr.message }, { status: 500 });
+  let history = [];
+  if (!isLightweightIntent) {
+    const { data, error: histErr } = await supabase
+      .from("ai_messages")
+      .select("role, content")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+      .limit(25);
+
+    if (histErr) {
+      return Response.json({ error: histErr.message }, { status: 500 });
+    }
+    history = data || [];
   }
 
-  const context = await buildUserContext(supabase, user.id);
+  const context = isLightweightIntent ? "" : await buildUserContext(supabase, user.id);
+
+  const mode = isLightweightIntent ? "LISTENING" : await classifyMode(message);
+  const modeLmConfig = getModeLmConfig(mode);
 
   let psychologyContext = '';
-  if (ENABLE_PSYCHOLOGY_RAG && message.length >= RAG_MIN_QUERY_LENGTH) {
+  if (!isLightweightIntent && ENABLE_PSYCHOLOGY_RAG && message.length >= RAG_MIN_QUERY_LENGTH) {
     psychologyContext = await searchPsychologyKnowledge(message, RAG_LIMIT);
   }
 
@@ -244,12 +603,37 @@ export async function POST(req) {
     })
   );
 
-  const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
-  ];
+  const messages = isGratitude
+    ? [
+        {
+          role: "system",
+          content:
+            "Пользователь тебя поблагодарил. Ответь вежливо, коротко и поддерживающе, не выдумывай новые проблемы.",
+        },
+      ]
+    : [{ role: "system", content: getSystemPrompt(mode) }];
+
+  if (greetingMode) {
+    messages.push({
+      role: "system",
+      content:
+        "Пользователь просто поздоровался. Ответь коротко и дружелюбно, без ссылок на прошлые темы, если он сам не просил продолжить контекст.",
+    });
+  }
+
+  if (positiveCheckin && !isGratitude) {
+    messages.push({
+      role: "system",
+      content:
+        "Пользователь сообщает, что у него все хорошо или отлично. Не приписывай ему тревогу, боль, неприятные ощущения и другие негативные чувства. " +
+        "Ответь коротко и по-доброму: порадуйся за пользователя и задай один легкий нейтральный вопрос про его день/планы.",
+    });
+  }
   
   console.log('[CHAT API]  Начинаю конструирование messages...');
-  console.log('[CHAT API]  System prompt первая строка:', SYSTEM_PROMPT.slice(0, 80) + '...');
+  console.log('[CHAT API]  Mode:', mode);
+  console.log('[CHAT API]  Mode config:', modeLmConfig);
+  console.log('[CHAT API]  System prompt первая строка:', String(messages[0]?.content || '').slice(0, 80) + '...');
   
   // Добавляем психологические знания как контекст для AI
   if (psychologyContext) {
@@ -289,16 +673,20 @@ export async function POST(req) {
   }
 
   //  КРИТИЧНОЕ НАПОМИНАНИЕ перед тем как читать пользовательское сообщение
-  messages.push({
-    role: 'system',
-    content: `ПЕРЕД ОТВЕТОМ: Внимательно прочитай что пишет юзер и ответь ТОЧНО на эту тему. НЕ меняй тему внезапно. Если юзер про "диплом" - говори про "диплом", если про "плагиат" - про "плагиат". Юзер просто РАССКАЗЫВАЕТ о проблеме - только СЛУШАЙ И СПРАШИВАЙ. БЕЗ советов, БЕЗ статистики.`
-  });
+  if (!isGratitude) {
+    messages.push({
+      role: 'system',
+      content: `ПЕРЕД ОТВЕТОМ: Внимательно прочитай что пишет юзер и ответь ТОЧНО на эту тему. НЕ меняй тему внезапно. Если юзер про "диплом" - говори про "диплом", если про "плагиат" - про "плагиат". Юзер просто РАССКАЗЫВАЕТ о проблеме - только СЛУШАЙ И СПРАШИВАЙ. БЕЗ советов, БЕЗ статистики.`
+    });
+  }
 
   //  ФИНАЛЬНОЕ ПРЕДУПРЕЖДЕНИЕ О ЗАПРЕТЕ НА СТАТИСТИКУ
-  messages.push({
-    role: 'system',
-    content: `СОВЕТ! ЗАПОМНИ: Если юзер НЕ просит статистику - НЕ ВЫВОДИ её. Точка. Не выводи "Дата:", не выводи "Настроение:", не выводи "Сон:". Если выведешь статистику когда её не просили - это ПОЛНОСТЬЮ НЕПРАВИЛЬНО.`
-  });
+  if (!isGratitude) {
+    messages.push({
+      role: 'system',
+      content: `СОВЕТ! ЗАПОМНИ: Если юзер НЕ просит статистику - НЕ ВЫВОДИ её. Точка. Не выводи "Дата:", не выводи "Настроение:", не выводи "Сон:". Если выведешь статистику когда её не просили - это ПОЛНОСТЬЮ НЕПРАВИЛЬНО.`
+    });
+  }
 
   messages.push({ role: "user", content: message });
 
@@ -315,7 +703,7 @@ export async function POST(req) {
 
   let reply = "";
   try {
-    const lm = await callLmStudio(messages);
+    const lm = await callLmStudio(messages, modeLmConfig);
     if (lm.error) {
       return Response.json({ error: lm.error }, { status: 502 });
     }
@@ -329,6 +717,34 @@ export async function POST(req) {
 
   reply = reply.trim() || "...";
 
+  // Universal consistency guard: avoid projecting anxiety/negativity onto positive check-ins.
+  if (userAffectClass === "positive" && replyHasUnwarrantedNegativity(reply)) {
+    console.log('[CHAT API]  Affect mismatch detected. Running one corrective regeneration...');
+
+    const correctedMessages = [
+      ...messages.slice(0, -1),
+      {
+        role: "system",
+        content:
+          "КОРРЕКЦИЯ: пользователь в позитивном состоянии. Не приписывай тревогу, боль, стресс, нервозность. " +
+          "Ответ: коротко, тепло, поддерживающе-позитивно, максимум 2-3 предложения, один легкий вопрос в конце.",
+      },
+      messages[messages.length - 1],
+    ];
+
+    const corrected = await callLmStudio(correctedMessages, {
+      temperature: Math.min(modeLmConfig.temperature, 0.35),
+      maxTokens: Math.min(modeLmConfig.maxTokens, 140),
+    });
+    if (!corrected.error && corrected.reply && !replyHasUnwarrantedNegativity(corrected.reply)) {
+      reply = corrected.reply.trim();
+      console.log('[CHAT API]  Corrective regeneration accepted.');
+    } else {
+      reply = "Рад слышать, что у тебя всё хорошо. Что хочешь сделать сегодня для себя, чтобы сохранить это состояние?";
+      console.log('[CHAT API]  Corrective regeneration failed. Using safe positive fallback.');
+    }
+  }
+
   //  DEBUG: логируем ответ от LM Studio ДО очистки
   if (reply.length < 300) {
     console.log('[LM STUDIO]  RAW ответ от LM Studio:', reply);
@@ -336,103 +752,47 @@ export async function POST(req) {
     console.log('[LM STUDIO]  RAW ответ (первые 300 символов):', reply.slice(0, 300));
   }
 
-  // СУПЕР-АГРЕССИВНАЯ очистка: удаляем всё что пахнет попыткой вывести статистику
-  const statTriggers = ['статистика', 'на сегодня', 'давай посмотрим на', 'посмотрим на твою'];
-  for (const trigger of statTriggers) {
-    if (reply.toLowerCase().includes(trigger)) {
-      console.log(`[LM STUDIO]   НАЙДЕНА ФРАЗА "${trigger}"! Удаляю...`);
-      // Ищем нормальный текст после этой фразы
-      const idx = reply.toLowerCase().indexOf(trigger);
-      if (idx >= 0) {
-        // Берем текст после фразы и двоеточия
-        const afterTrigger = reply.slice(idx + trigger.length).trim();
-        const colonIdx = afterTrigger.indexOf(':');
-        if (colonIdx >= 0) {
-          const afterColon = afterTrigger.slice(colonIdx + 1).trim();
-          if (afterColon.length > 15 && !afterColon.match(/^дата|настроение|сон/i)) {
-            reply = afterColon;
-            console.log(`[LM STUDIO] ️  Извлек текст после "${trigger}"`);
-          } else {
-            // Если после нет смысла - берем всё что было ДО фразы
-            const beforeTrigger = reply.slice(0, idx).trim();
-            if (beforeTrigger.length > 15) {
-              reply = beforeTrigger;
-              console.log(`[LM STUDIO] ️  Взял текст ДО "${trigger}"`);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // КРАЙНЕ АГРЕССИВНАЯ очистка: если видим "статистика" в ответе - это плохой ответ
-  // Удаляем всё до и после статистики
-  if (reply.toLowerCase().includes('статистика')) {
-    console.log('[LM STUDIO]   НАЙДЕНА СТАТИСТИКА (вторая проверка)! Удаляю...');
-    // Попытка найти нормальный текст после статистики
-    const parts = reply.split(/статистика[^а-яёa-z]*/i);
-    if (parts.length > 1 && parts[parts.length - 1].trim().length > 10) {
-      reply = parts[parts.length - 1].trim();
-    } else {
-      // Если нет смысла после "статистика" - просто заменяем на generic ответ
-      reply = "Как дела?";
-    }
-  }
-
-  // Удаляем строки со статистикой/мониторингом
-  let lines = reply.split('\n');
-  lines = lines.filter(line => {
-    const lower = line.toLowerCase().trim();
-    
-    if (lower.includes('дата:') || lower.includes('дата :')) return false;
-    if (lower.includes('настроение:') || lower.includes('настроение :')) return false;
-    if (lower.includes('сон:') || lower.includes('сон :')) return false;
-    if (lower.includes('эмоциональная регуляция')) return false;
-    if (lower.includes('физическая активность')) return false;
-    if (lower.includes('на сегодня:')) return false;  // Вот это было проблема!
-    if (lower.includes('давай посмотрим на')) return false;
-    if (lower.includes('посмотрим на твою')) return false;
-    if (lower.match(/\d+\s*минут/) && lower.match(/\/10/)) return false;
-    if (lower.match(/^\d+\/10/)) return false;
-    if (lower.includes('продолжай в том же духе')) return false;
-    
-    return true;
+  const validation = validateAndSanitizeReply({
+    reply,
+    mode,
+    isFirstMessage: history.length === 0,
+    userAffectClass,
+    positiveFallback: "Рад слышать, что у тебя всё хорошо. Что хочешь сделать сегодня для себя, чтобы сохранить это состояние?",
+    genericFallback: "Как дела?",
   });
+  reply = validation.reply;
 
-  reply = lines.join('\n').trim() || "...";
-
-  //  DEBUG: логируем ответ ПОСЛЕ очистки
-  console.log('[LM STUDIO]  ПОСЛЕ очистки:', reply.slice(0, 200));
-  console.log('[LM STUDIO]  Содержит статистику?', reply.includes('Дата:') || reply.includes('Настроение:') ? 'ДА ' : 'НЕТ ');
-  
-  // Финальная проверка: если ответ всё ещё странный или минимальной длины - берем последний параграф
-  if (reply.length < 15 || reply.match(/дата|настроение|сон/i)) {
-    const paragraphs = reply.split(/\n\n+/).filter(p => p.trim().length > 0);
-    if (paragraphs.length > 1) {
-      reply = paragraphs[paragraphs.length - 1];
-    } else {
-      reply = "Как дела?";
-    }
-  }
-
-  reply = reply.trim() || "Как дела?";
+  console.log('[LM STUDIO]  ПОСЛЕ валидации:', reply.slice(0, 200));
+  console.log('[LM STUDIO]  Validator rules:', validation.meta);
 
   //  DEBUG: логируем финальный ответ который отправляется пользователю
   console.log('[LM STUDIO]  ФИНАЛЬНЫЙ ответ:', reply);
   console.log('[LM STUDIO]  Все проверки пройдены\n');
 
-  const { error: insAiErr } = await supabase.from("ai_messages").insert({
-    user_id: user.id,
-    role: "assistant",
-    content: reply,
-    source: "web",
-  });
+  // Запускаем сохранение в БД и генерацию якорей параллельно
+  const anchorPromise = greetingMode
+    ? Promise.resolve({ anchors: [], source: "disabled:greeting" })
+    : generateAnchorsWithAI(reply)
+        .then((ai) =>
+          ai.length > 0
+            ? { anchors: ai, source: "ai" }
+            : { anchors: extractAnchors(reply), source: "heuristic" }
+        )
+        .catch(() => ({ anchors: extractAnchors(reply), source: "heuristic" }));
 
-  if (insAiErr) {
-    return Response.json({ error: insAiErr.message }, { status: 500 });
+  const [dbResult, { anchors, source: anchorSource }] = await Promise.all([
+    supabase.from("ai_messages").insert({
+      user_id: user.id,
+      role: "assistant",
+      content: reply,
+      source: "web",
+    }),
+    anchorPromise,
+  ]);
+
+  if (dbResult.error) {
+    return Response.json({ error: dbResult.error.message }, { status: 500 });
   }
-
-  const anchors = extractAnchors(reply);
 
   const debug = body?.debug === true
     ? {
@@ -440,6 +800,8 @@ export async function POST(req) {
         ragEnabled: ENABLE_PSYCHOLOGY_RAG,
         ragLimit: RAG_LIMIT,
         ragContextChars: psychologyContext.length,
+        anchorSource,
+        mode,
       }
     : undefined;
 

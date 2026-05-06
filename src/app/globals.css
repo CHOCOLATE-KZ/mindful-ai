@@ -105,6 +105,62 @@ html, body {
   color: rgb(var(--fg));
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter,
     "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  overflow-x: hidden;
+}
+
+/* Global interactive cursors */
+button,
+a[href],
+summary,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* =========================
+   THEME TOGGLE (Moon/Sun)
+   ========================= */
+
+.theme-toggle-input {
+  --size: 1.2rem;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  width: var(--size);
+  height: var(--size);
+  box-shadow: inset calc(var(--size) * 0.33) calc(var(--size) * -0.25) 0;
+  border-radius: 999px;
+  color: hsl(240, 100%, 85%);
+  transition: all 500ms;
+  flex-shrink: 0;
+}
+
+.theme-toggle-input:checked {
+  --ray-size: calc(var(--size) * -0.4);
+  --offset-orthogonal: calc(var(--size) * 0.65);
+  --offset-diagonal: calc(var(--size) * 0.45);
+  transform: scale(0.75);
+  color: hsl(40, 100%, 50%);
+  box-shadow:
+    inset 0 0 0 var(--size),
+    calc(var(--offset-orthogonal) * -1) 0 0 var(--ray-size),
+    var(--offset-orthogonal) 0 0 var(--ray-size),
+    0 calc(var(--offset-orthogonal) * -1) 0 var(--ray-size),
+    0 var(--offset-orthogonal) 0 var(--ray-size),
+    calc(var(--offset-diagonal) * -1) calc(var(--offset-diagonal) * -1) 0 var(--ray-size),
+    var(--offset-diagonal) var(--offset-diagonal) 0 var(--ray-size),
+    calc(var(--offset-diagonal) * -1) var(--offset-diagonal) 0 var(--ray-size),
+    var(--offset-diagonal) calc(var(--offset-diagonal) * -1) 0 var(--ray-size);
 }
 
 /* =========================
@@ -298,6 +354,10 @@ html.dark .bg-slate-200,
 html.dark .bg-gray-200               { background-color: rgb(42 42 58) !important; }
 html.dark .bg-slate-800              { background-color: rgb(52 52 70) !important; }
 html.dark .bg-slate-950\/90          { background-color: rgb(26 26 38 / 0.92) !important; }
+/* #131314 overrides — declared AFTER generic rules so they win (same specificity, last wins) */
+html.dark .dark\:bg-\[\#131314\]        { background-color: #131314 !important; }
+html.dark .dark\:bg-\[\#131314\]\/80    { background-color: rgb(19 19 20 / 0.80) !important; }
+html.dark .dark\:bg-\[\#131314\]\/90    { background-color: rgb(19 19 20 / 0.90) !important; }
 
 /* Полупрозрачные чёрные оверлеи → светлые */
 html.dark .bg-black\/\[0\.03\]       { background-color: rgb(255 255 255 / 0.03) !important; }
@@ -323,6 +383,8 @@ html.dark .text-gray-900             { color: rgb(236 237 245) !important; }
 html.dark .text-gray-800             { color: rgb(210 212 235) !important; }
 html.dark .text-gray-700             { color: rgb(140 145 175) !important; }
 html.dark .text-gray-600             { color: rgb(140 145 175) !important; }
+/* override — must be after generic rules */
+html.dark .dark\:text-slate-300      { color: rgb(203 213 225) !important; }
 
 /* ---- РАМКИ ---- */
 html.dark .border-black\/10          { border-color: rgb(255 255 255 / 0.08) !important; }
@@ -429,11 +491,14 @@ html.dark .bg-amber-50\/60    { background-color: rgb(55 32 5 / 0.24) !important
 
 /* ---- ВВОД (формы) ---- */
 html.dark input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
-html.dark textarea,
+html.dark textarea:not(.bg-transparent),
 html.dark select {
-  background-color: rgb(28 28 40) !important;
+  background-color: #1c1c1d !important;
   color: rgb(236 237 245) !important;
   border-color: rgb(255 255 255 / 0.10) !important;
+}
+html.dark textarea.bg-transparent {
+  background-color: transparent !important;
 }
 html.dark input::placeholder,
 html.dark textarea::placeholder {
@@ -441,8 +506,8 @@ html.dark textarea::placeholder {
 }
 html.dark input:focus:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
 html.dark textarea:focus {
-  border-color: rgb(116 170 156 / 0.55) !important;
-  box-shadow: 0 0 0 3px rgb(116 170 156 / 0.18) !important;
+  border-color: rgb(255 255 255 / 0.10) !important;
+  box-shadow: none !important;
 }
 
 /* ---- СКРОЛЛБАР ---- */

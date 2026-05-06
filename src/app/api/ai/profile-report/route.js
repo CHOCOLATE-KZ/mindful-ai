@@ -555,34 +555,101 @@ export async function POST(req) {
       `IMPORTANT: Compare current data with the previous report. Explicitly mention what improved, what got worse, what stayed the same. This comparison is a key required section.`;
   }
 
-  const userPrompt =
-    mode === "weekly"
-      ? `Create a WEEKLY SUMMARY in ${language === "ru" ? "Russian" : language === "kz" ? "Kazakh" : "English"}. ` +
-        "Output STRICT JSON ONLY (no markdown, no code fences, no extra text). " +
-        "Use keys exactly: summaryText, keyFindings, likelyDrivers, plan24h, plan7d, expectedSignals, checkInQuestions. " +
-        "Each key except summaryText must be an array of short strings. " +
-        "summaryText must be a single plain string (not an array). " +
-        "Keep each list item concrete, behavioral, and measurable (time, frequency, or threshold). " +
-        "Never include violent/graphic wording; if such themes are present in data, describe them neutrally as distress markers and suggest a safety-oriented coping step. " +
-        "Do not invent facts that are not supported by the provided data. " +
-        `Ensure content includes weekly sections equivalent to: ${labels.weekly.join(", ")}. ` +
-        "Integrate all available sources (notes + chats + tests) and explicitly mention source agreement or mismatch. " +
-        "Do NOT mention user IDs, technical field names, or raw JSON keys from input payload.\n\n" +
-        `DATA:\n${JSON.stringify(payload, null, 2)}${previousContext}`
-      : `Create a PERSONAL WELLBEING REPORT in ${language === "ru" ? "Russian" : language === "kz" ? "Kazakh" : "English"}. ` +
-        "Output STRICT JSON ONLY (no markdown, no code fences, no extra text). " +
-        "Use keys exactly: summaryText, keyFindings, likelyDrivers, plan24h, plan7d, expectedSignals, checkInQuestions. " +
-        "Each key except summaryText must be an array of short strings. " +
-        "summaryText must be a single plain string (not an array). " +
-        "Keep each list item concrete, behavioral, and measurable (time, frequency, or threshold). " +
-        "Never include violent/graphic wording; if such themes are present in data, describe them neutrally as distress markers and suggest a safety-oriented coping step. " +
-        "Do not invent facts that are not supported by the provided data. " +
-        `Make summary and findings reflect profile sections equivalent to: ${labels.profile.join(", ")}. ` +
-        "You MUST integrate diary metrics, CBT/ABC notes, test trends, and chat themes into one coherent profile. " +
-        "For each key conclusion, reference source(s) and confidence (low/medium/high) in natural language. " +
-        "Include a 24-hour micro-plan and a 7-day plan with measurable check-ins. " +
-        "Do NOT mention user IDs, technical field names, or raw JSON keys from input payload.\n\n" +
-        `DATA:\n${JSON.stringify(payload, null, 2)}${previousContext}`;
+  // Slimmed payload for weekly mode — remove statistical noise, keep meaningful signals
+  const weeklyPayload = {
+    period: "last 7 days",
+    keyMetrics: {
+      avgMood: payload.stats.avgMood,
+      avgSleepHours: payload.stats.avgSleepMinutes != null ? +(payload.stats.avgSleepMinutes / 60).toFixed(1) : null,
+      avgEnergy: payload.stats.avgEnergy,
+      avgStress: payload.stats.avgStress,
+    },
+    moodTrend: payload.derived.moodTrendSlope14d,
+    sleepTrend: payload.derived.sleepTrendSlope14d,
+    psychSignals: payload.derived.psychSignals,
+    diaryEntries: (payload.recentNotes || []).slice(0, 10).map((n) => ({
+      date: n.date,
+      mood: n.mood,
+      sleep: n.sleep,
+      energy: n.energy,
+      stress: n.stress,
+      text: n.text || null,
+      cbt: n.abc ? { situation: n.abc.a, thoughts: n.abc.b, reaction: n.abc.c } : null,
+    })),
+    topKeywords: payload.topTopics,
+    chatThemes: (payload.recentChats || [])
+      .filter((m) => m.role === "user")
+      .slice(0, 8)
+      .map((m) => m.text),
+    tests: (payload.testsSummary?.byTest || []).slice(0, 3).map((t) => ({
+      name: t.testKey,
+      latestLevel: t.latestLevel,
+      latestScore: t.latestScore,
+      trend: t.scoreTrendSlope,
+    })),
+  };
+
+  const weeklyPrompt =
+    `Ты — MindfulAI, когнитивно-аналитический помощник. Напиши НЕДЕЛЬНЫЙ ОТЧЁТ на ${language === "ru" ? "русском" : language === "kz" ? "казахском" : "английском"} языке.
+
+ФОРМАТ ОТВЕТА: строгий JSON без markdown-обёрток, без \`\`\`. Ключи:
+- summaryText (строка с markdown: используй **жирный** для ключевых инсайтов, эмодзи для разделов)
+- keyFindings (массив строк — конкретные наблюдения, ссылаясь на реальный текст дневника)
+- likelyDrivers (массив строк — конкретные слова-маркеры и темы, найденные в дневнике)
+- plan24h (массив строк — 2-3 конкретных действия на сегодня)
+- plan7d (массив строк — 3-4 цели на неделю)
+- expectedSignals (массив строк — как пользователь узнает, что стало лучше)
+- checkInQuestions (массив строк — 2-3 рефлексивных вопроса к себе)
+
+ПРАВИЛА ДЛЯ summaryText:
+1. 📋 **Итоги недели** — напиши уникальный вводный абзац. Если в дневнике упомянуты конкретные люди, события или страхи — говори о них прямо (например, «на этой неделе ты несколько раз упоминал экзамены и ощущение давления»).
+2. 📊 **Ключевые метрики** — только сон, настроение, энергия. Без количества сообщений и записей. Если данных нет — пропусти.
+3. 🔑 **Темы недели** — вытащи 3-5 конкретных слов-маркеров прямо из текстов дневника. Объясни, что они говорят о состоянии.
+4. ⚠️ **Сигналы риска** — если есть тревожные паттерны (негативные слова, низкое настроение, плохой сон), подсвети их прямо. Не сглаживай.
+5. 💡 **Главный инсайт недели** — одно самое важное наблюдение жирным шрифтом.
+
+ВАЖНО:
+- Не придумывай факты, которых нет в данных.
+- Не упоминай технические поля (user_id, JSON-ключи).
+- Если в дневнике мало текстов — честно скажи, что анализ ограничен, и опирайся на цифры.
+- Тон: тёплый, прямой, как коллега-психолог, а не статистик.
+${previousContext ? `\nСРАВНЕНИЕ С ПРОШЛЫМ ОТЧЁТОМ:\n${previousContext}` : ""}
+
+ДАННЫЕ ПОЛЬЗОВАТЕЛЯ:
+${JSON.stringify(weeklyPayload, null, 2)}`;
+
+  const profilePrompt = `
+Ты — MindfulAI, экспертный психолог-аналитик с глубоким пониманием когнитивно-поведенческой терапии. 
+Твоя задача: составить ПОЛНЫЙ ПСИХОЛОГИЧЕСКИЙ ПОРТРЕТ пользователя на основе его данных.
+
+ОТВЕТЬ СТРОГО В ФОРМАТЕ JSON (без разметки \`\`\`, только чистый объект).
+Ключи: summaryText, keyFindings, likelyDrivers, plan24h, plan7d, expectedSignals, checkInQuestions.
+
+ТРЕБОВАНИЯ К СОДЕРЖАНИЮ:
+1. **summaryText (Главный анализ):** 
+   - Используй Markdown (жирный текст, эмодзи). 
+   - Это должен быть связный текст, разделенный на логические блоки: «Общее состояние», «Динамика и тренды», «Темы и триггеры», «Риски и ресурсы».
+   - **ВАЖНО:** Проведи контент-анализ. Найди в дневнике конкретные слова-маркеры (например: "ректор", "наказание", "учеба", "страх"). Не сглаживай острые углы — если есть тревожные темы, опиши их прямо.
+   - Ищи связи: как события (учеба, встречи) влияют на метрики (сон, настроение).
+
+2. **keyFindings (Наблюдения):** Список из 4-5 глубоких инсайтов. Не пиши "сон 4 часа", пиши "Дефицит сна коррелирует с ростом агрессивных мыслей в дневнике".
+
+3. **likelyDrivers (Триггеры):** Список конкретных тем, людей или событий, которые больше всего влияют на состояние пользователя сейчас.
+
+4. **Риски (внутри summaryText или keyFindings):** Если есть упоминания самоповреждения, агрессии или глубокой депрессии — выдели это как приоритетную зону внимания.
+
+5. **Планы (plan24h, plan7d):** Конкретные психологические упражнения или действия, а не просто "отдохни". Например: "Техника децентрации при мыслях о ректоре".
+
+СТИЛЬ:
+- Профессиональный, эмпатичный, но аналитически точный. 
+- Избегай общих фраз типа "все будет хорошо".
+- ТОЛЬКО на русском языке.
+${previousContext ? `\nСРАВНЕНИЕ С ПРОШЛЫМ ОТЧЁТОМ:\n${previousContext}` : ""}
+
+ДАННЫЕ ДЛЯ АНАЛИЗА:
+${JSON.stringify(payload, null, 2)}`;
+
+  const userPrompt = mode === "weekly" ? weeklyPrompt : profilePrompt;
 
   const lm = await callLmStudio([
     { role: "system", content: systemPrompt },

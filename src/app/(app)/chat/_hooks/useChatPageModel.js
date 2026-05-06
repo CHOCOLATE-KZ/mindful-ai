@@ -33,7 +33,7 @@ export function useChatPageModel() {
   const startingVoiceRef = useRef(false);
   const lastSpokenAssistantRef = useRef("");
 
-  const { atBottom, scrollRef, scrollToTop } = useChatScroll();
+  const { atTop, atBottom, scrolledDown, scrollRef, scrollToTop, scrollToBottom } = useChatScroll();
   const helpIconRef = useRef(null);
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -327,24 +327,130 @@ export function useChatPageModel() {
     }
   }, []);
 
-  const exportMyData = useCallback(async () => {
-    const res = await fetch("/api/export", { method: "GET", credentials: "include" });
-    if (!res.ok) {
-      alert("Не удалось экспортировать данные");
-      return;
+  const exportMyData = useCallback(async (format = "json") => {
+    try {
+      const res = await fetch("/api/profile/export", { method: "GET", credentials: "include" });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        alert(`Не удалось экспортировать данные: ${errData.error || res.status}`);
+        return;
+      }
+
+      const rawData = await res.json();
+      const normalizedData = {
+        ...rawData,
+        notes: rawData?.data?.notes || rawData?.notes || [],
+        tests: rawData?.data?.tests || rawData?.tests || [],
+        messages: rawData?.data?.aiMessages || rawData?.messages || [],
+        exportedAt: rawData?.exportedAt || rawData?.exported_at || new Date().toISOString(),
+      };
+      setMenuOpen(false);
+
+      if (format === "pdf") {
+        // PDF via print window (same as profile page)
+        const notes = normalizedData.notes || [];
+        const messages = normalizedData.messages || [];
+        const tests = normalizedData.tests || [];
+        const profile = normalizedData.profile || {};
+        const exportedAt = new Date(normalizedData.exportedAt).toLocaleString("ru-RU");
+
+        const avgMood = notes.filter(n => n.mood).length
+          ? (notes.filter(n => n.mood).reduce((s, n) => s + n.mood, 0) / notes.filter(n => n.mood).length).toFixed(1)
+          : "—";
+        const avgSleep = notes.filter(n => n.sleep).length
+          ? (notes.filter(n => n.sleep).reduce((s, n) => s + n.sleep, 0) / notes.filter(n => n.sleep).length).toFixed(1)
+          : "—";
+
+        const moodColor = (m) => !m ? "#94a3b8" : m >= 7 ? "#10b981" : m >= 4 ? "#f59e0b" : "#ef4444";
+
+        const notesRows = notes.slice(-30).map(n => `
+          <tr>
+            <td>${n.date || ""}</td>
+            <td style="color:${moodColor(n.mood)};font-weight:600">${n.mood ?? "—"}</td>
+            <td>${n.sleep ?? "—"}ч</td>
+            <td style="color:#64748b;font-size:11px">${(n.comment || "").slice(0, 60)}</td>
+          </tr>`).join("");
+
+        const html = `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"/>
+<title>MindfulAI — Экспорт данных</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;color:#1e293b;background:#fff;line-height:1.6}
+  .page{max-width:800px;margin:0 auto;padding:40px 40px 60px}
+  .header{display:flex;align-items:center;justify-content:space-between;padding-bottom:24px;border-bottom:2px solid #e2e8f0;margin-bottom:32px}
+  .logo{font-size:22px;font-weight:700;color:#0f172a}.logo span{color:#74AA9C}
+  .meta{font-size:12px;color:#94a3b8;text-align:right}
+  .section{margin-bottom:36px}
+  .section-title{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#74AA9C;margin-bottom:14px;padding-bottom:6px;border-bottom:1px solid #e2e8f0}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .stat-card{background:#f8fafc;border-radius:12px;padding:16px;text-align:center}
+  .stat-value{font-size:26px;font-weight:700;color:#0f172a}.stat-label{font-size:11px;color:#94a3b8;margin-top:2px}
+  table{width:100%;border-collapse:collapse;font-size:12px}thead tr{background:#f1f5f9}
+  th{padding:8px 10px;text-align:left;font-weight:600;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  td{padding:7px 10px;border-bottom:1px solid #f1f5f9;color:#334155}tr:last-child td{border-bottom:none}
+  .chat-list{display:flex;flex-direction:column;gap:8px}
+  .chat-msg{padding:10px 14px;border-radius:10px;font-size:12px;line-height:1.5}
+  .chat-msg.user{background:#eff6ff;border-left:3px solid #3b82f6}
+  .chat-msg.assistant{background:#f0fdf4;border-left:3px solid #74AA9C}
+  .chat-role{font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;margin-bottom:2px}
+  .chat-date{font-size:10px;color:#cbd5e1;float:right}
+  .footer{margin-top:48px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#94a3b8;text-align:center}
+  @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.section{page-break-inside:avoid}}
+</style></head><body><div class="page">
+  <div class="header"><div class="logo">Mindful<span>AI</span></div><div class="meta">Экспорт данных<br/>${exportedAt}</div></div>
+  <div class="section"><div class="section-title">Профиль</div>
+    <table><tbody>
+      <tr><td style="width:160px;color:#94a3b8">Имя</td><td>${profile.name || "—"}</td></tr>
+    </tbody></table>
+  </div>
+  <div class="section"><div class="section-title">Статистика</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value">${notes.length}</div><div class="stat-label">Записей</div></div>
+      <div class="stat-card"><div class="stat-value">${avgMood}</div><div class="stat-label">Ср. настроение</div></div>
+      <div class="stat-card"><div class="stat-value">${avgSleep}</div><div class="stat-label">Ср. сон (ч)</div></div>
+      <div class="stat-card"><div class="stat-value">${messages.length}</div><div class="stat-label">Сообщений ИИ</div></div>
+    </div>
+  </div>
+  ${notes.length > 0 ? `<div class="section"><div class="section-title">Дневник (последние 30)</div>
+    <table><thead><tr><th>Дата</th><th>Настроение</th><th>Сон</th><th>Комментарий</th></tr></thead>
+    <tbody>${notesRows}</tbody></table></div>` : ""}
+  ${tests.length > 0 ? `<div class="section"><div class="section-title">Результаты тестов</div>
+    <table><thead><tr><th>Дата</th><th>Тест</th><th>Результат</th></tr></thead>
+    <tbody>${tests.map(t => `
+      <tr>
+        <td>${t.created_at ? new Date(t.created_at).toLocaleDateString("ru-RU") : "—"}</td>
+        <td>${t.test_key || "—"}</td>
+        <td>${t.result?.score ?? t.result?.level ?? "—"}</td>
+      </tr>`).join("")}</tbody></table></div>` : ""}
+  ${messages.length > 0 ? `<div class="section"><div class="section-title">История чата (последние 20)</div>
+    <div class="chat-list">${messages.slice(-20).map(m => `
+      <div class="chat-msg ${m.role}">
+        <span class="chat-role">${m.role === "user" ? "Вы" : "MindfulAI"}</span>
+        <span class="chat-date">${new Date(m.created_at).toLocaleDateString("ru-RU")}</span>
+        <div>${(m.content || "").slice(0, 300)}${(m.content || "").length > 300 ? "…" : ""}</div>
+      </div>`).join("")}</div></div>` : ""}
+  <div class="footer">MindfulAI • ${exportedAt} • Данные принадлежат только вам</div>
+</div><script>window.onload=()=>window.print();</script></body></html>`;
+
+        const win = window.open("", "_blank");
+        if (!win) { alert("Разрешите всплывающие окна в браузере для PDF-экспорта"); return; }
+        win.document.write(html);
+        win.document.close();
+      } else {
+        // JSON download
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `mindfulai-export-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      alert(`Не удалось экспортировать данные: ${err?.message || "неизвестная ошибка"}`);
     }
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `mindfulai-export-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-
-    setMenuOpen(false);
   }, []);
 
   const send = useCallback((e) => sendMessage(e, input), [sendMessage, input]);
@@ -394,5 +500,8 @@ export function useChatPageModel() {
     setInput,
     send,
     scrollToTop,
+    scrollToBottom,
+    atTop,
+    scrolledDown,
   };
 }
