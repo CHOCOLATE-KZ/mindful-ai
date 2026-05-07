@@ -175,7 +175,7 @@ export default function ChatDemo() {
   }
 
   return (
-    <div className="rounded-3xl border border-black/10 bg-white p-6 shadow-xl h-[620px] overflow-hidden flex flex-col">
+    <div className="flex h-[540px] flex-col overflow-hidden rounded-3xl border border-black/10 bg-white p-5 shadow-xl lg:h-[560px]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BotAvatar size="lg" />
@@ -212,10 +212,10 @@ export default function ChatDemo() {
         </div>
       </div>
 
-      <div className="mt-5 flex-1 min-h-0 flex flex-col">
+      <div className="mt-4 flex min-h-0 flex-1 flex-col">
         <div
           ref={scrollRef}
-          className="flex-1 min-h-0 overflow-hidden pr-2 space-y-4"
+          className="min-h-0 flex-1 space-y-3 overflow-hidden pr-1"
         >
           {messages.map((m) => {
             const isUser = m.role === "user";
@@ -232,7 +232,7 @@ export default function ChatDemo() {
 
                 <div
                   className={[
-                    "max-w-[78%] rounded-2xl px-4 py-3 text-sm md:text-base",
+                    "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm",
                     isUser
                       ? "bg-blue-600 text-white shadow-sm"
                       : "bg-black/[0.03] text-black/80 border border-black/10",
@@ -242,8 +242,8 @@ export default function ChatDemo() {
                 </div>
 
                 {isUser && (
-                  <div className="h-9 w-9 rounded-full bg-blue-200 grid place-items-center shrink-0">
-                    <UserRound size={16} className="text-blue-800" />
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-200">
+                    <UserRound size={15} className="text-blue-800" />
                   </div>
                 )}
               </div>
@@ -253,35 +253,35 @@ export default function ChatDemo() {
           {typing && (
             <div className="flex items-end gap-3 justify-start chat-fade">
               <BotAvatar size="md" />
-              <div className="rounded-2xl bg-black/[0.03] px-4 py-3 border border-black/10">
+              <div className="rounded-2xl border border-black/10 bg-black/[0.03] px-3.5 py-2.5">
                 <TypingDots />
               </div>
             </div>
           )}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2 shrink-0">
+        <div className="mt-3 flex shrink-0 flex-wrap gap-2">
           {currentChips.map((c) => (
             <button
               key={c}
               type="button"
               onClick={() => onChipClick(c)}
-              className="rounded-full border border-black/10 bg-white px-3 py-1 text-sm text-black/60 transition hover:bg-black/[0.03] hover:text-black/80 active:scale-[0.98]"
+              className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs text-black/60 transition hover:bg-black/[0.03] hover:text-black/80 active:scale-[0.98]"
             >
               {c}
             </button>
           ))}
         </div>
 
-        <div className="mt-4 flex items-center gap-3 shrink-0">
-          <div className="flex-1 rounded-2xl border border-black/10 bg-white px-4 py-3 text-black/60 overflow-hidden whitespace-nowrap text-ellipsis">
+        <div className="mt-3 flex shrink-0 items-center gap-2.5">
+          <div className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-black/60">
             {input.length ? input : <span className="text-black/40">Введите текст…</span>}
             <span className="ml-1 inline-block h-[1.05em] w-[2px] animate-pulse bg-black/30 align-[-2px]" />
           </div>
           <button
             type="button"
             onClick={() => router.push("/chat")}
-            className="h-12 rounded-2xl bg-blue-600 px-5 font-semibold text-white shadow-sm transition hover:opacity-95"
+            className="h-11 rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
             aria-label="Перейти в чат"
           >
             Попробовать
@@ -293,15 +293,15 @@ export default function ChatDemo() {
 }
 
 function BotAvatar({ size = "md" }) {
-  const boxSize = size === "lg" ? "h-10 w-10" : "h-9 w-9";
+  const boxSize = size === "lg" ? "h-9 w-9" : "h-8 w-8";
 
   return (
     <div className={`${boxSize} rounded-full bg-blue-100 grid place-items-center shrink-0 overflow-hidden border border-blue-200/70`}>
       <Image
         src="/mindfullailogo.svg"
         alt="MindfulAI logo"
-        width={size === "lg" ? 28 : 24}
-        height={size === "lg" ? 28 : 24}
+        width={size === "lg" ? 24 : 20}
+        height={size === "lg" ? 24 : 20}
         className="object-contain"
         priority={size === "lg"}
       />

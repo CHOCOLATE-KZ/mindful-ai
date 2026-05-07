@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
@@ -8,7 +8,6 @@ import Input from "@/components/ui/Input";
 import Label from "@/components/ui/Label";
 import Button from "@/components/ui/Button";
 import AuthFrame from "@/components/AuthFrame";
-import LiquidGlassCard from "@/components/LiquidGlassCard";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 export default function SignInPage() {
@@ -20,6 +19,26 @@ export default function SignInPage() {
   const [telegramCode, setTelegramCode] = useState("");
   const [telegramLoading, setTelegramLoading] = useState(false);
   const supabase = supabaseBrowser();
+
+  function closeTelegramModal() {
+    setShowTelegramCode(false);
+    setTelegramCode("");
+    setTelegramLoading(false);
+    setMsg("");
+  }
+
+  useEffect(() => {
+    if (!showTelegramCode) return;
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        closeTelegramModal();
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showTelegramCode]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -40,14 +59,6 @@ export default function SignInPage() {
 
     const next = searchParams.get("next") || "/chat";
     router.replace(next && next.startsWith("/") ? next : "/chat");
-  }
-
-  async function signInWithFacebook() {
-    setMsg("");
-    await supabase.auth.signInWithOAuth({
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-      provider: "facebook",
-    });
   }
 
   async function handleTelegramCode(e) {
@@ -104,35 +115,35 @@ export default function SignInPage() {
 
   return (
     <AuthFrame>
-      <LiquidGlassCard className="w-full max-w-md border-white/70 bg-white/70 shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
+      <div className="w-full max-w-md rounded-3xl border border-gray-200/60 dark:border-white/[0.08] bg-white/80 dark:bg-[rgb(33_33_46)]/80 backdrop-blur-2xl shadow-md shadow-black/10 p-8">
         <div className="text-center">
           <p className="text-xs uppercase tracking-[0.35em] text-[#74AA9C]">
             MindfulAI
           </p>
-          <h1 className="mt-3 text-2xl font-semibold text-slate-900">Вход</h1>
-          <p className="mt-2 text-sm text-slate-600">Рады видеть вас снова.</p>
+          <h1 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">Вход</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-white/70">Рады видеть вас снова.</p>
         </div>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <div className="grid gap-2">
-            <Label>Email</Label>
+            <Label className="text-slate-700 dark:text-white/80">Email</Label>
             <Input
               name="email"
               type="email"
               required
               placeholder="you@example.com"
-              className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
+              className="border-slate-200 dark:border-white/20 bg-white dark:bg-white/10 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
             />
           </div>
 
           <div className="grid gap-2">
-            <Label>Пароль</Label>
+            <Label className="text-slate-700 dark:text-white/80">Пароль</Label>
             <Input
               name="password"
               type="password"
               required
               placeholder="••••••••"
-              className="border-slate-200 bg-white text-slate-900 placeholder:text-slate-400"
+              className="border-slate-200 dark:border-white/20 bg-white dark:bg-white/10 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
             />
           </div>
 
@@ -146,36 +157,20 @@ export default function SignInPage() {
           </Button>
         </form>
 
-        <div className="mt-5 flex items-center gap-3 text-xs text-slate-400">
-          <span className="h-px w-full bg-slate-200" />
+        <div className="mt-5 flex items-center gap-3 text-xs text-slate-400 dark:text-white/50">
+          <span className="h-px w-full bg-slate-200 dark:bg-white/20" />
           <span className="whitespace-nowrap">или</span>
-          <span className="h-px w-full bg-slate-200" />
+          <span className="h-px w-full bg-slate-200 dark:bg-white/20" />
         </div>
 
         <div className="mt-4 grid gap-2">
-          <Button
-            type="button"
-            className="w-full rounded-2xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-            variant="ghost"
-            onClick={signInWithFacebook}
-          >
-            <span className="inline-flex items-center gap-2">
-              Continue with Facebook
-              <svg
-                aria-hidden
-                viewBox="0 0 24 24"
-                className="h-4 w-4 text-[#74AA9C]"
-                fill="currentColor"
-              >
-                <path d="M13.5 8.25v-2.1c0-.9.6-1.65 1.8-1.65h2.2V2h-2.8C11.7 2 10 3.7 10 6.3v1.95H7.8v2.85H10V22h3.5V11.1h2.6l.4-2.85h-3z" />
-              </svg>
-            </span>
-          </Button>
-
           {/* Telegram Login via Bot */}
           <button
             type="button"
-            onClick={() => setShowTelegramCode(true)}
+            onClick={() => {
+              setMsg("");
+              setShowTelegramCode(true);
+            }}
             className="w-full rounded-2xl border border-slate-200 bg-gradient-to-r from-[#2AABEE] to-[#229ED9] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 flex items-center justify-center gap-2"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -187,7 +182,14 @@ export default function SignInPage() {
 
         {/* Telegram Code Modal */}
         {showTelegramCode && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                closeTelegramModal();
+              }
+            }}
+          >
             <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl">
               <div className="mb-4 flex items-start justify-between">
                 <div>
@@ -206,14 +208,12 @@ export default function SignInPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => {
-                    setShowTelegramCode(false);
-                    setTelegramCode("");
-                    setMsg("");
-                  }}
-                  className="text-slate-400 hover:text-slate-600"
+                  type="button"
+                  onClick={closeTelegramModal}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Close modal"
                 >
-                  
+                  <span aria-hidden="true" className="text-lg leading-none">×</span>
                 </button>
               </div>
 
@@ -245,10 +245,10 @@ export default function SignInPage() {
           </div>
         )}
 
-        <p className="mt-4 text-sm text-slate-600">
-          Нет аккаунта? <Link href="/auth/sign-up" className="underline">Регистрация</Link>
+        <p className="mt-4 text-sm text-slate-600 dark:text-white/70">
+          Нет аккаунта? <Link href="/auth/sign-up" className="text-[#74AA9C] underline">Создать</Link>
         </p>
-      </LiquidGlassCard>
+      </div>
     </AuthFrame>
   );
 }
