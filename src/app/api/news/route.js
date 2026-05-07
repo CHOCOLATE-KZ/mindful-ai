@@ -222,6 +222,13 @@ function extractArticlesFromBAQ(html) {
         published_at = parseDateFromText(maybeDate) || toISODateMaybe(maybeDate);
       }
 
+      // Extract thumbnail from list item
+      const imgEl = $el.find("img").first();
+      let image = (imgEl.attr("src") || imgEl.attr("data-src") || imgEl.attr("data-lazy") || "").trim() || null;
+      if (image) {
+        try { image = new URL(image, BASE_BAQ).toString(); } catch { /* keep as-is */ }
+      }
+
       const tags = computeTags(title, summary);
 
       found.push({
@@ -232,6 +239,7 @@ function extractArticlesFromBAQ(html) {
         published_at,
         tags,
         source: "BAQ.kz",
+        image: image || null,
         rank: i,
       });
     });
@@ -345,6 +353,11 @@ function extractArticlesFromSEZ(html) {
     const summary = cleanSummaryText(summaryCandidate);
     const tags = computeTags(`${category} ${title}`, summary);
 
+    // Extract thumbnail from card
+    const imgEl = $card.find("img").first();
+    let image = imgEl.attr("src") || imgEl.attr("data-src") || imgEl.attr("data-lazy") || null;
+    if (image && image.startsWith("/")) image = BASE_SEZ + image;
+
     found.push({
       id: href,
       title,
@@ -353,6 +366,7 @@ function extractArticlesFromSEZ(html) {
       published_at,
       tags,
       source: "SEZ.im",
+      image: image || null,
       rank: i,
       views,
       category,
@@ -412,6 +426,18 @@ function extractArticlesFromSEZFallbackMarkdown(mdText) {
   return found.slice(0, 120);
 }
 
+/** Scrape og:image from an article page */
+async function scrapeOgImage(articleUrl) {
+  try {
+    const res = await fetchWithTimeout(articleUrl, { timeoutMs: 7000 });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+           || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    return m ? m[1] : null;
+  } catch { return null; }
+}
+
 async function fetchSEZ() {
   const primary = await fetchWithTimeout(FEED_SEZ, {
     timeoutMs: 14000,
@@ -426,14 +452,29 @@ async function fetchSEZ() {
   const html = await primary.text();
   if (html.includes("blog_article?art_id=")) {
     const fromHtml = extractArticlesFromSEZ(html);
-    if (fromHtml.length) return fromHtml;
+    if (fromHtml.length) {
+      // Параллельно скрапим og:image для первых 10 статей
+      await Promise.all(fromHtml.slice(0, 10).map(async (art) => {
+        if (art.image) return;
+        const img = await scrapeOgImage(art.url);
+        if (img) art.image = img;
+      }));
+      return fromHtml;
+    }
   }
 
   // Bubble pages often render list client-side only; fallback to rendered markdown mirror.
   const fallbackRes = await fetchWithTimeout(FEED_SEZ_FALLBACK, { timeoutMs: 16000 });
   if (!fallbackRes.ok) return [];
   const markdown = await fallbackRes.text();
-  return extractArticlesFromSEZFallbackMarkdown(markdown);
+  const fromMd = extractArticlesFromSEZFallbackMarkdown(markdown);
+  // Параллельно скрапим og:image для первых 10 статей из markdown
+  await Promise.all(fromMd.slice(0, 10).map(async (art) => {
+    if (art.image) return;
+    const img = await scrapeOgImage(art.url);
+    if (img) art.image = img;
+  }));
+  return fromMd;
 }
 
 /** =========================
@@ -469,6 +510,16 @@ function parseRSS(xml, sourceName) {
       "";
     const published_at = toISODateMaybe(pubRaw);
 
+    // Extract image from RSS: media:content, enclosure, or first img in description
+    let image =
+      $it.find("media\\:content").attr("url") ||
+      $it.find("enclosure").attr("url") ||
+      null;
+    if (!image) {
+      const imgMatch = descRaw.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (imgMatch) image = imgMatch[1];
+    }
+
     const tags = computeTags(title, summary);
 
     items.push({
@@ -479,6 +530,7 @@ function parseRSS(xml, sourceName) {
       published_at,
       tags,
       source: sourceName,
+      image: image || null,
       rank: i,
     });
   });
@@ -589,7 +641,14 @@ export async function GET(req) {
 
     const totalCount = items.length;
     const offset = (page - 1) * per_page;
-    const paged = items.slice(offset, offset + per_page);
+    const paged = items.slice(offset, offset + per_page).map((it) => ({
+      ...it,
+      // Wrap external images in server-side proxy to bypass hotlink protection
+      // cdn.bubble.io (sez.im) does NOT need proxy — serve directly
+      image: it.image && !it.image.startsWith("/") && !it.image.includes("cdn.bubble.io")
+        ? `/api/news/image?proxy=1&imgUrl=${encodeURIComponent(it.image)}`
+        : (it.image || null),
+    }));
     const hasMore = offset + per_page < totalCount;
 
     return NextResponse.json({ items: paged, totalCount, page, per_page, hasMore });

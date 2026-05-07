@@ -18,22 +18,15 @@ export default function NewsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Floating decorative elements */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-40 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/3 w-96 h-96 bg-blue-400/8 rounded-full blur-3xl" />
-      </div>
-
-      <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50">
+      <main className="mx-auto max-w-7xl px-4 pt-10 pb-16 sm:px-6 lg:px-8">
         <NewsHeader totalCount={newsLoad.totalCount} />
         <NewsFilters filters={filters} />
 
         {newsLoad.err && (
-          <div className="mb-8 p-5 rounded-2xl bg-blue-50 border border-blue-200/60 backdrop-blur-sm shadow-sm">
-            <p className="text-sm font-medium text-blue-700 flex items-center gap-2">
-              <AlertTriangle size={18} />
+          <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200">
+            <p className="text-sm font-medium text-amber-700 flex items-center gap-2">
+              <AlertTriangle size={16} />
               {newsLoad.err}
             </p>
           </div>
@@ -42,7 +35,7 @@ export default function NewsPage() {
         <NewsGrid items={newsLoad.items} loading={newsLoad.loading} />
 
         {!newsLoad.loading && newsLoad.items.length > 0 && (
-          <div className="mt-12 flex justify-center">
+          <div className="mt-10 flex justify-center">
             <LoadMoreButton
               hasMore={newsLoad.hasMore}
               loadingMore={newsLoad.loadingMore}

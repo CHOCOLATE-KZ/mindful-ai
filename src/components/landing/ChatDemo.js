@@ -134,7 +134,11 @@ export default function ChatDemo() {
     isRunningRef.current = true;
     runTurn(current.user, current.bot, true);
 
-    return () => clearTimers();
+    return () => {
+      clearTimers();
+      isRunningRef.current = false;
+      lockRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

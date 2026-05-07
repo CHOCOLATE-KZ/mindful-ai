@@ -11,13 +11,20 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-blue-600 text-white">
-      <div className="mx-auto max-w-7xl px-4 py-16">
+    <footer className="relative text-white overflow-hidden">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/footerimg.png')" }}
+      />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/60" />
+      <div className="relative mx-auto max-w-7xl px-4 py-16">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="h-10 w-10 rounded-full bg-white/15 grid place-items-center font-bold transition-transform duration-300 group-hover:scale-110">
-                
+                <img src="/white-logo.svg" alt="MindfulAI" className="w-6 h-6 object-contain" />
               </div>
               <div className="text-2xl font-semibold transition-colors duration-300 group-hover:text-blue-200">
                 MindfulAI

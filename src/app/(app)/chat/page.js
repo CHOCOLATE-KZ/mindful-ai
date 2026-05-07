@@ -3,6 +3,7 @@
 import ChatHeader from "./_components/ChatHeader";
 import ChatComposer from "./_components/ChatComposer";
 import ChatBackground from "./_components/ChatBackground";
+import ChatAmbient from "./_components/ChatAmbient";
 import ChatSidebar from "./_components/ChatSidebar";
 import ChatSidebarNav from "./_components/ChatSidebarNav";
 import AnchorsModal from "./_components/AnchorsModal";
@@ -21,6 +22,8 @@ export default function ChatPage() {
   const [anchorsModalOpen, setAnchorsModalOpen] = useState(false);
   const [showAnchorsInChat, setShowAnchorsInChat] = useState(true);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [ambientBg, setAmbientBg] = useState("none");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   
   const {
     messages,
@@ -67,15 +70,16 @@ export default function ChatPage() {
 
 
   return (
-    <div className="min-h-dvh flex bg-white dark:bg-[#131314] text-slate-900 dark:text-slate-100">
+    <div className="min-h-dvh flex text-slate-900 dark:text-slate-100">
       <ChatBackground />
+      <ChatAmbient selectedBg={ambientBg} setSelectedBg={setAmbientBg} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       {sessionModeEnabled && <EmotionTracker userId="test-user" />}
       
       {/* Left sidebar nav */}
-      <ChatSidebarNav onAnchorsClick={() => setAnchorsModalOpen(true)} />
+      <ChatSidebarNav onAnchorsClick={() => setAnchorsModalOpen(true)} isOpen={sidebarOpen} />
 
       {/* Main content area */}
-      <div className="flex flex-1 ml-16">
+      <div className={`flex flex-1 transition-all duration-300 ease-out ${sidebarOpen ? "ml-16" : "ml-0"}`}>
         {/* Center: Chat */}
         <div className="flex flex-col flex-1 min-w-0">
           <ChatHeader
@@ -108,6 +112,7 @@ export default function ChatPage() {
                   scrollRef={scrollRef}
                   onAnchorSelect={applyAnchorToInput}
                   showAnchors={showAnchorsInChat}
+                  hasAmbientBg={ambientBg !== "none"}
                 />
               </div>
 
@@ -125,9 +130,8 @@ export default function ChatPage() {
               </div>
               */}
 
-              <div className="bg-white dark:bg-[#131314] border-t border-gray-200 dark:border-white/10 p-4">
-                <div className="flex-1 max-w-5xl mx-auto">
-                  <ChatComposer
+              <div className="h-0">
+                <ChatComposer
                     input={input}
                     setInput={setInput}
                     onSend={send}
@@ -137,8 +141,9 @@ export default function ChatPage() {
                     onToggleVoiceMode={toggleVoiceConversation}
                     sessionModeEnabled={sessionModeEnabled}
                     onToggleSessionMode={toggleSessionMode}
+                    sidebarOpen={sidebarOpen}
+                    hasAmbientBg={ambientBg !== "none"}
                   />
-                </div>
               </div>
             </>
           )}

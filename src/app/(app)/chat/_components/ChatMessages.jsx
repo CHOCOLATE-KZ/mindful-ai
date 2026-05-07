@@ -7,7 +7,7 @@ import { extractAnchors } from "@/lib/utils/extractAnchors";
 import CrisisAlert from "./CrisisAlert";
 import { motion } from "framer-motion";
 
-export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, scrollRef, onAnchorSelect, showAnchors = true }) {
+export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, scrollRef, onAnchorSelect, showAnchors = true, hasAmbientBg = false }) {
   const endRef = useRef(null);
   const [dismissedCrisis, setDismissedCrisis] = useState(new Set());
 
@@ -102,17 +102,19 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                 <div
                   className={`px-5 py-3 ${
                     isAI
-                      ? "text-slate-900 dark:text-slate-100"
+                      ? hasAmbientBg
+                        ? "text-white"
+                        : "text-slate-900 dark:text-slate-100"
                       : "rounded-3xl bg-[#74AA9C] text-white shadow-sm ring-1 ring-[#5d9088]/30"
                   }`}
                 >
-                  <div className={`prose prose-sm max-w-none ${isAI ? "prose-slate dark:prose-invert" : "prose-invert"}`}>
+                  <div className={`prose prose-sm max-w-none ${isAI ? (hasAmbientBg ? "prose-invert" : "prose-slate dark:prose-invert") : "prose-invert"}`}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                       {m.content}
                     </ReactMarkdown>
                   </div>
 
-                  <p className={`text-xs mt-2 ${isAI ? "text-slate-400 dark:text-slate-500" : "text-white/70"}`}>
+                  <p className={`text-xs mt-2 ${isAI ? (hasAmbientBg ? "text-white/70" : "text-slate-400 dark:text-slate-500") : "text-white/70"}`}>
                     {m.created_at
                       ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                       : ""}

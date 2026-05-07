@@ -18,6 +18,8 @@ export default function ChatComposer({
   onToggleVoiceMode,
   sessionModeEnabled,
   onToggleSessionMode,
+  sidebarOpen = true,
+  hasAmbientBg = false,
 }) {
   const { t } = useLanguage("chat");
   const {
@@ -73,16 +75,16 @@ export default function ChatComposer({
 
   return (
     <>
-      <div className="fixed bottom-0 left-16 right-0 z-50 bg-white/85 dark:bg-[#131314]/90 backdrop-blur-xl">
-          <form onSubmit={onSend} className="mx-auto max-w-4xl px-4 py-2">
+      <div className={`fixed bottom-0 right-0 z-50 transition-all duration-300 ease-out ${sidebarOpen ? "left-16" : "left-0"}`}>
+          <form onSubmit={onSend} className="mx-auto max-w-4xl px-4 py-3">
           {/* панель */}
-            <div className="rounded-2xl bg-white dark:bg-[#1c1c1d] shadow-sm ring-1 ring-black/10 dark:ring-white/10 px-4 pt-3 pb-2">
+            <div className={`rounded-2xl shadow-lg ring-1 px-4 pt-3 pb-2 backdrop-blur-xl ${hasAmbientBg ? "bg-black/30 ring-white/15" : "bg-white/90 dark:bg-[#131314] ring-black/10 dark:ring-white/10"}`}>
             {/* textarea без своей рамки — выглядит как часть контейнера */}
             <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               placeholder={t("inputPlaceholder")}
-                className="w-full min-h-[40px] max-h-36 resize-none bg-transparent dark:text-slate-100 dark:placeholder-slate-400 text-[15px] leading-6 outline-none"
+                className={`w-full min-h-[40px] max-h-36 resize-none bg-transparent text-[15px] leading-6 outline-none ${hasAmbientBg ? "text-white placeholder-white/50" : "dark:text-slate-100 dark:placeholder-slate-400 text-slate-900 placeholder-slate-400"}`}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
