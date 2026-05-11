@@ -3,10 +3,10 @@
 export default function ChatBackground() {
   return (
     <div className="fixed inset-0 -z-10">
-      <div className="absolute inset-0 bg-gray-50 dark:bg-[#131314]" />
-      <div className="absolute -top-56 -right-56 h-[620px] w-[620px] rounded-full bg-blue-600/10 blur-3xl" />
-      <div className="absolute top-1/3 -left-56 h-[620px] w-[620px] rounded-full bg-blue-500/10 blur-3xl" />
-      <div className="absolute bottom-[-260px] left-1/2 h-[680px] w-[680px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-3xl" />
+      {/* Light mode */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#e8f4f1] via-[#f5f5f5] to-[#ffffff] dark:hidden" />
+      {/* Dark mode — Premium Dark с бирюзовым акцентом бренда */}
+      <div className="absolute inset-0 hidden dark:block bg-gradient-to-br from-[#152e28] via-[#1a1d2e] to-[#111318]" />
     </div>
   );
 }

@@ -22,8 +22,8 @@ export default function CoursePage({ params }) {
 
   if (!course) return <div className="p-8">Загрузка...</div>;
 
-  const module = course.modules[activeModule];
-  const lesson = module.lessons[activeLesson];
+  const activeCourseModule = course.modules[activeModule];
+  const lesson = activeCourseModule.lessons[activeLesson];
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -107,7 +107,7 @@ export default function CoursePage({ params }) {
           <button
             className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50"
             onClick={() => {
-              if (activeLesson < module.lessons.length - 1) setActiveLesson(activeLesson + 1);
+              if (activeLesson < activeCourseModule.lessons.length - 1) setActiveLesson(activeLesson + 1);
               else if (activeModule < course.modules.length - 1) {
                 setActiveModule(activeModule + 1);
                 setActiveLesson(0);
@@ -115,7 +115,7 @@ export default function CoursePage({ params }) {
             }}
             disabled={
               activeModule === course.modules.length - 1 &&
-              activeLesson === module.lessons.length - 1
+              activeLesson === activeCourseModule.lessons.length - 1
             }
           >
             Далее

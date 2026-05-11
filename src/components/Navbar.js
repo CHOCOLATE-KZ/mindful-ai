@@ -113,10 +113,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
-
   async function signOut() {
     await supabase.auth.signOut();
     router.replace("/");
@@ -286,6 +282,7 @@ export default function Navbar() {
                     onClick={() => setProfileOpen(!profileOpen)}
                     className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-white/[0.10] text-gray-700 dark:text-slate-300 hover:border-blue-600/40 dark:hover:border-blue-400/40 hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all duration-200 cursor-pointer"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={userAvatarUrl || "/user.png"}
                       alt="User avatar"

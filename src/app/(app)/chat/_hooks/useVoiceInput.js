@@ -3,35 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useVoiceInput({ lang = "ru-RU", autoStopMs = 8000 } = {}) {
+  const hasWindow = typeof window !== "undefined";
   const [voiceText, setVoiceText] = useState("");
   const [listening, setListening] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [isSecure, setIsSecure] = useState(true);
-  const [browserSupportsSpeechRecognition, setBrowserSupportsSpeechRecognition] = useState(false);
-  const [unsupportedReason, setUnsupportedReason] = useState("");
+  const mounted = hasWindow;
+  const isSecure = hasWindow ? window.isSecureContext : true;
+  const browserSupportsSpeechRecognition = hasWindow
+    ? Boolean(window.SpeechRecognition || window.webkitSpeechRecognition)
+    : false;
+  const unsupportedReason = browserSupportsSpeechRecognition
+    ? ""
+    : "В этом браузере нет Web Speech API. Используйте Edge или Chrome.";
   const [lastVoiceError, setLastVoiceError] = useState("");
   const recognitionRef = useRef(null);
   const stopTimerRef = useRef(0);
 
   const clearVoiceText = useCallback(() => {
     setVoiceText("");
-  }, []);
-
-  useEffect(() => {
-    setMounted(true);
-    if (typeof window === "undefined") return;
-
-    setIsSecure(window.isSecureContext);
-    const hasSpeechApi = Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
-
-    if (!hasSpeechApi) {
-      setBrowserSupportsSpeechRecognition(false);
-      setUnsupportedReason("В этом браузере нет Web Speech API. Используйте Edge или Chrome.");
-      return;
-    }
-
-    setBrowserSupportsSpeechRecognition(true);
-    setUnsupportedReason("");
   }, []);
 
   const stopVoice = useCallback(() => {

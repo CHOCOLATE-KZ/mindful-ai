@@ -37,7 +37,7 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
     if (atBottom) {
       endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-  }, [messages, loading, scrollRef]);
+  }, [atBottom, messages, loading, scrollRef]);
 
   const markdownComponents = useMemo(
     () => ({
@@ -143,6 +143,7 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
 
               {!isAI && (
                 <div className="h-10 w-10 rounded-full bg-slate-900/5 ring-1 ring-black/10 overflow-hidden flex-shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={userAvatarUrl || "/user.png"}
                     alt="User avatar"

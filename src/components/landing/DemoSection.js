@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { motion, useInView } from "framer-motion";
-import { ArrowUpRight, HeartPulse, ShieldAlert, Users, LineChart } from "lucide-react";
+import { ArrowUpRight, HeartPulse, ShieldAlert, Users } from "lucide-react";
 
 const STATS = [
   {
@@ -42,21 +43,25 @@ export default function DemoSection() {
   }, [isInView]);
 
   return (
-    <section ref={sectionRef} className="relative py-20 overflow-hidden bg-white">
-      <motion.div
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="absolute -top-16 right-20 h-72 w-72 rounded-full bg-blue-100/60 blur-3xl -z-10"
-      />
-      <div className="absolute -bottom-20 left-10 h-80 w-80 rounded-full bg-slate-100 blur-3xl -z-10" />
+    <section ref={sectionRef} className="relative py-20">
+      {/* Background image */}
+      <div className="absolute inset-0 overflow-hidden">
+        <Image
+          src="/psychology_statistics.png"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority
+        />
+        <div className="absolute inset-0 bg-white/85 backdrop-blur-[2px]" />
+      </div>
 
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="relative mx-auto max-w-7xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
           className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-sm font-semibold text-blue-700"
         >
@@ -65,17 +70,18 @@ export default function DemoSection() {
         </motion.div>
 
         <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
+          {/* Text card */}
           <motion.div
-            initial={{ opacity: 0, x: -24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
             transition={{ duration: 0.6 }}
-            className="rounded-3xl border border-black/10 bg-white p-7 shadow-lg"
+            className="rounded-3xl border border-black/10 bg-white/80 backdrop-blur-sm p-7 shadow-lg"
           >
-            <h2 className="text-4xl font-bold leading-tight text-black md:text-5xl">
+            <h2 className="text-3xl font-bold leading-tight text-black md:text-4xl">
               Психологическое состояние общества
             </h2>
-            <p className="mt-4 max-w-xl text-black/65 text-base">
+            <p className="mt-4 text-black/65 text-base">
               Сводные индикаторы показывают, насколько важна ранняя эмоциональная поддержка
               для подростков и взрослых. Эти значения используются в приложении как опорный
               контекст для профилактики тревожности, стресса и выгорания.
@@ -93,28 +99,14 @@ export default function DemoSection() {
                 icon={<ShieldAlert size={16} className="text-blue-700" />}
               />
             </div>
-
-            <div className="mt-6 rounded-2xl border border-black/10 bg-slate-50 p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-black/70">Тренд индикаторов</div>
-                <LineChart size={16} className="text-blue-600" />
-              </div>
-              <div className="mt-3 h-16 rounded-xl bg-white border border-black/10 px-3 py-2 flex items-end gap-2">
-                <div className="h-6 w-2 rounded bg-blue-200" />
-                <div className="h-10 w-2 rounded bg-blue-400" />
-                <div className="h-8 w-2 rounded bg-blue-300" />
-                <div className="h-12 w-2 rounded bg-blue-500" />
-                <div className="h-11 w-2 rounded bg-blue-600" />
-                <div className="h-14 w-2 rounded bg-blue-700" />
-              </div>
-            </div>
           </motion.div>
 
+          {/* Blue stats card */}
           <motion.div
-            initial={{ opacity: 0, x: 24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.65 }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.65, delay: 0.1 }}
             className="rounded-3xl border border-blue-700 bg-blue-600 p-7 shadow-lg"
           >
             <div className="text-sm font-semibold text-white/80">Ключевой показатель</div>

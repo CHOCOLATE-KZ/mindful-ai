@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 import { SiTiktok } from "react-icons/si";
 
@@ -24,7 +25,7 @@ export default function Footer() {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="h-10 w-10 rounded-full bg-white/15 grid place-items-center font-bold transition-transform duration-300 group-hover:scale-110">
-                <img src="/white-logo.svg" alt="MindfulAI" className="w-6 h-6 object-contain" />
+                <Image src="/white-logo.svg" alt="MindfulAI" width={24} height={24} className="w-6 h-6 object-contain" />
               </div>
               <div className="text-2xl font-semibold transition-colors duration-300 group-hover:text-blue-200">
                 MindfulAI

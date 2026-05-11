@@ -107,7 +107,7 @@ export default function FaqSection() {
     },
   ];
 
-  const articles = [
+  const articles = useMemo(() => [
     {
       category: "support",
       icon: HeartHandshake,
@@ -180,11 +180,11 @@ export default function FaqSection() {
       q: "Подойдет ли сервис для ежедневного использования?",
       a: "Да. Логика продукта строится вокруг коротких, регулярных действий: чек-ин настроения, заметка, небольшая практика или разговор с ассистентом. Это помогает встроить сервис в повседневную жизнь.",
     },
-  ];
+  ], []);
 
   const visibleArticles = useMemo(
     () => articles.filter((item) => item.category === activeCategory),
-    [activeCategory]
+    [activeCategory, articles]
   );
 
   return (

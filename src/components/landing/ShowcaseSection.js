@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Bot, Brain, NotebookPen, ShieldCheck } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export default function ShowcaseSection() {
   return (
@@ -54,26 +55,31 @@ export default function ShowcaseSection() {
   );
 }
 
-import { useEffect, useRef } from "react";
-
 function ShaderBackground() {
   const ref = useRef();
 
   useEffect(() => {
-    let renderer, scene, camera, uniforms, animationId;
-    let three;
+    let renderer;
+    let scene;
+    let camera;
+    let uniforms;
+    let animationId;
+    let handleResize;
     let width = window.innerWidth;
     let height = window.innerHeight;
+    const mountNode = ref.current;
+
+    if (!mountNode) return;
 
     (async () => {
-      three = await import("three");
+      const three = await import("three");
       scene = new three.Scene();
       camera = new three.Camera();
       camera.position.z = 1;
       renderer = new three.WebGLRenderer({ alpha: true });
       renderer.setSize(width, height);
       renderer.setClearColor(0x0f172a, 1);
-      ref.current.appendChild(renderer.domElement);
+      mountNode.appendChild(renderer.domElement);
 
       uniforms = {
         time: { value: 0 },
@@ -81,7 +87,7 @@ function ShaderBackground() {
       };
 
       const material = new three.ShaderMaterial({
-        uniforms: uniforms,
+        uniforms,
         vertexShader: `
           void main() {
             gl_Position = vec4(position, 1.0);
@@ -92,9 +98,6 @@ function ShaderBackground() {
           uniform vec2 resolution;
           void main() {
             vec2 uv = gl_FragCoord.xy / resolution.xy;
-            float color =
-              0.5 + 0.5*sin(time + uv.x*8.0) +
-              0.5 + 0.5*sin(time + uv.y*8.0);
 
             // Мягкая анимация вокруг #74AA9C
             vec3 base = vec3(0.455, 0.667, 0.612); // #74AA9C
@@ -118,30 +121,29 @@ function ShaderBackground() {
       }
       animate();
 
-      function handleResize() {
+      handleResize = () => {
         width = window.innerWidth;
         height = window.innerHeight;
         renderer.setSize(width, height);
         uniforms.resolution.value.x = width;
         uniforms.resolution.value.y = height;
-      }
-      window.addEventListener("resize", handleResize);
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-        cancelAnimationFrame(animationId);
-        renderer.dispose();
-        ref.current.removeChild(renderer.domElement);
       };
+      window.addEventListener("resize", handleResize);
     })();
 
     return () => {
+      if (handleResize) {
+        window.removeEventListener("resize", handleResize);
+      }
       if (renderer) {
         renderer.dispose();
-        if (ref.current && renderer.domElement)
-          ref.current.removeChild(renderer.domElement);
+        if (mountNode.contains(renderer.domElement)) {
+          mountNode.removeChild(renderer.domElement);
+        }
       }
-      cancelAnimationFrame(animationId);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
     };
   }, []);
 

@@ -22,6 +22,7 @@ export default function EditProfileModal({
         <div className="text-lg font-semibold text-black dark:text-white">{t("editProfile")}</div>
 
         <div className="mt-4 flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={avatarSrc}
             alt={t("avatarAlt")}

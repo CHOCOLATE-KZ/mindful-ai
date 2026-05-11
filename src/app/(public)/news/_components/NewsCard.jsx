@@ -1,5 +1,6 @@
 import { Eye, Clock, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -59,10 +60,12 @@ function SlideBackground({ news, image, gradIdx, visible }) {
       style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
     >
       {image ? (
-        <img
+        <Image
           src={image}
           alt={news.title}
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, 1200px"
+          className="absolute inset-0 object-cover"
         />
       ) : (
         <div

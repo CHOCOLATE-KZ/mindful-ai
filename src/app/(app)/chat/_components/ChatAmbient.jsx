@@ -25,19 +25,25 @@ const SOUNDS = [
 export default function ChatAmbient({ selectedBg, setSelectedBg, sidebarOpen, setSidebarOpen }) {
   const [bgOpen, setBgOpen] = useState(false);
   const [soundOpen, setSoundOpen] = useState(false);
-  const [selectedSound, setSelectedSound] = useState("none");
+  const [selectedSound, setSelectedSound] = useState(() => {
+    if (typeof window === "undefined") return "none";
+    return localStorage.getItem("chatAmbientSound") || "none";
+  });
   const [muted, setMuted] = useState(false);
-  const [volume, setVolume] = useState(40);
+  const [volume, setVolume] = useState(() => {
+    if (typeof window === "undefined") return 40;
+    const savedVol = localStorage.getItem("chatAmbientVolume");
+    return savedVol ? Number(savedVol) : 40;
+  });
   const audioRef = useRef(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const savedBg = localStorage.getItem("chatAmbientBg");
-    const savedSound = localStorage.getItem("chatAmbientSound");
-    const savedVol = localStorage.getItem("chatAmbientVolume");
-    if (savedBg) setSelectedBg(savedBg);
-    if (savedSound) setSelectedSound(savedSound);
-    if (savedVol) setVolume(Number(savedVol));
-  }, []);
+    if (savedBg) {
+      queueMicrotask(() => setSelectedBg(savedBg));
+    }
+  }, [setSelectedBg]);
 
   useEffect(() => { localStorage.setItem("chatAmbientBg", selectedBg); }, [selectedBg]);
   useEffect(() => { localStorage.setItem("chatAmbientSound", selectedSound); }, [selectedSound]);

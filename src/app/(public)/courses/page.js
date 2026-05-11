@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Footer from "@/components/landing/Footer";
 
 // Заглушка для будущей архитектуры курсов
 export default function CoursesPage() {
@@ -8,8 +9,8 @@ export default function CoursesPage() {
   const [search, setSearch] = useState("");
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-5xl px-6 py-16">
+    <div className="min-h-screen bg-white flex flex-col">
+      <div className="mx-auto max-w-5xl px-6 py-16 flex-1">
         <h1 className="text-4xl font-bold mb-6 text-blue-700">Видеокурсы по психологии</h1>
         <p className="mb-8 text-lg text-blue-900">Платформа для прохождения структурированных онлайн-курсов с видеоуроками, прогрессом и сертификатами.</p>
         <input
@@ -23,6 +24,7 @@ export default function CoursesPage() {
           Здесь появятся курсы. Реализуйте backend и логику отображения!
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

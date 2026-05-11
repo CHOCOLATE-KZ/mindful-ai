@@ -340,7 +340,7 @@ html.dark .glass-card {
    ========================= */
 
 /* ---- ФОНЫ ---- */
-html.dark .bg-white                  { background-color: #131314 !important; }
+html.dark .bg-white                  { background-color: rgb(42 42 58) !important; }
 html.dark .bg-white\/90              { background-color: rgb(42 42 58 / 0.93) !important; }
 html.dark .bg-white\/80              { background-color: rgb(42 42 58 / 0.85) !important; }
 html.dark .bg-white\/75              { background-color: rgb(33 33 46 / 0.88) !important; }
@@ -351,7 +351,7 @@ html.dark .bg-gray-50                { background-color: rgb(26 26 38) !importan
 html.dark .bg-slate-100,
 html.dark .bg-gray-100               { background-color: rgb(33 33 46) !important; }
 html.dark .bg-slate-200,
-html.dark .bg-gray-200               { background-color: #131314 !important; }
+html.dark .bg-gray-200               { background-color: rgb(42 42 58) !important; }
 html.dark .bg-slate-800              { background-color: rgb(52 52 70) !important; }
 html.dark .bg-slate-950\/90          { background-color: rgb(26 26 38 / 0.92) !important; }
 /* #131314 overrides — declared AFTER generic rules so they win (same specificity, last wins) */

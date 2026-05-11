@@ -39,20 +39,17 @@ export default function PsychologistCharacter({
 
   // Наклоны головы при слушании
   useEffect(() => {
-    if (!animated) {
-      setHeadTilt(0);
+    if (!animated || !(emotion === 'listening' && isActive)) {
       return;
     }
 
-    if (emotion === 'listening' && isActive) {
-      const tiltInterval = setInterval(() => {
-        setHeadTilt((prev) => (prev === 0 ? -4 : 0));
-      }, 2000);
-      return () => clearInterval(tiltInterval);
-    }
-
-    setHeadTilt(0);
+    const tiltInterval = setInterval(() => {
+      setHeadTilt((prev) => (prev === 0 ? -4 : 0));
+    }, 2000);
+    return () => clearInterval(tiltInterval);
   }, [animated, isActive, emotion]);
+
+  const effectiveHeadTilt = animated && emotion === 'listening' && isActive ? headTilt : 0;
 
   const sizeMap = {
     small: 'w-16 h-16',
@@ -183,7 +180,7 @@ export default function PsychologistCharacter({
               viewBox="0 0 194 335"
               className={`w-full h-full drop-shadow-2xl ${emotion === 'thinking' ? styles.thinkingBody : ''}`}
               style={{
-                transform: `rotateZ(${headTilt}deg)`,
+                transform: `rotateZ(${effectiveHeadTilt}deg)`,
                 transformOrigin: 'center 100px',
               }}
             >

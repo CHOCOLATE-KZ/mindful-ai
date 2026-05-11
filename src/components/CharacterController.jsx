@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import PsychologistCharacter from './PsychologistCharacter';
 
@@ -15,22 +15,16 @@ export default function CharacterController({
   size = 'medium',
   showCharacter = true,
 }) {
-  const [emotion, setEmotion] = useState('neutral');
-  const [showThoughts, setShowThoughts] = useState(false);
+  const [showThoughts] = useState(false);
   const [thoughtText, setThoughtText] = useState('');
 
-  // Логика для изменения эмоций на основе сообщений
-  useEffect(() => {
+  const emotion = useMemo(() => {
     if (isLoading) {
-      setEmotion('thinking');
-      setShowThoughts(false); // Убрали фиолетовое облако
-      return;
+      return 'thinking';
     }
 
     if (!chatMessages || chatMessages.length === 0) {
-      setEmotion('happy');
-      setShowThoughts(false);
-      return;
+      return 'happy';
     }
 
     const lastMessage = chatMessages[chatMessages.length - 1];
@@ -48,8 +42,7 @@ export default function CharacterController({
         content.includes('грустно') ||
         content.includes('плач')
       ) {
-        setEmotion('concerned');
-        setShowThoughts(false);
+        return 'concerned';
       }
       // Признаки позитивного настроения
       else if (
@@ -58,25 +51,23 @@ export default function CharacterController({
         content.includes('стало лучше') ||
         content.includes('помог')
       ) {
-        setEmotion('happy');
-        setShowThoughts(false);
+        return 'happy';
       }
       // Вопросы - слушаем
       else if (content.includes('?')) {
-        setEmotion('listening');
-        setShowThoughts(false);
+        return 'listening';
       }
       // Стандартное состояние слушания
       else {
-        setEmotion('listening');
-        setShowThoughts(false);
+        return 'listening';
       }
     }
     // Когда AI отвечает - счастливое состояние
     else if (lastMessage.role === 'assistant') {
-      setEmotion('happy');
-      setShowThoughts(false);
+      return 'happy';
     }
+
+    return 'neutral';
   }, [chatMessages, isLoading]);
 
   if (!showCharacter) return null;

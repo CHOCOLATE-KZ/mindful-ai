@@ -19,6 +19,7 @@ export default function ProfileHeroCard({ user, profile, stats, onEdit, onSecuri
         <div className="flex flex-wrap items-start justify-between gap-4">
           {/* avatar + name */}
           <div className="flex items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={avatarSrc}
               alt="Profile avatar"

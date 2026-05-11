@@ -189,10 +189,10 @@ export default function ProfileClient({ initialUser, initialProfile, initialSett
               <div>
                 <div className="text-sm font-medium text-black dark:text-white">Telegram</div>
                 <div className="text-xs text-black/50 dark:text-white/40">
-                  {safeProfile?.telegram_username ? `@${safeProfile.telegram_username}` : "Не подключён"}
+                  {safeProfile?.telegram_username ? `@${safeProfile.telegram_username}` : safeProfile?.telegram_id ? "Подключён" : "Не подключён"}
                 </div>
               </div>
-              {safeProfile?.telegram_username ? (
+              {safeProfile?.telegram_id ? (
                 <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                   Подключён
                 </span>

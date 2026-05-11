@@ -11,5 +11,5 @@ export default function PublicLayout({ children }) {
     return <main className="w-full">{children}</main>;
   }
 
-  return <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>;
+  return <main className="mx-auto max-w-6xl px-4 pt-8 pb-0">{children}</main>;
 }

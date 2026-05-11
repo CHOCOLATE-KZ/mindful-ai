@@ -3,8 +3,30 @@
 
 import { generateDeepLink } from '@/lib/telegram/userManager';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import { supabaseServer } from '@/lib/supabase/server';
 
 const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || 'diplomaproject_bot';
+
+async function getAuthenticatedUserId() {
+  const supabase = await supabaseServer();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user.id;
+}
+
+function forbiddenResponse() {
+  return new Response(
+    JSON.stringify({ error: 'Доступ запрещен' }),
+    { status: 403, headers: { 'Content-Type': 'application/json' } }
+  );
+}
 
 /**
  * POST /api/telegram/deep-link
@@ -18,20 +40,26 @@ const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME || 'diplomaproject_bot';
  */
 export async function POST(request) {
   try {
+    const authUserId = await getAuthenticatedUserId();
+    if (!authUserId) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { userId } = await request.json();
 
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'userId не передан' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    const targetUserId = userId || authUserId;
+    if (userId && userId !== authUserId) {
+      return forbiddenResponse();
     }
 
     // Проверяем что пользователь существует
     const { data: profile, error } = await supabaseAdmin
       .from('profiles')
       .select('id')
-      .eq('id', userId)
+      .eq('id', targetUserId)
       .single();
 
     if (error || !profile) {
@@ -42,7 +70,7 @@ export async function POST(request) {
     }
 
     // Генерируем deep link
-    const deepLink = generateDeepLink(userId, BOT_USERNAME);
+    const deepLink = generateDeepLink(targetUserId, BOT_USERNAME);
 
     return new Response(
       JSON.stringify({ deepLink, botUsername: BOT_USERNAME }),
@@ -64,14 +92,19 @@ export async function POST(request) {
  */
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
+    const authUserId = await getAuthenticatedUserId();
+    if (!authUserId) {
       return new Response(
-        JSON.stringify({ error: 'userId не передан' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId') || authUserId;
+
+    if (userId !== authUserId) {
+      return forbiddenResponse();
     }
 
     // Проверяем что пользователь существует

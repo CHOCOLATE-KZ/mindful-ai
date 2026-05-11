@@ -72,6 +72,7 @@ export default function FeaturesSection() {
               >
                 {/* Картинка над карточкой */}
                 <div className="w-full flex justify-center mb-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={image}
                     alt={title}

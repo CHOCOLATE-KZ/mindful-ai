@@ -55,7 +55,7 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-white text-slate-900">
+    <div className="relative min-h-screen overflow-hidden bg-white text-slate-900 -mt-[4.5rem] pt-[4.5rem]">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#74AA9C]/20 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-[#74AA9C]/15 blur-3xl" />

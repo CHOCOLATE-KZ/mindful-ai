@@ -9,7 +9,7 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAppSettings } from "@/components/AppShell";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
+export default function ChatSidebarNav({ onAnchorsClick }) {
   const { user, settings, updateSettings } = useAppSettings();
   const isDark = settings?.theme === "dark";
   const lang = settings?.language || "ru";
@@ -20,15 +20,17 @@ export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [userAvatarUrl, setUserAvatarUrl] = useState("");
-  const [mounted, setMounted] = useState(false);
+  const mounted = typeof window !== "undefined";
   const profileRef = useRef(null);
   const langRef = useRef(null);
 
-  useEffect(() => { setMounted(true); }, []);
-
   useEffect(() => {
     let active = true;
-    if (!user) { setUserAvatarUrl(""); return; }
+    if (!user) {
+      return () => {
+        active = false;
+      };
+    }
     (async () => {
       const { data } = await supabase
         .from("profiles")
@@ -78,13 +80,14 @@ export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
   }
 
   return (
-    <aside className={`fixed left-0 top-0 h-screen w-16 bg-white dark:bg-[#131314] border-r border-black/10 dark:border-white/10 flex flex-col items-center py-3 z-50 gap-2 transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
+    <aside className="fixed left-0 top-0 h-screen w-16 bg-white dark:bg-[#131314] border-r border-black/10 dark:border-white/10 flex flex-col items-center py-3 z-50 gap-2">
       {/* Logo */}
       <Link
         href="/"
         className="flex items-center justify-center h-12 w-12 rounded-xl bg-gradient-to-br from-[#74AA9C] to-[#5d9088] hover:shadow-lg transition-shadow flex-shrink-0"
         title="MindfulAI"
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/white-logo.svg" alt="MindfulAI" className="w-8 h-8 object-contain" />
       </Link>
 
@@ -177,6 +180,7 @@ export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
               className="flex items-center justify-center h-9 w-9 rounded-full overflow-hidden hover:ring-2 hover:ring-[#74AA9C] transition-all mx-auto bg-slate-900 dark:bg-slate-700 cursor-pointer"
             >
               {userAvatarUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={userAvatarUrl} alt="avatar" className="h-9 w-9 object-cover" />
               ) : (
                 <User className="w-4 h-4 text-white" />
