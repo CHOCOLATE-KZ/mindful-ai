@@ -1,11 +1,7 @@
 // src/lib/lmStudioClient.js
 // Клиент для работы с LM Studio API
-import { searchPsychologyKnowledge } from "./knowledge-search.js";
-import { SYSTEM_PROMPT } from "../data/systemPrompt.js";
-
-const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
-const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
-const LMSTUDIO_TIMEOUT_MS = Number(process.env.LMSTUDIO_TIMEOUT_MS || 15000);
+import { callUnifiedLlm } from "./llm/unifiedClient.js";
+import { generateSafePsychReply } from "./chat/unifiedResponder.js";
 
 /**
  * Вызов LM Studio API для генерации ответа
@@ -14,47 +10,13 @@ const LMSTUDIO_TIMEOUT_MS = Number(process.env.LMSTUDIO_TIMEOUT_MS || 15000);
  * @returns {Promise<Object>} { reply, error }
  */
 export async function callLmStudio(messages, options = {}) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), LMSTUDIO_TIMEOUT_MS);
-
-  try {
-    const resp = await fetch(`${LMSTUDIO_BASE_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: options.model || LMSTUDIO_MODEL,
-        messages,
-        temperature: options.temperature || 0.8,
-        max_tokens: options.max_tokens || 512,
-        top_p: 0.95,
-        frequency_penalty: 0.3,
-      }),
-    });
-
-    const raw = await resp.text();
-    if (!resp.ok) {
-      return { error: `LM Studio error (${resp.status}): ${raw}` };
-    }
-
-    let json;
-    try {
-      json = JSON.parse(raw);
-    } catch {
-      return { error: `LM Studio returned non-JSON: ${raw}` };
-    }
-
-    const reply = (json?.choices?.[0]?.message?.content || "").trim();
-    return { reply };
-  } catch (error) {
-    if (error?.name === 'AbortError') {
-      return { error: `LM Studio request timeout after ${LMSTUDIO_TIMEOUT_MS}ms` };
-    }
-
-    return { error: error.message };
-  } finally {
-    clearTimeout(timeout);
-  }
+  return callUnifiedLlm(messages, {
+    model: options.model,
+    temperature: options.temperature ?? 0.8,
+    maxTokens: options.max_tokens ?? 512,
+    topP: 0.95,
+    frequencyPenalty: 0.3,
+  });
 }
 
 /**
@@ -64,32 +26,16 @@ export async function callLmStudio(messages, options = {}) {
  * @returns {Promise<string>} Ответ AI
  */
 export async function askAI(userMessage, userContext = '') {
-  const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
-  ];
+  const result = await generateSafePsychReply({
+    message: userMessage,
+    history: [],
+    userContext,
+    userEmotion: "neutral",
+  });
 
-  // Добавляем релевантные психологические знания
-  const psychologyContext = await searchPsychologyKnowledge(userMessage);
-  if (psychologyContext) {
-    messages.push({ 
-      role: "system", 
-      content: `ПРОФЕССИОНАЛЬНАЯ БАЗА ЗНАНИЙ:\n\n${psychologyContext}\n\nИспользуй эти знания для предоставления информированной и основанной на доказательствах поддержки. Применяй техники естественно, без явного их перечисления.` 
-    });
-  }
-
-  if (userContext) {
-    messages.push({ role: "system", content: `User Context: ${userContext}` });
-  }
-
-  messages.push({ role: "user", content: userMessage });
-
-  const { reply, error } = await callLmStudio(messages);
-
-  if (error) {
-    throw new Error(error);
-  }
-
-  return reply || "Извините, не могу ответить на этот вопрос.";
+  if (result.error) throw new Error(result.error);
+  if (result.crisis) return result.crisisReply || "Похоже, тебе сейчас очень тяжело. Пожалуйста, обратись за немедленной помощью по номеру 112.";
+  return result.reply || "Извините, не могу ответить на этот вопрос.";
 }
 
 /**
@@ -100,53 +46,16 @@ export async function askAI(userMessage, userContext = '') {
  * @returns {Promise<string>} Ответ AI
  */
 export async function askAIWithHistory(userMessage, history = [], userContext = '') {
-  const messages = [
-    { role: "system", content: SYSTEM_PROMPT },
-  ];
+  const result = await generateSafePsychReply({
+    message: userMessage,
+    history: Array.isArray(history) ? history : [],
+    userContext,
+    userEmotion: "neutral",
+  });
 
-  // Добавляем релевантные психологические знания
-  const psychologyContext = await searchPsychologyKnowledge(userMessage);
-  if (psychologyContext) {
-    messages.push({ 
-      role: "system", 
-      content: `ПРОФЕССИОНАЛЬНАЯ БАЗА ЗНАНИЙ:\n\n${psychologyContext}\n\nИспользуй эти знания для предоставления информированной и основанной на доказательствах поддержки. Применяй техники естественно, без явного их перечисления.` 
-    });
-  }
-
-  if (userContext) {
-    messages.push({ role: "system", content: `User Context: ${userContext}` });
-  }
-
-  // Добавляем историю (последние N сообщений)
-  if (history && history.length > 0) {
-    const recentHistory = history.slice(-10); // последние 10
-    messages.push(...recentHistory);
-  }
-
-  // Проверка для избежания дублирования контента
-  if (history && history.length >= 2) {
-    const lastAssistantMsg = history
-      .slice()
-      .reverse()
-      .find(m => m.role === 'assistant')?.content || '';
-    
-    if (lastAssistantMsg.length > 150) {
-      messages.push({
-        role: 'system',
-        content: `ВАЖНО: Не повторяй точно такой же контент как в предыдущем ответе. Если пользователь говорит спасибо или переходит дальше - предоставь новый взгляд или более глубокое понимание, а не повтор.`
-      });
-    }
-  }
-
-  messages.push({ role: "user", content: userMessage });
-
-  const { reply, error } = await callLmStudio(messages);
-
-  if (error) {
-    throw new Error(error);
-  }
-
-  return reply || "Извините, не могу ответить на этот вопрос.";
+  if (result.error) throw new Error(result.error);
+  if (result.crisis) return result.crisisReply || "Похоже, тебе сейчас очень тяжело. Пожалуйста, обратись за немедленной помощью по номеру 112.";
+  return result.reply || "Извините, не могу ответить на этот вопрос.";
 }
 
 /**

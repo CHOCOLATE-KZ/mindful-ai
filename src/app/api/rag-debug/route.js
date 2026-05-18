@@ -11,58 +11,26 @@
 
 import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getUnifiedEmbedding, unifiedLlmConfig } from "@/lib/llm/unifiedClient";
 
-const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434").trim();
-const OLLAMA_EMBEDDING_MODEL = (process.env.OLLAMA_EMBEDDING_MODEL || "nomic-embed-text").trim();
-const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS || 10000);
+const LMSTUDIO_BASE_URL = unifiedLlmConfig.baseUrl;
+const LMSTUDIO_EMBEDDING_MODEL = unifiedLlmConfig.embedModel;
+const LMSTUDIO_TIMEOUT_MS = unifiedLlmConfig.timeoutMs;
 const ENABLE_PSYCHOLOGY_RAG = (process.env.ENABLE_PSYCHOLOGY_RAG || "true").trim().toLowerCase() !== "false";
 
 // ---------- helpers ----------
 
 async function tryGetEmbedding(text) {
   const t0 = Date.now();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
+  const { embedding, error } = await getUnifiedEmbedding(text, { timeoutMs: LMSTUDIO_TIMEOUT_MS });
 
-  try {
-    const res = await fetch(`${OLLAMA_BASE_URL}/api/embeddings`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({ model: OLLAMA_EMBEDDING_MODEL, prompt: text }),
-    });
-
-    const latencyMs = Date.now() - t0;
-
-    if (!res.ok) {
-      return {
-        ok: false,
-        latencyMs,
-        error: `Ollama HTTP ${res.status}`,
-        embedding: null,
-      };
-    }
-
-    const json = await res.json();
-    const embedding = Array.isArray(json?.embedding) ? json.embedding : null;
-
-    return {
-      ok: Boolean(embedding?.length),
-      latencyMs,
-      error: embedding ? null : "Ollama returned empty embedding",
-      dims: embedding?.length ?? 0,
-      embedding,
-    };
-  } catch (err) {
-    return {
-      ok: false,
-      latencyMs: Date.now() - t0,
-      error: err?.name === "AbortError" ? `Timeout (>${OLLAMA_TIMEOUT_MS}ms)` : err.message,
-      embedding: null,
-    };
-  } finally {
-    clearTimeout(timer);
-  }
+  return {
+    ok: Boolean(embedding?.length),
+    latencyMs: Date.now() - t0,
+    error: error || null,
+    dims: embedding?.length ?? 0,
+    embedding: embedding || null,
+  };
 }
 
 async function semanticSearch(embedding, limit, threshold) {
@@ -208,8 +176,8 @@ async function handler(req) {
     query,
     settings: {
       ragEnabled: ENABLE_PSYCHOLOGY_RAG,
-      ollamaUrl: OLLAMA_BASE_URL,
-      ollamaModel: OLLAMA_EMBEDDING_MODEL,
+      lmStudioUrl: LMSTUDIO_BASE_URL,
+      lmStudioEmbedModel: LMSTUDIO_EMBEDDING_MODEL,
       limit,
       threshold,
     },

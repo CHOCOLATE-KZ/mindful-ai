@@ -1,58 +1,24 @@
 // src/lib/knowledge-search.js
 // Поиск психологических знаний через embeddings (LM Studio)
 
-import { supabaseBrowser } from './supabase/browser.js';
-
-const LM_BASE_URL = (process.env.LMSTUDIO_BASE_URL || 'http://127.0.0.1:1234').trim();
-const LM_EMBED_MODEL = (process.env.LMSTUDIO_EMBED_MODEL || 'text-embedding-nomic-embed-text-v1.5').trim();
-const EMBED_TIMEOUT_MS = 15000;
+import { supabaseAdmin } from './supabase/admin.js';
+import { getUnifiedEmbedding } from './llm/unifiedClient.js';
 
 function getSupabaseClient() {
-  return supabaseBrowser();
+  return supabaseAdmin;
 }
 
 /**
  * Получает embedding через LM Studio /v1/embeddings (OpenAI-совместимый)
  */
 async function getTextEmbedding(text) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), EMBED_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(`${LM_BASE_URL}/v1/embeddings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: LM_EMBED_MODEL,
-        input: text,
-      }),
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      console.warn(`[RAG]  LM Studio embeddings вернул ${response.status}, keyword fallback`);
-      return null;
-    }
-
-    const data = await response.json();
-    const embedding = data?.data?.[0]?.embedding;
-    if (Array.isArray(embedding) && embedding.length > 0) {
-      return embedding;
-    }
-
-    console.warn('[RAG]  LM Studio вернул некорректный embedding, keyword fallback');
-    return null;
-  } catch (error) {
-    clearTimeout(timeout);
-    if (error?.name === 'AbortError') {
-      console.warn(`[RAG]  LM Studio embeddings timeout, keyword fallback`);
-    } else {
-      console.warn(`[RAG]  LM Studio embeddings недоступны: ${error.message}`);
-    }
+  const { embedding, error } = await getUnifiedEmbedding(text);
+  if (error || !embedding) {
+    console.warn(`[RAG]  LM Studio embeddings недоступны: ${error || 'empty embedding'}, keyword fallback`);
     return null;
   }
+
+  return embedding;
 }
 
 /**

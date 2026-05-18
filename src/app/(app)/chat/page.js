@@ -27,6 +27,7 @@ export default function ChatPage() {
   
   const {
     messages,
+    currentUserId,
     userAvatarUrl,
     input,
     loading,
@@ -73,7 +74,7 @@ export default function ChatPage() {
     <div className="min-h-dvh flex text-slate-900 dark:text-slate-100">
       <ChatBackground />
       <ChatAmbient selectedBg={ambientBg} setSelectedBg={setAmbientBg} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      {sessionModeEnabled && <EmotionTracker userId="test-user" />}
+      {sessionModeEnabled && <EmotionTracker userId={currentUserId} />}
       
       {/* Left sidebar nav */}
       <ChatSidebarNav onAnchorsClick={() => setAnchorsModalOpen(true)} isOpen={sidebarOpen} />
@@ -103,7 +104,7 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              <div ref={scrollRef} className="flex-1 overflow-y-auto pb-16 flex flex-col items-center">
+              <div ref={scrollRef} className="flex-1 overflow-y-auto pb-24 md:pb-28 flex flex-col items-center">
                 <ChatConversation
                   messages={messages}
                   userAvatarUrl={userAvatarUrl}
@@ -113,6 +114,7 @@ export default function ChatPage() {
                   onAnchorSelect={applyAnchorToInput}
                   showAnchors={showAnchorsInChat}
                   hasAmbientBg={ambientBg !== "none"}
+                  ambientBg={ambientBg}
                 />
               </div>
 
@@ -152,6 +154,7 @@ export default function ChatPage() {
             <ScrollToTopButton
               atTop={atTop}
               onClick={atTop ? scrollToBottom : scrollToTop}
+              ambientBg={ambientBg}
             />
           )}
           <AnchorTooltip show={showAnchorTooltip} position={tooltipPosition} />

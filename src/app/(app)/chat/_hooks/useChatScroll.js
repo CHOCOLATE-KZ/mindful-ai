@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 export function useChatScroll() {
+  const BOTTOM_EPSILON = 16;
   const [atBottom, setAtBottom] = useState(true);
   const [atTop, setAtTop] = useState(true);
   const [scrolledDown, setScrolledDown] = useState(false);
@@ -17,7 +18,7 @@ export function useChatScroll() {
       const top = root.scrollTop;
       return {
         atTop: top <= 12,
-        atBottom: maxTop - top <= 6,
+        atBottom: maxTop - top <= BOTTOM_EPSILON,
         scrolledDown: top > 24,
       };
     }
@@ -30,14 +31,13 @@ export function useChatScroll() {
 
     return {
       atTop: pageTop <= 12,
-      atBottom: pageMaxTop - pageTop <= 6,
+      atBottom: pageMaxTop - pageTop <= BOTTOM_EPSILON,
       scrolledDown: pageTop > 24,
     };
-  }, []);
+  }, [BOTTOM_EPSILON]);
 
   useEffect(() => {
     const el = scrollRef?.current;
-    if (!el) return;
 
     const onScroll = () => {
       const state = getScrollState();
@@ -47,10 +47,15 @@ export function useChatScroll() {
     };
 
     onScroll();
-    el.addEventListener("scroll", onScroll, { passive: true });
+    if (el) {
+      el.addEventListener("scroll", onScroll, { passive: true });
+    }
     window.addEventListener("scroll", onScroll, { passive: true });
+
     return () => {
-      el.removeEventListener("scroll", onScroll);
+      if (el) {
+        el.removeEventListener("scroll", onScroll);
+      }
       window.removeEventListener("scroll", onScroll);
     };
   }, [getScrollState]);

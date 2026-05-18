@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Next.js приложение MindfulAI
   app:
     build:
       context: .
@@ -9,13 +8,18 @@ services:
     container_name: mindfulai-app
     ports:
       - "3001:3000"
+    
+    # Добавляем эту строчку, чтобы Docker подтянул значения для конструкций ${...} ниже:
+    env_file:
+      - .env
+
     environment:
       # Supabase
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       
-      # LM Studio (на localhost на хоста, или используй host.docker.internal)
+      # LM Studio
       - LMSTUDIO_BASE_URL=${LMSTUDIO_BASE_URL:-http://host.docker.internal:1234}
       - LMSTUDIO_MODEL=${LMSTUDIO_MODEL:-gpt-oss-20b}
       
@@ -25,9 +29,9 @@ services:
       # Telegram
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
-      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3001}
       
-      # Email (опционально)
+      # Email
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
@@ -35,45 +39,19 @@ services:
       
       # Node environment
       - NODE_ENV=production
-    
-    # Зависимости (когда реализуешь локальные сервисы в Docker)
-    # depends_on:
-    #   - lmstudio
-    #   - ollama
-    
-    # Networks
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - mindfulai-network
-    
-    # Volumes (если нужна persisten data)
-    # volumes:
-    #   - ./data:/app/data
-    
-    # Restart policy
     restart: unless-stopped
-    
-    # Healthcheck
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => r.statusCode === 200 ? process.exit(0) : process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
-  # ======================================
-  # ВНИМАНИЕ: LM Studio и Ollama НЕ включены в Docker
-  # Они требуют GPU и много памяти
-  # Установите их вручную на вашем хосте
-  # 
-  # Инструкции в DOCKER_QUICKSTART.md
-  # ======================================
-
-# Networks
 networks:
   mindfulai-network:
     driver: bridge
-
-# Volumes (если добавишь persistence)
-# volumes:
-#   mindfulai-data:
-#     driver: local

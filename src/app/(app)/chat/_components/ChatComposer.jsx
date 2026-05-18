@@ -1,7 +1,7 @@
 "use client";
 
 import { HelpCircle, Mic, Send } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getSessionModeConfirmationRequired,
   setSessionModeConfirmationRequired,
@@ -18,6 +18,8 @@ export default function ChatComposer({
   onToggleVoiceMode,
   sessionModeEnabled,
   onToggleSessionMode,
+  sidebarOpen = true,
+  hasAmbientBg = false,
 }) {
   const { t } = useLanguage("chat");
   const {
@@ -29,9 +31,15 @@ export default function ChatComposer({
     unsupportedReason,
   } = voice;
 
-  const micDisabled = !mounted || !browserSupportsSpeechRecognition || !isSecure;
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const micDisabled = !hydrated || !mounted || !browserSupportsSpeechRecognition || !isSecure;
   const [showSessionModeModal, setShowSessionModeModal] = useState(false);
   const [rememberChoice, setRememberChoice] = useState(false);
+
   const [showRememberHint, setShowRememberHint] = useState(false);
   const [sessionConfirmRequired, setSessionConfirmRequired] = useState(
     () => getSessionModeConfirmationRequired()
@@ -71,16 +79,30 @@ export default function ChatComposer({
 
   return (
     <>
-      <div className="fixed bottom-0 left-16 right-0 z-50 bg-white/85 dark:bg-[#131314]/90 backdrop-blur-xl">
+      <div
+        className={`fixed bottom-0 right-0 z-50 transition-all duration-300 ease-out ${
+          sidebarOpen ? "left-16" : "left-0"
+        }`}
+      >
           <form onSubmit={onSend} className="mx-auto max-w-4xl px-4 py-2">
           {/* панель */}
-            <div className="rounded-2xl bg-white dark:bg-[#1c1c1d] shadow-sm ring-1 ring-black/10 dark:ring-white/10 px-4 pt-3 pb-2">
+            <div
+              className={`rounded-2xl shadow-sm ring-1 px-4 pt-3 pb-2 ${
+                hasAmbientBg
+                  ? "bg-black/55 dark:bg-black/60 ring-white/25"
+                  : "bg-gradient-to-br from-[#e8f4f1]/95 via-[#f5f5f5]/95 to-[#ffffff]/95 dark:from-[#152e28]/80 dark:via-[#1a1d2e]/80 dark:to-[#111318]/80 ring-black/10 dark:ring-white/10"
+              }`}
+            >
             {/* textarea без своей рамки — выглядит как часть контейнера */}
             <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               placeholder={t("inputPlaceholder")}
-                className="w-full min-h-[40px] max-h-36 resize-none bg-transparent dark:text-slate-100 dark:placeholder-slate-400 text-[15px] leading-6 outline-none"
+                className={`w-full min-h-[40px] max-h-36 resize-none bg-transparent text-[15px] leading-6 outline-none ${
+                  hasAmbientBg
+                    ? "text-white placeholder-white/70 caret-white"
+                    : "dark:text-slate-100 dark:placeholder-slate-400"
+                }`}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -118,15 +140,18 @@ export default function ChatComposer({
                   {voiceModeEnabled ? t("voiceModeOn") : t("voiceMode")}
                 </button>
 
-                {loading && <span className="text-[11px] text-slate-500">{t("sending")}</span>}
+                {loading && (
+                  <span className={`text-[11px] ${hasAmbientBg ? "text-white/75" : "text-slate-500"}`}>
+                    {t("sending")}
+                  </span>
+                )}
               </div>
 
               {/* кнопка: микрофон или отправить */}
               {input.trim() ? (
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="h-11 w-11 rounded-full grid place-items-center bg-[#74AA9C] text-white hover:bg-[#5d9088] transition disabled:opacity-40 flex-shrink-0 "
+                  className="h-11 w-11 rounded-full grid place-items-center bg-[#74AA9C] text-white hover:bg-[#5d9088] shadow-[0_8px_20px_rgba(116,170,156,0.35)] transition flex-shrink-0"
                   title="Send"
                   aria-label="Send"
                 >

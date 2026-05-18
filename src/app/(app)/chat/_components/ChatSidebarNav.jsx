@@ -9,7 +9,7 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAppSettings } from "@/components/AppShell";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-export default function ChatSidebarNav({ onAnchorsClick }) {
+export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
   const { user, settings, updateSettings } = useAppSettings();
   const isDark = settings?.theme === "dark";
   const lang = settings?.language || "ru";
@@ -80,7 +80,12 @@ export default function ChatSidebarNav({ onAnchorsClick }) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-16 bg-white dark:bg-[#131314] border-r border-black/10 dark:border-white/10 flex flex-col items-center py-3 z-50 gap-2">
+    <aside
+      aria-hidden={!isOpen}
+      className={`fixed left-0 top-0 h-screen w-16 bg-white dark:bg-[#131314] border-r border-black/10 dark:border-white/10 flex flex-col items-center py-3 z-50 gap-2 transition-transform duration-300 ease-out ${
+        isOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
+      }`}
+    >
       {/* Logo */}
       <Link
         href="/"

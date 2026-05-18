@@ -1,8 +1,7 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { extractAnchors } from "@/lib/utils/extractAnchors";
-import { searchPsychologyKnowledge } from "@/lib/knowledge-search";
-import { getSystemPrompt } from "@/data/systemPrompt";
-import { replyHasUnwarrantedNegativity, validateAndSanitizeReply } from "@/lib/chat/responseValidator";
+import { callUnifiedLlm } from "@/lib/llm/unifiedClient";
+import { generateSafePsychReply } from "@/lib/chat/unifiedResponder";
 
 const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
 const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
@@ -293,49 +292,23 @@ async function callLmStudio(messages, options = {}) {
     console.log('[LM STUDIO]  User message:', messages[messages.length - 1]?.content?.slice(0, 100) || '');
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), LMSTUDIO_TIMEOUT_MS);
+  const result = await callUnifiedLlm(messages, {
+    model: LMSTUDIO_MODEL,
+    temperature,
+    maxTokens,
+    topP: 0.9,
+    frequencyPenalty: 0.5,
+    timeoutMs: LMSTUDIO_TIMEOUT_MS,
+  });
 
-  try {
-    const resp = await fetch(`${LMSTUDIO_BASE_URL}/v1/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: LMSTUDIO_MODEL,
-        messages,
-        temperature,
-        max_tokens: maxTokens,
-        top_p: 0.9,
-        frequency_penalty: 0.5,
-      }),
-    });
-
-    const raw = await resp.text();
-    if (!resp.ok) {
-      console.error('[LM STUDIO]  Error:', resp.status, raw.slice(0, 200));
-      return { error: `LM Studio error (${resp.status}): ${raw}` };
-    }
-
-    let json;
-    try {
-      json = JSON.parse(raw);
-    } catch {
-      return { error: `LM Studio returned non-JSON: ${raw}` };
-    }
-
-    const reply = (json?.choices?.[0]?.message?.content || "").trim();
-    console.log('[LM STUDIO]  Reply length:', reply.length, 'символов');
-    return { reply };
-  } catch (error) {
-    if (error?.name === 'AbortError') {
-      return { error: `LM Studio request timeout after ${LMSTUDIO_TIMEOUT_MS}ms` };
-    }
-
-    return { error: error?.message || String(error) };
-  } finally {
-    clearTimeout(timeout);
+  if (result.error) {
+    console.error('[LM STUDIO]  Error:', String(result.error).slice(0, 200));
+    return { error: result.error };
   }
+
+  const reply = (result.reply || "").trim();
+  console.log('[LM STUDIO]  Reply length:', reply.length, 'символов');
+  return { reply };
 }
 
 const MODES = ["LISTENING", "ANALYSIS", "GUIDANCE"];
@@ -493,36 +466,7 @@ export async function POST(req) {
     return Response.json({ error: "Empty message" }, { status: 400 });
   }
 
-  // Жёсткий блок — криминал/наркотики блокируются ДО LLM, без эмпатии
-  if (isHardBlocked(message)) {
-    console.log('[CHAT API] 🚫 Hard-blocked message');
-    return Response.json(
-      { reply: "Я ИИ-психолог и не помогаю в вопросах, связанных с нарушением закона. Этот запрос вне моей компетенции." },
-      { status: 200 }
-    );
-  }
-
   const greetingMode = isGreetingOnly(message);
-  const isGratitude = isGratitudeMessage(message);
-  const positiveCheckin = isPositiveCheckin(message);
-  const shouldShortPositiveReply = positiveCheckin && !hasNegativeSignal(message);
-  const userAffectClass = detectAffectClass(message);
-
-  console.log('[CHAT API] intent flags:', {
-    greetingMode,
-    isGratitude,
-    positiveCheckin,
-    hasNegativeSignal: hasNegativeSignal(message),
-    userAffectClass,
-    shouldShortPositiveReply,
-    message: message.slice(0, 80),
-  });
-
-  // Кризисный детектор — проверяем ДО обращения к LLM
-  if (detectCrisis(message)) {
-    console.log('[CHAT API] ⚠️  Обнаружен кризисный сигнал в сообщении');
-    return Response.json({ crisis: true }, { status: 200 });
-  }
 
   const supabase = await supabaseServer();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -530,165 +474,23 @@ export async function POST(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (shouldShortPositiveReply) {
-    const quickReply = "Рад слышать, что у тебя всё хорошо. Что хочешь сделать сегодня для себя, чтобы сохранить это состояние?";
-
-    const [insertUser, insertAssistant] = await Promise.all([
-      supabase.from("ai_messages").insert({
-        user_id: user.id,
-        role: "user",
-        content: message,
-        source: "web",
-      }),
-      supabase.from("ai_messages").insert({
-        user_id: user.id,
-        role: "assistant",
-        content: quickReply,
-        source: "web",
-      }),
-    ]);
-
-    if (insertUser.error) {
-      return Response.json({ error: insertUser.error.message }, { status: 500 });
-    }
-    if (insertAssistant.error) {
-      return Response.json({ error: insertAssistant.error.message }, { status: 500 });
-    }
-
-    return Response.json({
-      reply: quickReply,
-      anchors: extractAnchors(quickReply),
-      debug: body?.debug === true ? { shortcut: "positive-checkin" } : undefined,
-    });
-  }
-
   // Получаем последнюю эмоцию пользователя
   const userEmotion = getLastUserEmotion(user.id);
   console.log('[CHAT API]  Эмоция пользователя:', userEmotion);
 
-  const isLightweightIntent = greetingMode || isGratitude;
+  const { data: historyData, error: histErr } = await supabase
+    .from("ai_messages")
+    .select("role, content")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(50);
 
-  let history = [];
-  if (!isLightweightIntent) {
-    const { data, error: histErr } = await supabase
-      .from("ai_messages")
-      .select("role, content")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(25);
-
-    if (histErr) {
-      return Response.json({ error: histErr.message }, { status: 500 });
-    }
-    history = data || [];
+  if (histErr) {
+    return Response.json({ error: histErr.message }, { status: 500 });
   }
 
-  const context = isLightweightIntent ? "" : await buildUserContext(supabase, user.id);
-
-  const mode = isLightweightIntent ? "LISTENING" : await classifyMode(message);
-  const modeLmConfig = getModeLmConfig(mode);
-
-  let psychologyContext = '';
-  if (!isLightweightIntent && ENABLE_PSYCHOLOGY_RAG && message.length >= RAG_MIN_QUERY_LENGTH) {
-    psychologyContext = await searchPsychologyKnowledge(message, RAG_LIMIT);
-  }
-
-  console.log(
-    '[CHAT API]  RAG settings:',
-    JSON.stringify({
-      enabled: ENABLE_PSYCHOLOGY_RAG,
-      minQueryLength: RAG_MIN_QUERY_LENGTH,
-      limit: RAG_LIMIT,
-      contextChars: psychologyContext.length,
-    })
-  );
-
-  const messages = isGratitude
-    ? [
-        {
-          role: "system",
-          content:
-            "Пользователь тебя поблагодарил. Ответь вежливо, коротко и поддерживающе, не выдумывай новые проблемы.",
-        },
-      ]
-    : [{ role: "system", content: getSystemPrompt(mode) }];
-
-  if (greetingMode) {
-    messages.push({
-      role: "system",
-      content:
-        "Пользователь просто поздоровался. Ответь коротко и дружелюбно, без ссылок на прошлые темы, если он сам не просил продолжить контекст.",
-    });
-  }
-
-  if (positiveCheckin && !isGratitude) {
-    messages.push({
-      role: "system",
-      content:
-        "Пользователь сообщает, что у него все хорошо или отлично. Не приписывай ему тревогу, боль, неприятные ощущения и другие негативные чувства. " +
-        "Ответь коротко и по-доброму: порадуйся за пользователя и задай один легкий нейтральный вопрос про его день/планы.",
-    });
-  }
-  
-  console.log('[CHAT API]  Начинаю конструирование messages...');
-  console.log('[CHAT API]  Mode:', mode);
-  console.log('[CHAT API]  Mode config:', modeLmConfig);
-  console.log('[CHAT API]  System prompt первая строка:', String(messages[0]?.content || '').slice(0, 80) + '...');
-  
-  // Добавляем психологические знания как контекст для AI
-  if (psychologyContext) {
-    messages.push({
-      role: "system",
-      content:
-        `PROFESSIONAL KNOWLEDGE BASE (retrieved chunks):\n\n${psychologyContext}\n\n` +
-        `Используй только релевантные части этой базы. Если в чанках нет точного ответа, скажи об этом прямо и дай безопасную общую рекомендацию без выдумывания фактов.`
-    });
-  }
-  if (context) {
-    messages.push({ role: "system", content: `User Context: ${context}` });
-  }
-  // ВСТАВЛЯЕМ ЭМОЦИЮ ПОЛЬЗОВАТЕЛЯ В КОНТЕКСТ ДЛЯ LLM
-  messages.push({
-    role: "system",
-    content: `User Emotion (detected by camera/voice): ${userEmotion}`
-  });
-  for (const m of history || []) {
-    const role = m.role === "assistant" ? "assistant" : "user";
-    messages.push({ role, content: String(m.content || "") });
-  }
-
-  // Проверка для избежания дублирования контента
-  if (history && history.length >= 2) {
-    const lastAssistantMsg = history
-      .slice()
-      .reverse()
-      .find(m => m.role === 'assistant')?.content || '';
-    
-    if (lastAssistantMsg.length > 150) {
-      messages.push({
-        role: 'system',
-        content: `ВАЖНО: Не повторяй точно такой же контент как в предыдущем ответе. Если пользователь говорит спасибо или переходит дальше - предоставь новый взгляд или более глубокое понимание, а не повтор.`
-      });
-    }
-  }
-
-  //  КРИТИЧНОЕ НАПОМИНАНИЕ перед тем как читать пользовательское сообщение
-  if (!isGratitude) {
-    messages.push({
-      role: 'system',
-      content: `ПЕРЕД ОТВЕТОМ: Внимательно прочитай что пишет юзер и ответь ТОЧНО на эту тему. НЕ меняй тему внезапно. Если юзер про "диплом" - говори про "диплом", если про "плагиат" - про "плагиат". Юзер просто РАССКАЗЫВАЕТ о проблеме - только СЛУШАЙ И СПРАШИВАЙ. БЕЗ советов, БЕЗ статистики.`
-    });
-  }
-
-  //  ФИНАЛЬНОЕ ПРЕДУПРЕЖДЕНИЕ О ЗАПРЕТЕ НА СТАТИСТИКУ
-  if (!isGratitude) {
-    messages.push({
-      role: 'system',
-      content: `СОВЕТ! ЗАПОМНИ: Если юзер НЕ просит статистику - НЕ ВЫВОДИ её. Точка. Не выводи "Дата:", не выводи "Настроение:", не выводи "Сон:". Если выведешь статистику когда её не просили - это ПОЛНОСТЬЮ НЕПРАВИЛЬНО.`
-    });
-  }
-
-  messages.push({ role: "user", content: message });
+  const history = historyData || [];
+  const context = await buildUserContext(supabase, user.id);
 
   const { error: insUserErr } = await supabase.from("ai_messages").insert({
     user_id: user.id,
@@ -701,73 +503,29 @@ export async function POST(req) {
     return Response.json({ error: insUserErr.message }, { status: 500 });
   }
 
-  let reply = "";
-  try {
-    const lm = await callLmStudio(messages, modeLmConfig);
-    if (lm.error) {
-      return Response.json({ error: lm.error }, { status: 502 });
-    }
-    reply = lm.reply || "";
-  } catch (err) {
-    return Response.json(
-      { error: `Failed to contact LLM: ${err?.message || String(err)}` },
-      { status: 502 }
-    );
-  }
-
-  reply = reply.trim() || "...";
-
-  // Universal consistency guard: avoid projecting anxiety/negativity onto positive check-ins.
-  if (userAffectClass === "positive" && replyHasUnwarrantedNegativity(reply)) {
-    console.log('[CHAT API]  Affect mismatch detected. Running one corrective regeneration...');
-
-    const correctedMessages = [
-      ...messages.slice(0, -1),
-      {
-        role: "system",
-        content:
-          "КОРРЕКЦИЯ: пользователь в позитивном состоянии. Не приписывай тревогу, боль, стресс, нервозность. " +
-          "Ответ: коротко, тепло, поддерживающе-позитивно, максимум 2-3 предложения, один легкий вопрос в конце.",
-      },
-      messages[messages.length - 1],
-    ];
-
-    const corrected = await callLmStudio(correctedMessages, {
-      temperature: Math.min(modeLmConfig.temperature, 0.35),
-      maxTokens: Math.min(modeLmConfig.maxTokens, 140),
-    });
-    if (!corrected.error && corrected.reply && !replyHasUnwarrantedNegativity(corrected.reply)) {
-      reply = corrected.reply.trim();
-      console.log('[CHAT API]  Corrective regeneration accepted.');
-    } else {
-      reply = "Рад слышать, что у тебя всё хорошо. Что хочешь сделать сегодня для себя, чтобы сохранить это состояние?";
-      console.log('[CHAT API]  Corrective regeneration failed. Using safe positive fallback.');
-    }
-  }
-
-  //  DEBUG: логируем ответ от LM Studio ДО очистки
-  if (reply.length < 300) {
-    console.log('[LM STUDIO]  RAW ответ от LM Studio:', reply);
-  } else {
-    console.log('[LM STUDIO]  RAW ответ (первые 300 символов):', reply.slice(0, 300));
-  }
-
-  const validation = validateAndSanitizeReply({
-    reply,
-    mode,
-    isFirstMessage: history.length === 0,
-    userAffectClass,
-    positiveFallback: "Рад слышать, что у тебя всё хорошо. Что хочешь сделать сегодня для себя, чтобы сохранить это состояние?",
-    genericFallback: "Как дела?",
+  const safeResult = await generateSafePsychReply({
+    message,
+    history,
+    userContext: context,
+    userEmotion,
+    enableRag: ENABLE_PSYCHOLOGY_RAG,
+    ragLimit: RAG_LIMIT,
+    ragMinQueryLength: RAG_MIN_QUERY_LENGTH,
   });
-  reply = validation.reply;
 
-  console.log('[LM STUDIO]  ПОСЛЕ валидации:', reply.slice(0, 200));
-  console.log('[LM STUDIO]  Validator rules:', validation.meta);
+  if (safeResult.error) {
+    return Response.json({ error: safeResult.error }, { status: 502 });
+  }
 
-  //  DEBUG: логируем финальный ответ который отправляется пользователю
+  if (safeResult.crisis) {
+    return Response.json({ crisis: true }, { status: 200 });
+  }
+
+  let reply = (safeResult.reply || "").trim() || "...";
+  const mode = safeResult.mode || "LISTENING";
+
   console.log('[LM STUDIO]  ФИНАЛЬНЫЙ ответ:', reply);
-  console.log('[LM STUDIO]  Все проверки пройдены\n');
+  console.log('[LM STUDIO]  Unified safety pipeline mode:', mode);
 
   // Запускаем сохранение в БД и генерацию якорей параллельно
   const anchorPromise = greetingMode
@@ -799,7 +557,7 @@ export async function POST(req) {
         model: LMSTUDIO_MODEL,
         ragEnabled: ENABLE_PSYCHOLOGY_RAG,
         ragLimit: RAG_LIMIT,
-        ragContextChars: psychologyContext.length,
+        ragContextChars: safeResult.psychologyContextChars || 0,
         anchorSource,
         mode,
       }

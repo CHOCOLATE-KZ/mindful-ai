@@ -7,9 +7,62 @@ import { extractAnchors } from "@/lib/utils/extractAnchors";
 import CrisisAlert from "./CrisisAlert";
 import { motion } from "framer-motion";
 
-export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, scrollRef, onAnchorSelect, showAnchors = true, hasAmbientBg = false }) {
+export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, scrollRef, onAnchorSelect, showAnchors = true, hasAmbientBg = false, ambientBg = "none" }) {
   const endRef = useRef(null);
+  const prevMessagesLenRef = useRef(messages.length);
+  const typingTimerRef = useRef(null);
   const [dismissedCrisis, setDismissedCrisis] = useState(new Set());
+  const [typingIndex, setTypingIndex] = useState(null);
+  const [typingText, setTypingText] = useState("");
+
+  useEffect(() => {
+    const prevLen = prevMessagesLenRef.current;
+    const currentLen = messages.length;
+
+    if (currentLen <= prevLen) {
+      prevMessagesLenRef.current = currentLen;
+      return;
+    }
+
+    const lastIndex = currentLen - 1;
+    const lastMessage = messages[lastIndex];
+
+    if (!lastMessage || lastMessage.role !== "assistant" || lastMessage.crisis || !lastMessage.content) {
+      prevMessagesLenRef.current = currentLen;
+      return;
+    }
+
+    if (typingTimerRef.current) {
+      window.clearInterval(typingTimerRef.current);
+      typingTimerRef.current = null;
+    }
+
+    setTypingIndex(lastIndex);
+    setTypingText("");
+
+    let cursor = 0;
+    const fullText = String(lastMessage.content);
+    const step = fullText.length > 800 ? 4 : 3;
+
+    typingTimerRef.current = window.setInterval(() => {
+      cursor = Math.min(cursor + step, fullText.length);
+      setTypingText(fullText.slice(0, cursor));
+
+      if (cursor >= fullText.length) {
+        window.clearInterval(typingTimerRef.current);
+        typingTimerRef.current = null;
+      }
+    }, 12);
+
+    prevMessagesLenRef.current = currentLen;
+
+    return () => {
+      if (typingTimerRef.current) {
+        window.clearInterval(typingTimerRef.current);
+        typingTimerRef.current = null;
+      }
+    };
+  }, [messages]);
 
   // Автоскролл: если пользователь уже у нижней границы, держим ленту внизу на новых сообщениях.
   useEffect(() => {
@@ -17,27 +70,17 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
 
     if (root && root.scrollHeight - root.clientHeight > 1) {
       const gap = root.scrollHeight - root.scrollTop - root.clientHeight;
-      const shouldFollow = atBottom || gap <= 120;
+      const isTypingActive = typingIndex !== null;
+      const shouldFollow = gap <= 100 || loading || isTypingActive;
       if (!shouldFollow) return;
 
-      root.scrollTo({ top: root.scrollHeight, behavior: "smooth" });
-
-      // After smooth animation/layout settles, ensure exact bottom position.
-      const settleTimer = window.setTimeout(() => {
-        root.scrollTo({ top: root.scrollHeight, behavior: "auto" });
-      }, 280);
-
-      return () => {
-        window.clearTimeout(settleTimer);
-      };
-
+      // Keep exact bottom to avoid tiny "snap-up" when user is near the end.
+      root.scrollTo({ top: root.scrollHeight - root.clientHeight, behavior: "auto" });
       return;
     }
 
-    if (atBottom) {
-      endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, [atBottom, messages, loading, scrollRef]);
+    endRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+  }, [messages, loading, scrollRef, typingText, typingIndex]);
 
   const markdownComponents = useMemo(
     () => ({
@@ -56,12 +99,25 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
     []
   );
 
+  const userBubblePalette = {
+    none: "bg-[#74AA9C] ring-[#5d9088]/30",
+    rain: "bg-[#355A8A] ring-[#29486F]/35",
+    forest: "bg-[#2F6A4F] ring-[#24533D]/35",
+    fireplace: "bg-[#8A4F36] ring-[#6A3B28]/35",
+    ocean: "bg-[#2C6F7B] ring-[#22545D]/35",
+    space: "bg-[#4C4F8A] ring-[#3A3C6A]/35",
+    lofi: "bg-[#6A4F8A] ring-[#543E6D]/35",
+  };
+
+  const userBubbleTheme = userBubblePalette[ambientBg] || userBubblePalette.none;
+
   return (
     <>
       {/*  чтобы последние сообщения не липли к composer */}
       <div className="space-y-4 pb-2">
         {messages.map((m, idx) => {
           const isAI = m.role === "assistant";
+          const hideAvatars = hasAmbientBg;
 
           // Кризисное сообщение
           if (isAI && m.crisis && !dismissedCrisis.has(idx)) {
@@ -87,7 +143,7 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
               transition={{ type: "spring", stiffness: 400, damping: 32, duration: 0.32 }}
               layout
             >
-              {isAI && (
+              {isAI && !hideAvatars && (
                 <div className="h-10 w-10 rounded-full bg-[#74AA9C] ring-1 ring-[#5d9088]/40 flex items-center justify-center flex-shrink-0">
                   <Image
                     src="/white-logo.svg"
@@ -105,12 +161,12 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                       ? hasAmbientBg
                         ? "text-white"
                         : "text-slate-900 dark:text-slate-100"
-                      : "rounded-3xl bg-[#74AA9C] text-white shadow-sm ring-1 ring-[#5d9088]/30"
+                      : `rounded-3xl text-white shadow-sm ring-1 ${userBubbleTheme}`
                   }`}
                 >
                   <div className={`prose prose-sm max-w-none ${isAI ? (hasAmbientBg ? "prose-invert" : "prose-slate dark:prose-invert") : "prose-invert"}`}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                      {m.content}
+                      {isAI && idx === typingIndex ? typingText : m.content}
                     </ReactMarkdown>
                   </div>
 
@@ -122,15 +178,27 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                 </div>
 
                 {isAI && anchors.length > 0 && showAnchors && (
-                  <div className="mt-2 rounded-2xl border border-black/10 bg-white/70 px-4 py-3 shadow-sm">
+                  <div
+                    className={`mt-2 rounded-2xl border px-4 py-3 shadow-sm ${
+                      hasAmbientBg
+                        ? "border-white/20 bg-black/40 backdrop-blur-sm"
+                        : "border-black/10 bg-white/70"
+                    }`}
+                  >
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-xs uppercase tracking-wide text-slate-500 shrink-0">Якоря разговора</p>
+                      <p className={`text-xs uppercase tracking-wide shrink-0 ${hasAmbientBg ? "text-white/75" : "text-slate-500"}`}>
+                        Якоря разговора
+                      </p>
                       {anchors.map((anchor) => (
                         <button
                           key={anchor}
                           type="button"
                           onClick={() => onAnchorSelect?.(anchor)}
-                          className="rounded-full border border-[#74AA9C]/40 bg-[#74AA9C]/10 px-3 py-1 text-xs text-[#5d9088] hover:bg-[#74AA9C]/20 transition"
+                          className={`rounded-full border px-3 py-1 text-xs transition ${
+                            hasAmbientBg
+                              ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                              : "border-[#74AA9C]/40 bg-[#74AA9C]/10 text-[#5d9088] hover:bg-[#74AA9C]/20"
+                          }`}
                           title="Обсудить тему"
                         >
                           {anchor}
@@ -141,7 +209,7 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                 )}
               </div>
 
-              {!isAI && (
+              {!isAI && !hideAvatars && (
                 <div className="h-10 w-10 rounded-full bg-slate-900/5 ring-1 ring-black/10 overflow-hidden flex-shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -165,8 +233,13 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                 height={24}
               />
             </div>
-            <div className="px-5 py-3 text-slate-700 dark:text-slate-300">
-              Думаю…
+            <div className="px-5 py-3 text-slate-700 dark:text-slate-300 flex items-center gap-1">
+              <span>Думаю</span>
+              <span className="inline-flex items-end gap-0.5" aria-hidden="true">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1s" }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1s" }} />
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1s" }} />
+              </span>
             </div>
           </div>
         )}

@@ -1,12 +1,24 @@
+import { supabaseServer } from "@/lib/supabase/server";
+
 export async function POST(req) {
-  // Получаем user_id и emotion из тела запроса
-  const { user_id, emotion } = await req.json();
-  if (!user_id || !emotion) {
-    return new Response(JSON.stringify({ ok: false, error: 'user_id and emotion required' }), { status: 400 });
+  const supabase = await supabaseServer();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401 });
   }
-  // Глобальное хранилище эмоций (in-memory, для прототипа)
+
+  const { emotion } = await req.json();
+  if (!emotion) {
+    return new Response(JSON.stringify({ ok: false, error: "emotion required" }), { status: 400 });
+  }
+
+  const userId = user.id;
   globalThis.userEmotions = globalThis.userEmotions || {};
-  globalThis.userEmotions[user_id] = {
+  globalThis.userEmotions[userId] = {
     emotion,
     timestamp: Date.now(),
   };
@@ -14,12 +26,16 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-  // Получить эмоцию по user_id (например, для отладки)
-  const { searchParams } = new URL(req.url);
-  const user_id = searchParams.get('user_id');
-  if (!user_id) {
-    return new Response(JSON.stringify({ ok: false, error: 'user_id required' }), { status: 400 });
+  const supabase = await supabaseServer();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), { status: 401 });
   }
-  const data = globalThis.userEmotions?.[user_id] || { emotion: 'neutral' };
+
+  const data = globalThis.userEmotions?.[user.id] || { emotion: "neutral" };
   return new Response(JSON.stringify({ ok: true, ...data }), { status: 200 });
 }

@@ -3,44 +3,69 @@
  */
 export default function ActivityRating({ icon, label, value, onChange }) {
   const options = [
-    { val: "great", label: "Отлично", emoji: "●", color: "emerald" },
-    { val: "fine", label: "Хорошо", emoji: "◉", color: "blue" },
-    { val: "ok", label: "OK", emoji: "○", color: "yellow" },
-    { val: "poor", label: "Плохо", emoji: "◌", color: "red" },
+    {
+      val: "great",
+      label: "Отлично",
+      emoji: "●",
+      activeStyle: {
+        backgroundColor: "#d1fae5",
+        color: "#047857",
+        borderColor: "#6ee7b7",
+      },
+    },
+    {
+      val: "fine",
+      label: "Хорошо",
+      emoji: "◉",
+      activeStyle: {
+        backgroundColor: "#dbeafe",
+        color: "#1d4ed8",
+        borderColor: "#93c5fd",
+      },
+    },
+    {
+      val: "ok",
+      label: "OK",
+      emoji: "○",
+      activeStyle: {
+        backgroundColor: "#fef3c7",
+        color: "#b45309",
+        borderColor: "#fcd34d",
+      },
+    },
+    {
+      val: "poor",
+      label: "Плохо",
+      emoji: "◌",
+      activeStyle: {
+        backgroundColor: "#fee2e2",
+        color: "#dc2626",
+        borderColor: "#fca5a5",
+      },
+    },
   ];
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 min-w-[140px]">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex items-center gap-2 min-w-[150px]">
         <span className="text-lg">{icon}</span>
-        <span className="text-sm font-medium text-black/70">{label}</span>
+        <span className="text-sm font-semibold text-slate-700">{label}</span>
       </div>
 
-      <div className="flex gap-1.5 flex-wrap">
+      <div className="flex gap-2 flex-wrap">
         {options.map((opt) => (
           <button
             key={opt.val}
             type="button"
             onClick={() => onChange(value === opt.val ? "" : opt.val)}
             className={`
-              px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+              px-3.5 py-2 rounded-xl text-xs font-semibold transition-all border
               ${value === opt.val
-                ? `bg-${opt.color}-100 text-${opt.color}-700 border-${opt.color}-300 shadow-sm scale-105`
-                : 'bg-white/80 text-black/50 border-black/10 hover:bg-black/[0.04]'
+                ? "shadow-sm scale-105"
+                : "bg-white/85 text-slate-500 border-slate-200 hover:bg-white hover:text-slate-700"
               }
-              border
             `}
-            style={value === opt.val ? {
-              backgroundColor: opt.color === 'emerald' ? '#d1fae5' : 
-                               opt.color === 'blue' ? '#d9eeea' :
-                               opt.color === 'yellow' ? '#fef3c7' : '#fee2e2',
-              color: opt.color === 'emerald' ? '#047857' :
-                     opt.color === 'blue' ? '#5d9088' :
-                     opt.color === 'yellow' ? '#b45309' : '#dc2626',
-              borderColor: opt.color === 'emerald' ? '#6ee7b7' :
-                          opt.color === 'blue' ? '#74AA9C' :
-                          opt.color === 'yellow' ? '#fcd34d' : '#fca5a5',
-            } : {}}
+            style={value === opt.val ? opt.activeStyle : undefined}
           >
             <span className="mr-1">{opt.emoji}</span>
             {opt.label}

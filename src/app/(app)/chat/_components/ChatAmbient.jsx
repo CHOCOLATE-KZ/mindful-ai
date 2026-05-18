@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { VolumeX, Volume2, Tv2, Music, X, PanelLeft, PanelLeftClose } from "lucide-react";
+import { VolumeX, Volume2, Music, X, PanelLeft, PanelLeftClose } from "lucide-react";
 
 const BACKGROUNDS = [
   { id: "none",      label: "Нет",     emoji: "⬜", videoId: null },
@@ -9,6 +9,7 @@ const BACKGROUNDS = [
   { id: "forest",    label: "Лес",     emoji: "🌲", videoId: "xNN7iTA57jM" },
   { id: "fireplace", label: "Камин",   emoji: "🔥", videoId: "L_LUpnjgPso" },
   { id: "ocean",     label: "Океан",   emoji: "🌊", videoId: "bn9F19Hi1Lk" },
+  { id: "lofi",      label: "Lo-Fi",   emoji: "🎵", videoId: "jfKfPfyJRdk" },
   // Space uses a built-in visual background to avoid YouTube "video unavailable" issues.
   { id: "space",     label: "Космос",  emoji: "🌌", videoId: null },
 ];
@@ -22,14 +23,24 @@ const SOUNDS = [
   { id: "lofi",      label: "Lo-Fi",   emoji: "🎵", videoId: "jfKfPfyJRdk" },
 ];
 
+const ATMOSPHERES = [
+  { id: "none", label: "Выкл", emoji: "🔇", bgId: "none", soundId: "none" },
+  { id: "rain", label: "Дождь", emoji: "🌧️", bgId: "rain", soundId: "rain" },
+  { id: "forest", label: "Лес", emoji: "🌲", bgId: "forest", soundId: "forest" },
+  { id: "fireplace", label: "Камин", emoji: "🔥", bgId: "fireplace", soundId: "fireplace" },
+  { id: "ocean", label: "Океан", emoji: "🌊", bgId: "ocean", soundId: "ocean" },
+  { id: "space", label: "Космос", emoji: "🌌", bgId: "space", soundId: "none" },
+  { id: "lofi", label: "Lo-Fi", emoji: "🎵", bgId: "lofi", soundId: "lofi" },
+];
+
 export default function ChatAmbient({ selectedBg, setSelectedBg, sidebarOpen, setSidebarOpen }) {
-  const [bgOpen, setBgOpen] = useState(false);
-  const [soundOpen, setSoundOpen] = useState(false);
+  const [ambientOpen, setAmbientOpen] = useState(false);
   const [selectedSound, setSelectedSound] = useState(() => {
     if (typeof window === "undefined") return "none";
     return localStorage.getItem("chatAmbientSound") || "none";
   });
   const [muted, setMuted] = useState(false);
+  const lastBgRef = useRef("rain");
   const [volume, setVolume] = useState(() => {
     if (typeof window === "undefined") return 40;
     const savedVol = localStorage.getItem("chatAmbientVolume");
@@ -61,7 +72,33 @@ export default function ChatAmbient({ selectedBg, setSelectedBg, sidebarOpen, se
 
   const bgVideo = BACKGROUNDS.find((b) => b.id === selectedBg);
   const soundItem = SOUNDS.find((s) => s.id === selectedSound);
+  const selectedAtmosphere = ATMOSPHERES.find((a) => a.bgId === selectedBg && a.soundId === selectedSound);
   const isSpaceBg = selectedBg === "space";
+  const bgEnabled = selectedBg !== "none";
+  const accentByAtmosphere = {
+    none: "bg-[#74AA9C] border-[#74AA9C]",
+    rain: "bg-[#355A8A] border-[#355A8A]",
+    forest: "bg-[#2F6A4F] border-[#2F6A4F]",
+    fireplace: "bg-[#8A4F36] border-[#8A4F36]",
+    ocean: "bg-[#2C6F7B] border-[#2C6F7B]",
+    space: "bg-[#4C4F8A] border-[#4C4F8A]",
+    lofi: "bg-[#6A4F8A] border-[#6A4F8A]",
+  };
+  const activeAccent = accentByAtmosphere[selectedAtmosphere?.id || (selectedBg !== "none" ? selectedBg : "none")] || accentByAtmosphere.none;
+
+  useEffect(() => {
+    if (selectedBg !== "none") {
+      lastBgRef.current = selectedBg;
+    }
+  }, [selectedBg]);
+
+  const handleToggleBackground = () => {
+    if (bgEnabled) {
+      setSelectedBg("none");
+      return;
+    }
+    setSelectedBg(lastBgRef.current || "rain");
+  };
 
   const bgSrc = bgVideo?.videoId
     ? `https://www.youtube-nocookie.com/embed/${bgVideo.videoId}?autoplay=1&mute=1&loop=1&playlist=${bgVideo.videoId}&controls=0&disablekb=1&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3&cc_load_policy=0&fs=0`
@@ -123,118 +160,102 @@ export default function ChatAmbient({ selectedBg, setSelectedBg, sidebarOpen, se
 
       {/* ── Floating buttons ── */}
       <div className="fixed bottom-36 right-4 z-[110] flex flex-col items-end gap-2">
-
-        {/* ── SOUND BUTTON ── */}
         <div className="relative">
           <button
-            onClick={() => { setSoundOpen((v) => !v); setBgOpen(false); }}
+            onClick={() => setAmbientOpen((v) => !v)}
             className={`h-10 w-10 rounded-full backdrop-blur shadow-md border grid place-items-center transition hover:scale-105 active:scale-95 ${
-              selectedSound !== "none"
-                ? "bg-[#74AA9C] border-[#74AA9C] text-white"
+              selectedSound !== "none" || selectedBg !== "none"
+                ? `${activeAccent} text-white`
                 : "bg-white/90 dark:bg-slate-800/90 border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-300"
             }`}
-            title="Звук атмосферы"
+            title="Звук и фон"
           >
-            {(muted || selectedSound === "none")
-              ? <VolumeX className="h-4 w-4" />
-              : <Volume2 className="h-4 w-4" />}
+            <Music className="h-4 w-4" />
           </button>
 
-          {soundOpen && (
-            <div className="absolute bottom-12 right-0 w-56 rounded-2xl bg-white/95 dark:bg-[rgb(33_33_46)]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-2xl p-3">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Звук</span>
-                <button onClick={() => setSoundOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
+          {ambientOpen && (
+            <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4">
+              <button
+                type="button"
+                className="absolute inset-0 bg-black/45"
+                aria-label="Закрыть настройки атмосферы"
+                onClick={() => setAmbientOpen(false)}
+              />
 
-              {/* Sound list */}
-              <div className="grid grid-cols-3 gap-1.5 mb-3">
-                {SOUNDS.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => { setSelectedSound(s.id); if (s.id !== "none") setMuted(false); }}
-                    className={`rounded-xl px-1 py-2 text-[11px] flex flex-col items-center gap-0.5 transition font-medium ${
-                      selectedSound === s.id
-                        ? "bg-[#74AA9C] text-white shadow-sm"
-                        : "bg-black/[0.04] dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-black/[0.08]"
-                    }`}
-                  >
-                    <span className="text-lg">{s.emoji}</span>
-                    <span>{s.label}</span>
+              <div className="relative w-full max-w-md rounded-2xl bg-white/95 dark:bg-[rgb(33_33_46)]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-2xl p-3 sm:p-4">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Атмосфера</span>
+                  <button onClick={() => setAmbientOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
+                    <X className="h-3.5 w-3.5" />
                   </button>
-                ))}
-              </div>
+                </div>
 
-              {/* Volume + mute */}
-              {selectedSound !== "none" && (
-                <div className="space-y-2 pt-2 border-t border-black/10 dark:border-white/10">
-                  <div className="flex items-center gap-2">
+                <div className="mb-3">
+                  <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Атмосфера</span>
+                  <div className="mb-2">
                     <button
-                      onClick={() => setMuted((v) => !v)}
-                      className="shrink-0 text-slate-500 dark:text-slate-400 hover:text-[#74AA9C] transition"
+                      type="button"
+                      onClick={handleToggleBackground}
+                      className={`w-full rounded-xl px-3 py-2 text-xs font-medium transition border ${
+                        bgEnabled
+                          ? "bg-[#74AA9C]/15 border-[#74AA9C]/45 text-[#5d9088] dark:text-[#9bd4c7]"
+                          : "bg-black/[0.04] dark:bg-white/[0.06] border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-300"
+                      }`}
                     >
-                      {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-[#74AA9C]" />}
+                      Фон: {bgEnabled ? "включен" : "выключен"}
                     </button>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={muted ? 0 : volume}
-                      onChange={(e) => { setVolume(Number(e.target.value)); setMuted(false); }}
-                      className="w-full h-1.5 accent-[#74AA9C] cursor-pointer"
-                    />
-                    <span className="text-[11px] text-slate-400 w-6 text-right shrink-0">{muted ? 0 : volume}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {ATMOSPHERES.map((a) => (
+                      <button
+                        key={a.id}
+                        onClick={() => {
+                          setSelectedBg(a.bgId);
+                          setSelectedSound(a.soundId);
+                          if (a.soundId !== "none") setMuted(false);
+                        }}
+                        className={`rounded-xl px-1 py-2 text-[11px] flex flex-col items-center gap-0.5 transition font-medium ${
+                          selectedAtmosphere?.id === a.id
+                            ? "bg-[#74AA9C] text-white shadow-sm"
+                            : "bg-black/[0.04] dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-black/[0.08]"
+                        }`}
+                      >
+                        <span className="text-lg">{a.emoji}</span>
+                        <span>{a.label}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
 
-        {/* ── BACKGROUND BUTTON ── */}
-        <div className="relative">
-          <button
-            onClick={() => { setBgOpen((v) => !v); setSoundOpen(false); }}
-            className={`h-10 w-10 rounded-full backdrop-blur shadow-md border grid place-items-center transition hover:scale-105 active:scale-95 ${
-              selectedBg !== "none"
-                ? "bg-[#74AA9C] border-[#74AA9C] text-white"
-                : "bg-white/90 dark:bg-slate-800/90 border-black/10 dark:border-white/10 text-slate-600 dark:text-slate-300"
-            }`}
-            title="Фон чата"
-          >
-            <Tv2 className="h-4 w-4" />
-          </button>
+                {selectedSound !== "none" && (
+                  <div className="space-y-2 border-t border-black/10 pt-2 dark:border-white/10">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setMuted((v) => !v)}
+                        className="shrink-0 text-slate-500 dark:text-slate-400 hover:text-[#74AA9C] transition"
+                      >
+                        {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-[#74AA9C]" />}
+                      </button>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={muted ? 0 : volume}
+                        onChange={(e) => { setVolume(Number(e.target.value)); setMuted(false); }}
+                        className="w-full h-1.5 accent-[#74AA9C] cursor-pointer"
+                      />
+                      <span className="text-[11px] text-slate-400 w-6 text-right shrink-0">{muted ? 0 : volume}</span>
+                    </div>
+                  </div>
+                )}
 
-          {bgOpen && (
-            <div className="absolute bottom-12 right-0 w-52 rounded-2xl bg-white/95 dark:bg-[rgb(33_33_46)]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 shadow-2xl p-3">
-              <div className="flex items-center justify-between mb-2.5">
-                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Фон</span>
-                <button onClick={() => setBgOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-1.5">
-                {BACKGROUNDS.map((bg) => (
-                  <button
-                    key={bg.id}
-                    onClick={() => { setSelectedBg(bg.id); setBgOpen(false); }}
-                    className={`rounded-xl px-2 py-2.5 text-xs flex flex-col items-center gap-1 transition font-medium ${
-                      selectedBg === bg.id
-                        ? "bg-[#74AA9C] text-white shadow-sm"
-                        : "bg-black/[0.04] dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 hover:bg-black/[0.08]"
-                    }`}
-                  >
-                    <span className="text-xl">{bg.emoji}</span>
-                    <span>{bg.label}</span>
-                  </button>
-                ))}
+                {!selectedAtmosphere && (
+                  <p className="mt-2 text-[11px] text-amber-500">Выбран пользовательский микс атмосферы.</p>
+                )}
               </div>
             </div>
           )}
         </div>
-
       </div>
     </>
   );
