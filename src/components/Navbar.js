@@ -10,13 +10,8 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import { ChevronDown, User, Sun, Moon, Menu, X, Languages } from "lucide-react";
 
 export default function Navbar() {
-  const { user, settings, updateSettings } = useAppSettings();
-  const isDark = settings?.theme === "dark";
-  const lang = settings?.language || "ru";
-
-  function toggleTheme() {
-    updateSettings?.({ theme: isDark ? "light" : "dark" });
-  }
+	const { user, settings, updateSettings } = useAppSettings();
+	const lang = settings?.language || "ru";
 
   function setLang(l) {
     updateSettings?.({ language: l });
@@ -240,15 +235,7 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Theme toggle */}
-              <button
-                onClick={toggleTheme}
-                aria-label="Toggle theme"
-                className="inline-flex items-center justify-center w-9 h-9 rounded-lg text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
-              >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                <span className="sr-only">Сменить тему</span>
-              </button>
+  	{/* Theme toggle removed */}
 
               {/* Mobile burger */}
               <button
