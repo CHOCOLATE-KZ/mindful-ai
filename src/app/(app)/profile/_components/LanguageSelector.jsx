@@ -15,8 +15,8 @@ export default function LanguageSelector({ value, onChange, t }) {
             onClick={() => onChange(code)}
             className={`rounded-full border px-3 py-1.5 text-sm transition ${
               value === code
-                ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                : "border-black/10 bg-white hover:bg-black/[0.03] dark:bg-black/20 dark:text-white"
+                ? "border-black bg-black text-white"
+                : "border-black/10 bg-white hover:bg-black/[0.03]"
             }`}
           >
             {label}

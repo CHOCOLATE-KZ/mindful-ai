@@ -11,7 +11,6 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
   const { user, settings, updateSettings } = useAppSettings();
-  const isDark = settings?.theme === "dark";
   const lang = settings?.language || "ru";
   const t = useTranslation("nav", lang);
   const pathname = usePathname();
@@ -50,10 +49,6 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
     { icon: Wrench, href: "/exercises", title: t("exercises") },
   ], [t]);
 
-  function toggleTheme() {
-    updateSettings?.({ theme: isDark ? "light" : "dark" });
-  }
-
   function setLang(l) {
     updateSettings?.({ language: l });
     setLangOpen(false);
@@ -81,7 +76,7 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
   return (
     <aside
       aria-hidden={!isOpen}
-      className={`fixed left-0 top-0 h-screen w-16 bg-white dark:bg-[#131314] border-r border-black/10 dark:border-white/10 flex flex-col items-center py-3 z-50 gap-2 transition-transform duration-300 ease-out ${
+      className={`fixed left-0 top-0 h-screen w-16 bg-white border-r border-black/10 flex flex-col items-center py-3 z-50 gap-2 transition-transform duration-300 ease-out ${
         isOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
       }`}
     >
@@ -107,7 +102,7 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
               className={`flex items-center justify-center h-9 w-9 rounded-lg transition-all duration-200 cursor-pointer ${
                 isActive
                   ? "bg-[#74AA9C] text-white shadow-lg"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10"
+                  : "text-slate-600 hover:bg-black/5"
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -124,7 +119,7 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
         <button
           onClick={onNotesClick}
           title={t("chatNotes")}
-          className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer"
+          className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-600 hover:bg-black/5 transition-all cursor-pointer"
         >
           <StickyNote className="w-4 h-4" />
         </button>
@@ -134,12 +129,12 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
           <button
             onClick={() => setLangOpen(!langOpen)}
             title={lang.toUpperCase()}
-            className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 transition-all mx-auto cursor-pointer"
+            className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-600 hover:bg-black/5 transition-all mx-auto cursor-pointer"
           >
             <Languages className="w-4 h-4" />
           </button>
           {langOpen && mounted && createPortal(
-            <div className="fixed left-16 bottom-20 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden" style={{ zIndex: 9999 }}>
+            <div className="fixed left-16 bottom-20 w-32 bg-white rounded-xl shadow-2xl border border-black/10 overflow-hidden" style={{ zIndex: 9999 }}>
               {[
                 { code: "ru", label: "Русский" },
                 { code: "en", label: "English" },
@@ -150,8 +145,8 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
                   onClick={() => setLang(l.code)}
                   className={`w-full px-3 py-2 text-sm transition-colors text-left flex items-center gap-2 cursor-pointer ${
                     lang === l.code
-                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-medium"
-                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/[0.05]"
+                      ? "bg-blue-50 text-blue-700 font-medium"
+                      : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   <span className="uppercase text-xs font-semibold w-6 opacity-60">{l.code}</span>
@@ -163,24 +158,13 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
           )}
         </div>
 
-        {/* Theme toggle */}
-        <div className="flex items-center justify-center h-9 w-9">
-          <input
-            type="checkbox"
-            checked={!isDark}
-            onChange={toggleTheme}
-            title={t("toggleTheme")}
-            className="theme-toggle-input"
-          />
-        </div>
-
         {/* Profile / Logout */}
         {user && (
           <div ref={profileRef} className="relative w-full">
             <button
               onClick={() => setProfileOpen(!profileOpen)}
               title={t("profile")}
-              className="flex items-center justify-center h-9 w-9 rounded-full overflow-hidden hover:ring-2 hover:ring-[#74AA9C] transition-all mx-auto bg-slate-900 dark:bg-slate-700 cursor-pointer"
+              className="flex items-center justify-center h-9 w-9 rounded-full overflow-hidden hover:ring-2 hover:ring-[#74AA9C] transition-all mx-auto bg-slate-900 cursor-pointer"
             >
               {userAvatarUrl ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -191,11 +175,11 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
             </button>
 
             {profileOpen && mounted && createPortal(
-              <div className="fixed left-16 bottom-4 w-44 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-black/10 dark:border-white/10 overflow-hidden" style={{ zIndex: 9999 }}>
+              <div className="fixed left-16 bottom-4 w-44 bg-white rounded-xl shadow-2xl border border-black/10 overflow-hidden" style={{ zIndex: 9999 }}>
                 <Link
                   href="/profile"
                   onClick={() => setProfileOpen(false)}
-                  className="block px-4 py-3 text-sm text-slate-900 dark:text-slate-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  className="block px-4 py-3 text-sm text-slate-900 hover:bg-black/5 transition-colors"
                 >
                   <span className="inline-flex items-center gap-2">
                     <User className="h-4 w-4" />
@@ -204,7 +188,7 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
                 </Link>
                 <button
                   onClick={() => { setProfileOpen(false); handleSignOut(); }}
-                  className="w-full px-4 py-3 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left flex items-center gap-2"
+                  className="w-full px-4 py-3 text-sm text-rose-600 hover:bg-rose-50 transition-colors text-left flex items-center gap-2"
                 >
                   <LogOut className="h-4 w-4" />
                   {t("signout")}

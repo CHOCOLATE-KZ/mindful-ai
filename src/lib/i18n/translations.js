@@ -143,6 +143,7 @@ export const translations = {
       pushHint: "Напоминания и обновления",
       ai: "Персонализация ИИ",
       aiHint: "Пусть ИИ учитывает ваши привычки",
+      aiPrivacyHint: "Персонализация и данные для ИИ настраиваются в «Настройки приватности» ниже.",
       privacy: "Конфиденциальность и данные",
       privacySettings: "Настройки приватности",
       privacyHint: "Контроль над хранением и использованием",
@@ -161,6 +162,17 @@ export const translations = {
       passwordMinLength: "Пароль должен содержать минимум 6 символов",
       passwordsDoNotMatch: "Пароли не совпадают",
       privacyDescription: "Управляйте тем, как приложение использует ваши данные",
+      privacyDataSharingTitle: "Данные дневника для ИИ",
+      privacyDataSharingDescription:
+        "Заметки и настроение передаются в чат и отчёт ИИ. Выключено — дневник не используется (история сообщений чата сохраняется).",
+      privacyDiaryContextTitle: "Расширенный контекст дневника",
+      privacyDiaryContextDescription:
+        "Тренды за 7 дней, сон и фрагменты записей в чате. Выключено — только последняя запись дневника.",
+      privacyDiaryContextRequiresData: "Сначала включите «Данные дневника для ИИ»",
+      sessionModeConfirmTitle: "Подтверждение режима сеанса",
+      sessionModeConfirmDescription:
+        "Перед включением режима сеанса показывать предупреждение о камере (настройка в браузере).",
+      close: "Закрыть",
       privacyAiTitle: "Персонализация ИИ",
       privacyAiDescription: "ИИ анализирует ваши заметки и настроение, чтобы давать более точные советы",
       privacyChatTitle: "Персонализация чата",
@@ -215,6 +227,7 @@ export const translations = {
       pushHint: "Get reminders and updates",
       ai: "AI Personalization",
       aiHint: "Let AI learn from your patterns",
+      aiPrivacyHint: "AI data and personalization are configured in Privacy Settings below.",
       privacy: "Privacy & Data",
       privacySettings: "Privacy Settings",
       privacyHint: "Control what's stored and used",
@@ -233,6 +246,17 @@ export const translations = {
       passwordMinLength: "Password must be at least 6 characters",
       passwordsDoNotMatch: "Passwords do not match",
       privacyDescription: "Manage how the app uses your data",
+      privacyDataSharingTitle: "Journal data for AI",
+      privacyDataSharingDescription:
+        "Notes and mood are used in chat and AI reports. Off — journal is not sent (chat message history remains).",
+      privacyDiaryContextTitle: "Extended journal context",
+      privacyDiaryContextDescription:
+        "7-day trends, sleep, and note excerpts in chat. Off — only the latest journal entry.",
+      privacyDiaryContextRequiresData: "Turn on “Journal data for AI” first",
+      sessionModeConfirmTitle: "Session mode confirmation",
+      sessionModeConfirmDescription:
+        "Show a camera warning before enabling session mode (stored in this browser).",
+      close: "Close",
       privacyAiTitle: "AI Personalization",
       privacyAiDescription: "AI analyzes your notes and mood to provide more accurate advice",
       privacyChatTitle: "Chat Personalization",
@@ -287,6 +311,7 @@ export const translations = {
       pushHint: "Еске салыстырғыштар мен жаңартулар",
       ai: "AI даралау",
       aiHint: "Үлгілеріңізден үйренсін",
+      aiPrivacyHint: "AI деректері мен даралау төмендегі «Құпиялылық баптаулары» бөлімінде.",
       privacy: "Құпиялылық және деректер",
       privacySettings: "Құпиялылық баптаулары",
       privacyHint: "Не сақталатынын бақылауы",
@@ -305,6 +330,17 @@ export const translations = {
       passwordMinLength: "Құпиясөз кемінде 6 таңбадан тұруы керек",
       passwordsDoNotMatch: "Құпиясөздер сәйкес келмейді",
       privacyDescription: "Қолданба деректеріңізді қалай қолданатынын басқарыңыз",
+      privacyDataSharingTitle: "Күнделік деректері AI үшін",
+      privacyDataSharingDescription:
+        "Жазбалар мен көңіл-күй чат пен AI есебінде қолданылады. Өшірілсе — күнделік жіберілмейді (чат тарихы сақталады).",
+      privacyDiaryContextTitle: "Кеңейтілген күнделік контексті",
+      privacyDiaryContextDescription:
+        "7 күндік тренд, ұйқы және жазба үзінділері. Өшірілсе — тек соңғы жазба.",
+      privacyDiaryContextRequiresData: "Алдымен «Күнделік деректері AI үшін» қосыңыз",
+      sessionModeConfirmTitle: "Сеанс режимін растау",
+      sessionModeConfirmDescription:
+        "Камера туралы ескерту — сеанс режимін қоспас бұрын (браузерде сақталады).",
+      close: "Жабу",
       privacyAiTitle: "AI даралау",
       privacyAiDescription: "AI дәлірек кеңес беру үшін жазбаларыңыз бен көңіл-күйіңізді талдайды",
       privacyChatTitle: "Чатты даралау",

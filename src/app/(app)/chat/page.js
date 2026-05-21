@@ -11,7 +11,7 @@ import ChatConversation from "./_components/ChatConversation";
 import VoiceConversationPanel from "./_components/VoiceConversationPanel";
 import { useChatPageModel } from "./_hooks/useChatPageModel";
 import EmotionTracker from "@/components/EmotionTracker";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileJson, FileText, X } from "lucide-react";
 
 
@@ -20,6 +20,39 @@ export default function ChatPage() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [ambientBg, setAmbientBg] = useState("none");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [hideChatHeader, setHideChatHeader] = useState(false);
+  const [hideChatAvatars, setHideChatAvatars] = useState(false);
+  const [minimalComposer, setMinimalComposer] = useState(false);
+  const [chatPrefsHydrated, setChatPrefsHydrated] = useState(false);
+
+  useEffect(() => {
+    const savedBg = localStorage.getItem("chatAmbientBg");
+    if (savedBg) setAmbientBg(savedBg);
+    setHideChatHeader(localStorage.getItem("chatHideHeader") === "true");
+    setHideChatAvatars(localStorage.getItem("chatHideAvatars") === "true");
+    setMinimalComposer(localStorage.getItem("chatMinimalComposer") === "true");
+    setChatPrefsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!chatPrefsHydrated) return;
+    localStorage.setItem("chatHideHeader", hideChatHeader ? "true" : "false");
+  }, [hideChatHeader, chatPrefsHydrated]);
+
+  useEffect(() => {
+    if (!chatPrefsHydrated) return;
+    localStorage.setItem("chatHideAvatars", hideChatAvatars ? "true" : "false");
+  }, [hideChatAvatars, chatPrefsHydrated]);
+
+  useEffect(() => {
+    if (!chatPrefsHydrated) return;
+    localStorage.setItem("chatMinimalComposer", minimalComposer ? "true" : "false");
+  }, [minimalComposer, chatPrefsHydrated]);
+
+  useEffect(() => {
+    if (!chatPrefsHydrated) return;
+    localStorage.setItem("chatAmbientBg", ambientBg);
+  }, [ambientBg, chatPrefsHydrated]);
   
   const {
     messages,
@@ -65,14 +98,25 @@ export default function ChatPage() {
 
 
   return (
-    <div className="h-dvh flex overflow-hidden text-slate-900 dark:text-slate-100">
+    <div className="relative isolate h-dvh flex overflow-hidden text-slate-900">
       <ChatBackground />
-      <ChatAmbient selectedBg={ambientBg} setSelectedBg={setAmbientBg} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <ChatAmbient
+        selectedBg={ambientBg}
+        setSelectedBg={setAmbientBg}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        hideChatHeader={hideChatHeader}
+        setHideChatHeader={setHideChatHeader}
+        hideChatAvatars={hideChatAvatars}
+        setHideChatAvatars={setHideChatAvatars}
+        minimalComposer={minimalComposer}
+        setMinimalComposer={setMinimalComposer}
+      />
       {sessionModeEnabled && <EmotionTracker userId={currentUserId} />}
       
       <ChatSidebarNav onNotesClick={() => setNotesModalOpen(true)} isOpen={sidebarOpen} />
 
-      <div className={`flex flex-1 min-h-0 transition-all duration-300 ease-out ${sidebarOpen ? "ml-16" : "ml-0"}`}>
+      <div className={`relative z-10 flex flex-1 min-h-0 transition-all duration-300 ease-out ${sidebarOpen ? "ml-16" : "ml-0"}`}>
         <div className="flex flex-col flex-1 min-w-0 min-h-0">
           <ChatHeader
             menuOpen={menuOpen}
@@ -80,6 +124,9 @@ export default function ChatPage() {
             menuRef={menuRef}
             exportMyData={() => setExportModalOpen(true)}
             clearChatHistory={clearChatHistory}
+            hasAmbientBg={ambientBg !== "none"}
+            ambientBg={ambientBg}
+            hidden={hideChatHeader}
           />
 
           {voiceModeEnabled ? (
@@ -95,7 +142,12 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              <div ref={setScrollContainerRef} className="flex-1 min-h-0 overflow-y-auto pb-24 md:pb-28 flex flex-col items-center">
+              <div
+                ref={setScrollContainerRef}
+                className={`flex-1 min-h-0 overflow-y-auto flex flex-col items-center ${
+                  minimalComposer ? "pb-14 md:pb-16" : "pb-24 md:pb-28"
+                }`}
+              >
                 <ChatConversation
                   messages={messages}
                   userAvatarUrl={userAvatarUrl}
@@ -106,6 +158,8 @@ export default function ChatPage() {
                   onDeclineCrisisTopic={declineCrisisTopic}
                   hasAmbientBg={ambientBg !== "none"}
                   ambientBg={ambientBg}
+                  hideAvatars={hideChatAvatars}
+                  minimalComposer={minimalComposer}
                 />
               </div>
 
@@ -122,6 +176,8 @@ export default function ChatPage() {
                     onToggleSessionMode={toggleSessionMode}
                     sidebarOpen={sidebarOpen}
                     hasAmbientBg={ambientBg !== "none"}
+                    ambientBg={ambientBg}
+                    minimalComposer={minimalComposer}
                   />
               </div>
             </>

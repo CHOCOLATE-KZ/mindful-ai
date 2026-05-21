@@ -153,7 +153,7 @@ export function CharacterShowcase() {
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               selected === emotion
                 ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600'
+                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
             }`}
           >
             {emotion}
@@ -161,7 +161,7 @@ export function CharacterShowcase() {
         ))}
       </div>
 
-      <div className="relative min-h-[400px] bg-gray-50 dark:from-gray-900 dark:to-gray-800 rounded-lg p-8 flex items-center justify-center">
+      <div className="relative min-h-[400px] bg-gray-50 rounded-lg p-8 flex items-center justify-center">
         <PsychologistCharacter
           emotion={selected}
           isActive={selected === 'thinking'}

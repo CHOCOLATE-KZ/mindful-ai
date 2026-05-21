@@ -13,6 +13,8 @@ export default function ChatConversation({
   onDeclineCrisisTopic,
   hasAmbientBg,
   ambientBg = "none",
+  hideAvatars = false,
+  minimalComposer = false,
 }) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
@@ -29,6 +31,8 @@ export default function ChatConversation({
             onDeclineCrisisTopic={onDeclineCrisisTopic}
             hasAmbientBg={hasAmbientBg}
             ambientBg={ambientBg}
+            hideAvatars={hideAvatars}
+            minimalComposer={minimalComposer}
           />
         </div>
       </main>

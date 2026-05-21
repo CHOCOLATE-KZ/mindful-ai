@@ -638,11 +638,11 @@ export async function sendTelegramNotification(telegramId, message) {
 
     const { data: settings } = await supabaseAdmin
       .from('user_settings')
-      .select('push_notifications')
+      .select('push_enabled')
       .eq('user_id', userId)
       .single();
 
-    if (!settings?.push_notifications) {
+    if (!settings?.push_enabled) {
       console.log(`Push notifications disabled for user ${userId}`);
       return;
     }

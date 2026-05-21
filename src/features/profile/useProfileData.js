@@ -55,12 +55,6 @@ export function useProfileData(supabase, initial = {}) {
     const next = { ...prev, ...patch, user_id: user.id, updated_at: new Date().toISOString() };
     setSettings(next);
 
-    if (patch.theme) {
-      const root = document.documentElement;
-      if (patch.theme === "dark") root.classList.add("dark");
-      else root.classList.remove("dark");
-    }
-
     const { error } = await supabase.from("user_settings").upsert(next);
     if (error) {
       setSettings(prev);

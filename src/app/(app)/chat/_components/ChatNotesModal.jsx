@@ -40,19 +40,19 @@ export default function ChatNotesModal({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/30 dark:bg-black/50 z-40 transition-opacity"
+        className="fixed inset-0 bg-black/30 z-40 transition-opacity"
         onClick={onClose}
       />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-black/10 dark:border-white/10 w-full max-w-md max-h-[80vh] overflow-y-auto">
-          <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-black/10 dark:border-white/10 flex items-center justify-between p-6">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <div className="bg-white rounded-3xl shadow-2xl border border-black/10 w-full max-w-md max-h-[80vh] overflow-y-auto">
+          <div className="sticky top-0 bg-white border-b border-black/10 flex items-center justify-between p-6">
+            <h2 className="text-lg font-semibold text-slate-900">
               Заметки чата
             </h2>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-lg transition-colors text-slate-600 dark:text-slate-400"
+              className="p-1 hover:bg-black/5 rounded-lg transition-colors text-slate-600"
               aria-label="Закрыть"
             >
               <X className="h-5 w-5" />
@@ -61,7 +61,7 @@ export default function ChatNotesModal({
 
           <div className="p-6 space-y-6">
             <form onSubmit={handleSave} className="space-y-3">
-              <label className="block text-xs uppercase tracking-widest font-semibold text-slate-700 dark:text-slate-400">
+              <label className="block text-xs uppercase tracking-widest font-semibold text-slate-700">
                 Новая заметка
               </label>
               <input
@@ -70,7 +70,7 @@ export default function ChatNotesModal({
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Тема или мысль для разговора…"
                 maxLength={120}
-                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/[0.04] px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:border-[#74AA9C]/50"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#74AA9C]/50"
               />
               <button
                 type="submit"
@@ -81,9 +81,9 @@ export default function ChatNotesModal({
               </button>
             </form>
 
-            <div className="border-t border-slate-200 dark:border-white/[0.08] pt-4">
+            <div className="border-t border-slate-200 pt-4">
               <div className="flex items-center gap-2 mb-4">
-                <div className="text-xs uppercase tracking-widest font-semibold text-slate-700 dark:text-slate-400">
+                <div className="text-xs uppercase tracking-widest font-semibold text-slate-700">
                   Сохранённые
                 </div>
                 {savedNotes.length > 0 && (
@@ -113,9 +113,9 @@ export default function ChatNotesModal({
                         onNoteClick(note.title);
                         onClose();
                       }}
-                      className="w-full rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.04] hover:bg-[#74AA9C]/10 dark:hover:bg-white/[0.07] hover:border-[#74AA9C]/40 dark:hover:border-[#74AA9C]/30 px-3 py-2 text-left transition group"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 hover:bg-[#74AA9C]/10 hover:border-[#74AA9C]/40 px-3 py-2 text-left transition group"
                     >
-                      <p className="text-xs text-slate-900 dark:text-slate-200 group-hover:text-[#74AA9C] dark:group-hover:text-[#74AA9C] truncate font-medium">
+                      <p className="text-xs text-slate-900 group-hover:text-[#74AA9C] truncate font-medium">
                         {note.title}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-1">

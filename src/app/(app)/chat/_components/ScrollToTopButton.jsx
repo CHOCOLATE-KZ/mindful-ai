@@ -19,14 +19,14 @@ export default function ScrollToTopButton({ onClick, atTop, ambientBg = "none" }
     <button
       type="button"
       onClick={onClick}
-      className={`fixed right-8 bottom-10 z-[120] h-12 w-12 rounded-full text-white shadow-2xl ring-2 ring-white grid place-items-center transition-all duration-300 opacity-100 translate-y-0 pointer-events-auto cursor-pointer ${accentClass}`}
+      className={`fixed right-4 bottom-4 z-[120] h-10 w-10 rounded-full text-white shadow-md border border-white/20 backdrop-blur grid place-items-center transition-all duration-300 hover:scale-105 active:scale-95 pointer-events-auto cursor-pointer ${accentClass}`}
       aria-label={atTop ? "Scroll to bottom" : "Scroll to top"}
       title={atTop ? "Вниз" : "Наверх"}
     >
       {atTop ? (
-        <ArrowDown className="h-6 w-6 text-white" />
+        <ArrowDown className="h-4 w-4 text-white" />
       ) : (
-        <ArrowUp className="h-6 w-6 text-white" />
+        <ArrowUp className="h-4 w-4 text-white" />
       )}
     </button>
   );

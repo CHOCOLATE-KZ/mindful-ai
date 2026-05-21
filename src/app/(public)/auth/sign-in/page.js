@@ -115,35 +115,35 @@ export default function SignInPage() {
 
   return (
     <AuthFrame>
-      <div className="w-full max-w-md rounded-3xl border border-gray-200/60 dark:border-white/[0.08] bg-white/80 dark:bg-[rgb(33_33_46)]/80 backdrop-blur-2xl shadow-md shadow-black/10 p-8">
+      <div className="w-full max-w-md rounded-3xl border border-gray-200/60 bg-white/80 backdrop-blur-2xl shadow-md shadow-black/10 p-8">
         <div className="text-center">
           <p className="text-xs uppercase tracking-[0.35em] text-[#74AA9C]">
             MindfulAI
           </p>
-          <h1 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">Вход</h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-white/70">Рады видеть вас снова.</p>
+          <h1 className="mt-3 text-2xl font-semibold text-slate-900">Вход</h1>
+          <p className="mt-2 text-sm text-slate-600">Рады видеть вас снова.</p>
         </div>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <div className="grid gap-2">
-            <Label className="text-slate-700 dark:text-white/80">Email</Label>
+            <Label className="text-slate-700">Email</Label>
             <Input
               name="email"
               type="email"
               required
               placeholder="you@example.com"
-              className="border-slate-200 dark:border-white/20 bg-white dark:bg-white/10 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
+              className="border-slate-200 bg-white text-gray-900 placeholder:text-slate-400"
             />
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-slate-700 dark:text-white/80">Пароль</Label>
+            <Label className="text-slate-700">Пароль</Label>
             <Input
               name="password"
               type="password"
               required
               placeholder="••••••••"
-              className="border-slate-200 dark:border-white/20 bg-white dark:bg-white/10 text-gray-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
+              className="border-slate-200 bg-white text-gray-900 placeholder:text-slate-400"
             />
           </div>
 
@@ -157,10 +157,10 @@ export default function SignInPage() {
           </Button>
         </form>
 
-        <div className="mt-5 flex items-center gap-3 text-xs text-slate-400 dark:text-white/50">
-          <span className="h-px w-full bg-slate-200 dark:bg-white/20" />
+        <div className="mt-5 flex items-center gap-3 text-xs text-slate-400">
+          <span className="h-px w-full bg-slate-200" />
           <span className="whitespace-nowrap">или</span>
-          <span className="h-px w-full bg-slate-200 dark:bg-white/20" />
+          <span className="h-px w-full bg-slate-200" />
         </div>
 
         <div className="mt-4 grid gap-2">
@@ -245,7 +245,7 @@ export default function SignInPage() {
           </div>
         )}
 
-        <p className="mt-4 text-sm text-slate-600 dark:text-white/70">
+        <p className="mt-4 text-sm text-slate-600">
           Нет аккаунта? <Link href="/auth/sign-up" className="text-[#74AA9C] underline">Создать</Link>
         </p>
       </div>

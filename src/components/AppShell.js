@@ -13,7 +13,7 @@ export function useAppSettings() {
 export default function AppShell({ children }) {
   const supabase = useMemo(() => supabaseBrowser(), []);
   const [user, setUser] = useState(null);
-  const [settings, setSettings] = useState({ theme: "light", language: "ru" });
+  const [settings, setSettings] = useState({ language: "ru" });
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -26,11 +26,11 @@ export default function AppShell({ children }) {
     if (u) {
       const { data: s } = await supabase
         .from("user_settings")
-        .select("theme, language")
+        .select("language")
         .eq("user_id", u.id)
         .maybeSingle();
 
-      if (s) setSettings((prev) => ({ ...prev, ...s }));
+      if (s) setSettings((prev) => ({ ...prev, language: s.language || prev.language }));
     }
 
     setLoading(false);
@@ -48,16 +48,9 @@ export default function AppShell({ children }) {
     return () => sub?.subscription?.unsubscribe?.();
   }, [supabase, load]);
 
-  // Sync theme class on <html> so Tailwind dark: variants and CSS vars stay in sync
   useEffect(() => {
-    const root = document.documentElement;
-    if (settings.theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, [settings.theme]);
-
+    document.documentElement.classList.remove("dark");
+  }, []);
 
   const updateSettings = useCallback(
     async (patch) => {
@@ -90,7 +83,6 @@ export default function AppShell({ children }) {
       user,
       settings,
       setLanguage: (language) => updateSettings({ language }),
-      setTheme: (theme) => updateSettings({ theme }),
       updateSettings,
     }),
     [loading, user, settings, updateSettings]

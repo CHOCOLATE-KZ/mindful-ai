@@ -17,6 +17,8 @@ export default function ChatMessages({
   onDeclineCrisisTopic,
   hasAmbientBg = false,
   ambientBg = "none",
+  hideAvatars = false,
+  minimalComposer = false,
 }) {
   const endRef = useRef(null);
   const prevMessagesLenRef = useRef(0);
@@ -176,17 +178,19 @@ export default function ChatMessages({
     []
   );
 
-  const userBubblePalette = {
-    none: "bg-[#74AA9C] ring-[#5d9088]/30",
-    rain: "bg-[#355A8A] ring-[#29486F]/35",
-    forest: "bg-[#2F6A4F] ring-[#24533D]/35",
-    fireplace: "bg-[#8A4F36] ring-[#6A3B28]/35",
-    ocean: "bg-[#2C6F7B] ring-[#22545D]/35",
-    space: "bg-[#4C4F8A] ring-[#3A3C6A]/35",
-    lofi: "bg-[#6A4F8A] ring-[#543E6D]/35",
+  const accentPalette = {
+    none: { bubble: "bg-[#74AA9C] ring-[#5d9088]/30", avatar: "bg-[#74AA9C] ring-[#5d9088]/40" },
+    rain: { bubble: "bg-[#355A8A] ring-[#29486F]/35", avatar: "bg-[#355A8A] ring-[#29486F]/40" },
+    forest: { bubble: "bg-[#2F6A4F] ring-[#24533D]/35", avatar: "bg-[#2F6A4F] ring-[#24533D]/40" },
+    fireplace: { bubble: "bg-[#8A4F36] ring-[#6A3B28]/35", avatar: "bg-[#8A4F36] ring-[#6A3B28]/40" },
+    ocean: { bubble: "bg-[#2C6F7B] ring-[#22545D]/35", avatar: "bg-[#2C6F7B] ring-[#22545D]/40" },
+    space: { bubble: "bg-[#4C4F8A] ring-[#3A3C6A]/35", avatar: "bg-[#4C4F8A] ring-[#3A3C6A]/40" },
+    lofi: { bubble: "bg-[#6A4F8A] ring-[#543E6D]/35", avatar: "bg-[#6A4F8A] ring-[#543E6D]/40" },
   };
 
-  const userBubbleTheme = userBubblePalette[ambientBg] || userBubblePalette.none;
+  const accent = accentPalette[ambientBg] || accentPalette.none;
+  const userBubbleTheme = accent.bubble;
+  const aiAvatarTheme = accent.avatar;
 
   return (
     <>
@@ -194,7 +198,7 @@ export default function ChatMessages({
       <div className="space-y-4 pb-2">
         {messages.map((m, idx) => {
           const isAI = m.role === "assistant";
-          const hideAvatars = hasAmbientBg;
+          const showAvatars = !hideAvatars;
 
           // Кризисное сообщение
           if (isAI && m.crisis && !dismissedCrisis.has(idx)) {
@@ -236,8 +240,10 @@ export default function ChatMessages({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 32, duration: 0.32 }}
             >
-              {isAI && !hideAvatars && (
-                <div className="h-10 w-10 rounded-full bg-[#74AA9C] ring-1 ring-[#5d9088]/40 flex items-center justify-center flex-shrink-0">
+              {isAI && showAvatars && (
+                <div
+                  className={`h-10 w-10 rounded-full ring-1 flex items-center justify-center flex-shrink-0 ${aiAvatarTheme}`}
+                >
                   <Image
                     src="/white-logo.svg"
                     alt="MindfulAI"
@@ -253,25 +259,27 @@ export default function ChatMessages({
                     isAI
                       ? hasAmbientBg
                         ? "text-white"
-                        : "text-slate-900 dark:text-slate-100"
+                        : "text-slate-900"
                       : `rounded-3xl text-white shadow-sm ring-1 ${userBubbleTheme}`
                   }`}
                 >
-                  <div className={`prose prose-sm max-w-none ${isAI ? (hasAmbientBg ? "prose-invert" : "prose-slate dark:prose-invert") : "prose-invert"}`}>
+                  <div className={`prose prose-sm max-w-none ${isAI ? (hasAmbientBg ? "prose-invert" : "prose-slate") : "prose-invert"}`}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                       {isAI && idx === typingIndex ? typingText : m.content}
                     </ReactMarkdown>
                   </div>
 
-                  <p className={`text-xs mt-2 ${isAI ? (hasAmbientBg ? "text-white/70" : "text-slate-400 dark:text-slate-500") : "text-white/70"}`}>
-                    {m.created_at
-                      ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                      : ""}
-                  </p>
+                  {!minimalComposer && (
+                    <p className={`text-xs mt-2 ${isAI ? (hasAmbientBg ? "text-white/70" : "text-slate-400") : "text-white/70"}`}>
+                      {m.created_at
+                        ? new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                        : ""}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {!isAI && !hideAvatars && (
+              {!isAI && showAvatars && (
                 <div className="h-10 w-10 rounded-full bg-slate-900/5 ring-1 ring-black/10 overflow-hidden flex-shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -287,15 +295,19 @@ export default function ChatMessages({
 
         {loading && (
           <div className="flex gap-3 justify-start">
-            <div className="h-10 w-10 rounded-full bg-[#74AA9C] ring-1 ring-[#5d9088]/40 flex items-center justify-center flex-shrink-0">
-              <Image
-                src="/white-logo.svg"
-                alt="MindfulAI"
-                width={24}
-                height={24}
-              />
-            </div>
-            <div className="px-5 py-3 text-slate-700 dark:text-slate-300 flex items-center gap-1">
+            {!hideAvatars && (
+              <div
+                className={`h-10 w-10 rounded-full ring-1 flex items-center justify-center flex-shrink-0 ${aiAvatarTheme}`}
+              >
+                <Image
+                  src="/white-logo.svg"
+                  alt="MindfulAI"
+                  width={24}
+                  height={24}
+                />
+              </div>
+            )}
+            <div className="px-5 py-3 text-slate-700 flex items-center gap-1">
               <span>Думаю</span>
               <span className="inline-flex items-end gap-0.5" aria-hidden="true">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1s" }} />

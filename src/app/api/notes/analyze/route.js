@@ -76,15 +76,12 @@ ${comments.map((c, i) => `${i + 1}. [${new Date(c.date).toLocaleDateString('ru-R
       .select('id');
 
     if (saveError) {
-      return Response.json({ 
-        error: 'Failed to save analysis request',
-        details: saveError.message
-      }, { status: 500 });
+      console.warn("notes_analysis save:", saveError.message);
     }
 
     return Response.json({
       success: true,
-      analysisId: analysisRecord?.[0]?.id,
+      analysisId: analysisRecord?.[0]?.id ?? null,
       prompt: analysisPrompt,
       message: 'Analysis data prepared for AI processing',
       commentsCount: comments.length,

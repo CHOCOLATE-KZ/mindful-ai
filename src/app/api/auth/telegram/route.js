@@ -140,7 +140,6 @@ async function findOrCreateUserByTelegramId(telegramId) {
   // Создаем настройки
   await supabaseAdmin.from("user_settings").insert({
     user_id: userId,
-    theme: "light",
     language: "ru",
     push_enabled: false,
     data_sharing_ai: true,
@@ -326,9 +325,9 @@ export async function POST(request) {
       // Создаем дефолтные настройки
       await supabaseAdmin.from("user_settings").insert({
         user_id: userId,
-        theme: "light",
         language: "ru",
-        notifications_enabled: true,
+        push_enabled: false,
+        reminders_enabled: true,
         data_sharing_ai: true,
       });
     }

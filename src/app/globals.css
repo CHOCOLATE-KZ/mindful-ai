@@ -15,12 +15,10 @@
   --color-blue-950: #1a2e2a;
 }
 
-/* Tailwind v4: use .dark class instead of prefers-color-scheme */
-@variant dark (&:is(.dark *));
-
-
-/* Цветовые переменные для светлой темы (пример, можно скорректировать) */
+/* Цветовые переменные — светлая тема */
 :root {
+  --bg: 247 247 250;
+  --fg: 17 24 39;
   --background: #fcfbfe;
   --foreground: #323133;
   --card: #ffffff;
@@ -57,44 +55,6 @@
   --accent-secondary-soft-secondary-foreground: #323133;
   --accent-secondary-soft-secondary-border: #3C3B3D;
   --accent-secondary-soft-secondary-muted: #e9e9e9;
-  --card: #222126;
-  --card-foreground: #F5F7FA;
-  --border: #252429;
-  --muted: #E6E9ED;
-  --muted-foreground: #A3B6B6;
-  --accent: #D8334A;
-  --accent-soft: #252429;
-  --accent-foreground: #F5F7FA;
-  --accent-border: #D8334A;
-  --accent-muted: #252429;
-  --accent-muted-foreground: #A3B6B6;
-  --accent-hover: #D8334A;
-  --accent-active: #D8334A;
-  --accent-disabled: #252429;
-  --accent-secondary: #A3B6B6;
-  --accent-secondary-foreground: #F5F7FA;
-  --accent-secondary-border: #A3B6B6;
-  --accent-secondary-muted: #252429;
-  --accent-secondary-muted-foreground: #A3B6B6;
-  --accent-secondary-hover: #D8334A;
-  --accent-secondary-active: #A3B6B6;
-  --accent-secondary-disabled: #252429;
-  --accent-secondary-soft: #252429;
-  --accent-secondary-soft-foreground: #A3B6B6;
-  --accent-secondary-soft-border: #252429;
-  --accent-secondary-soft-muted: #252429;
-  --accent-secondary-soft-muted-foreground: #A3B6B6;
-  --accent-secondary-soft-hover: #D8334A;
-  --accent-secondary-soft-active: #A3B6B6;
-  --accent-secondary-soft-disabled: #252429;
-  --accent-secondary-soft-secondary: #A3B6B6;
-  --accent-secondary-soft-secondary-foreground: #F5F7FA;
-  --accent-secondary-soft-secondary-border: #A3B6B6;
-  --accent-secondary-soft-secondary-muted: #252429;
-  --accent-secondary-soft-secondary-muted-foreground: #A3B6B6;
-  --accent-secondary-soft-secondary-hover: #D8334A;
-  --accent-secondary-soft-secondary-active: #A3B6B6;
-  --accent-secondary-soft-secondary-disabled: #252429;
 }
 * { box-sizing: border-box; }
 
@@ -128,92 +88,42 @@ textarea:disabled,
 }
 
 /* =========================
-   THEME TOGGLE (Moon/Sun)
+   SCROLLBAR (TEAL) — только ползунок, без стрелок
+   Chrome 121+ / Firefox / Edge: scrollbar-width + scrollbar-color (без -webkit).
+   Safari / старый Chromium: -webkit без scrollbar-width на том же элементе.
    ========================= */
 
-.theme-toggle-input {
-  --size: 1.2rem;
-  appearance: none;
-  outline: none;
-  cursor: pointer;
-  width: var(--size);
-  height: var(--size);
-  box-shadow: inset calc(var(--size) * 0.33) calc(var(--size) * -0.25) 0;
-  border-radius: 999px;
-  color: hsl(240, 100%, 85%);
-  transition: all 500ms;
-  flex-shrink: 0;
+@supports not (scrollbar-width: thin) {
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: rgba(229, 231, 235, 0.5);
+    border-radius: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #74aa9c;
+    border-radius: 8px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #5d9088;
+  }
 }
 
-.theme-toggle-input:checked {
-  --ray-size: calc(var(--size) * -0.4);
-  --offset-orthogonal: calc(var(--size) * 0.65);
-  --offset-diagonal: calc(var(--size) * 0.45);
-  transform: scale(0.75);
-  color: hsl(40, 100%, 50%);
-  box-shadow:
-    inset 0 0 0 var(--size),
-    calc(var(--offset-orthogonal) * -1) 0 0 var(--ray-size),
-    var(--offset-orthogonal) 0 0 var(--ray-size),
-    0 calc(var(--offset-orthogonal) * -1) 0 var(--ray-size),
-    0 var(--offset-orthogonal) 0 var(--ray-size),
-    calc(var(--offset-diagonal) * -1) calc(var(--offset-diagonal) * -1) 0 var(--ray-size),
-    var(--offset-diagonal) var(--offset-diagonal) 0 var(--ray-size),
-    calc(var(--offset-diagonal) * -1) var(--offset-diagonal) 0 var(--ray-size),
-    var(--offset-diagonal) calc(var(--offset-diagonal) * -1) 0 var(--ray-size);
-}
-
-/* =========================
-   CUSTOM SCROLLBAR (TEAL)
-   ========================= */
-
-/* Webkit browsers (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-
-::-webkit-scrollbar-button {
-  display: none; /* Hide arrow buttons */
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(229, 231, 235, 0.5);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #74AA9C;
-  border-radius: 10px;
-  border: 2px solid rgba(229, 231, 235, 0.5);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #5d9088;
-}
-
-::-webkit-scrollbar-thumb:active {
-  background: #4a7a70;
-}
-
-/* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #74AA9C rgba(229, 231, 235, 0.5);
-}
-
-/* Dark mode adjustments */
-html.dark ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-html.dark ::-webkit-scrollbar-thumb {
-  background: #5d9088;
-  border-color: rgba(255, 255, 255, 0.05);
-}
-
-html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #74AA9C;
+  scrollbar-color: #74aa9c rgba(229, 231, 235, 0.5);
 }
 
 /* ===========================
@@ -229,10 +139,6 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   color: rgb(17 24 39);
 }
 
-html.dark * {
-  scrollbar-color: #5d9088 rgba(255, 255, 255, 0.05);
-}
-
 /* =========================
    UTILITIES (your custom)
    ========================= */
@@ -242,13 +148,6 @@ html.dark * {
   box-shadow:
     0 10px 30px rgba(37, 99, 235, 0.08),
     0 2px 10px rgba(0, 0, 0, 0.06);
-}
-
-/* Dark card shadow */
-html.dark .shadow-card {
-  box-shadow:
-    0 10px 30px rgba(37, 99, 235, 0.12),
-    0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
 /* ===== Animations ===== */
@@ -326,196 +225,6 @@ html.dark .shadow-card {
     0 8px 32px rgba(31, 38, 135, 0.1),
     0 0 0 1px rgba(255, 255, 255, 0.2) inset;
 }
-
-html.dark .glass-card {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-
-/* =========================
-   DARK MODE — ПОЛНОЕ ПОКРЫТИЕ
-   ChatGPT-стиль (#212121) + синий подтон бренда
-   bg: #1a1b2e | card: #22243a | input: #181928
-   ========================= */
-
-/* ---- ФОНЫ ---- */
-html.dark .bg-white                  { background-color: rgb(42 42 58) !important; }
-html.dark .bg-white\/90              { background-color: rgb(42 42 58 / 0.93) !important; }
-html.dark .bg-white\/80              { background-color: rgb(42 42 58 / 0.85) !important; }
-html.dark .bg-white\/75              { background-color: rgb(33 33 46 / 0.88) !important; }
-html.dark .bg-white\/70              { background-color: rgb(42 42 58 / 0.78) !important; }
-html.dark .bg-white\/60              { background-color: rgb(42 42 58 / 0.65) !important; }
-html.dark .bg-slate-50,
-html.dark .bg-gray-50                { background-color: rgb(26 26 38) !important; }
-html.dark .bg-slate-100,
-html.dark .bg-gray-100               { background-color: rgb(33 33 46) !important; }
-html.dark .bg-slate-200,
-html.dark .bg-gray-200               { background-color: rgb(42 42 58) !important; }
-html.dark .bg-slate-800              { background-color: rgb(52 52 70) !important; }
-html.dark .bg-slate-950\/90          { background-color: rgb(26 26 38 / 0.92) !important; }
-/* #131314 overrides — declared AFTER generic rules so they win (same specificity, last wins) */
-html.dark .dark\:bg-\[\#131314\]        { background-color: #131314 !important; }
-html.dark .dark\:bg-\[\#131314\]\/80    { background-color: rgb(19 19 20 / 0.80) !important; }
-html.dark .dark\:bg-\[\#131314\]\/90    { background-color: rgb(19 19 20 / 0.90) !important; }
-
-/* Полупрозрачные чёрные оверлеи → светлые */
-html.dark .bg-black\/\[0\.03\]       { background-color: rgb(255 255 255 / 0.03) !important; }
-html.dark .bg-black\/\[0\.04\]       { background-color: rgb(255 255 255 / 0.05) !important; }
-html.dark .bg-black\/\[0\.05\]       { background-color: rgb(255 255 255 / 0.06) !important; }
-html.dark .bg-black\/\[0\.06\]       { background-color: rgb(255 255 255 / 0.07) !important; }
-html.dark .bg-black\/10              { background-color: rgb(255 255 255 / 0.07) !important; }
-
-/* ---- ТЕКСТ ---- */
-html.dark .text-black                { color: rgb(236 237 245) !important; }
-html.dark .text-black\/65            { color: rgb(140 145 175) !important; }
-html.dark .text-black\/60            { color: rgb(140 145 175) !important; }
-html.dark .text-black\/50            { color: rgb(100 104 140) !important; }
-html.dark .text-black\/40            { color: rgb(70 74 110) !important; }
-html.dark .text-slate-900            { color: rgb(236 237 245) !important; }
-html.dark .text-slate-800            { color: rgb(210 212 235) !important; }
-html.dark .text-slate-700            { color: rgb(140 145 175) !important; }
-html.dark .text-slate-600            { color: rgb(140 145 175) !important; }
-html.dark .text-slate-500,
-html.dark .text-gray-500             { color: rgb(100 104 140) !important; }
-html.dark .text-slate-400            { color: rgb(100 104 140) !important; }
-html.dark .text-gray-900             { color: rgb(236 237 245) !important; }
-html.dark .text-gray-800             { color: rgb(210 212 235) !important; }
-html.dark .text-gray-700             { color: rgb(140 145 175) !important; }
-html.dark .text-gray-600             { color: rgb(140 145 175) !important; }
-/* override — must be after generic rules */
-html.dark .dark\:text-slate-300      { color: rgb(203 213 225) !important; }
-
-/* ---- РАМКИ ---- */
-html.dark .border-black\/10          { border-color: rgb(255 255 255 / 0.08) !important; }
-html.dark .border-black\/5           { border-color: rgb(255 255 255 / 0.05) !important; }
-html.dark .border-gray-200           { border-color: rgb(255 255 255 / 0.08) !important; }
-html.dark .border-gray-100           { border-color: rgb(255 255 255 / 0.05) !important; }
-html.dark .border-gray-300           { border-color: rgb(255 255 255 / 0.10) !important; }
-html.dark .border-slate-100          { border-color: rgb(255 255 255 / 0.06) !important; }
-html.dark .border-slate-200          { border-color: rgb(255 255 255 / 0.08) !important; }
-html.dark .divide-gray-100 > * + *   { border-color: rgb(255 255 255 / 0.05) !important; }
-
-/* ---- RING ---- */
-html.dark .ring-black\/5             { --tw-ring-color: rgb(255 255 255 / 0.04) !important; }
-html.dark .ring-black\/10            { --tw-ring-color: rgb(255 255 255 / 0.08) !important; }
-
-/* ---- ТЕНИ ---- */
-html.dark .shadow-sm                 { box-shadow: 0 1px 6px rgb(0 0 5 / 0.40) !important; }
-html.dark .shadow-md                 { box-shadow: 0 4px 18px rgb(0 0 5 / 0.50) !important; }
-html.dark .shadow-lg                 { box-shadow: 0 8px 32px rgb(0 0 5 / 0.55) !important; }
-html.dark .shadow-xl                 { box-shadow: 0 16px 48px rgb(0 0 5 / 0.60) !important; }
-html.dark .shadow-2xl                { box-shadow: 0 24px 64px rgb(0 0 5 / 0.65) !important; }
-
-/* ---- HOVER ---- */
-html.dark .hover\:bg-gray-50:hover   { background-color: rgb(255 255 255 / 0.05) !important; }
-html.dark .hover\:bg-slate-50:hover  { background-color: rgb(255 255 255 / 0.05) !important; }
-html.dark .hover\:bg-gray-100:hover  { background-color: rgb(255 255 255 / 0.07) !important; }
-html.dark .hover\:bg-black\/\[0\.04\]:hover { background-color: rgb(255 255 255 / 0.05) !important; }
-html.dark .hover\:bg-black\/\[0\.05\]:hover { background-color: rgb(255 255 255 / 0.06) !important; }
-html.dark .hover\:bg-rose-50:hover   { background-color: rgb(120 20 20 / 0.25) !important; }
-html.dark .hover\:bg-red-50:hover    { background-color: rgb(120 20 20 / 0.25) !important; }
-html.dark .hover\:border-blue-600:hover { border-color: rgb(96 165 250) !important; }
-
-/* ---- ГРАДИЕНТЫ ---- */
-html.dark .from-white {
-  --tw-gradient-from: rgb(42 42 58) var(--tw-gradient-from-position) !important;
-}
-html.dark .to-white {
-  --tw-gradient-to: rgb(42 42 58) var(--tw-gradient-to-position) !important;
-}
-html.dark .via-white {
-  --tw-gradient-via: rgb(42 42 58) var(--tw-gradient-via-position) !important;
-}
-html.dark .from-violet-50 {
-  --tw-gradient-from: rgb(50 20 110 / 0.35) var(--tw-gradient-from-position) !important;
-}
-html.dark .via-violet-50\/20 {
-  --tw-gradient-via: transparent var(--tw-gradient-via-position) !important;
-}
-html.dark .to-violet-50 {
-  --tw-gradient-to: rgb(50 20 110 / 0.25) var(--tw-gradient-to-position) !important;
-}
-html.dark .from-blue-50 {
-  --tw-gradient-from: rgb(20 60 52 / 0.50) var(--tw-gradient-from-position) !important;
-}
-html.dark .to-blue-50 {
-  --tw-gradient-to: rgb(20 60 52 / 0.35) var(--tw-gradient-to-position) !important;
-}
-html.dark .from-blue-100 {
-  --tw-gradient-from: rgb(20 60 52 / 0.65) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-blue-50\/50 {
-  --tw-gradient-from: rgb(20 60 52 / 0.30) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-emerald-50 {
-  --tw-gradient-from: rgb(15 50 35 / 0.45) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-purple-50,
-html.dark .from-purple-100 {
-  --tw-gradient-from: rgb(55 10 95 / 0.40) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-orange-50,
-html.dark .from-orange-100 {
-  --tw-gradient-from: rgb(65 22 5 / 0.40) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-red-50,
-html.dark .from-red-100 {
-  --tw-gradient-from: rgb(65 10 10 / 0.40) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-pink-50,
-html.dark .from-pink-100 {
-  --tw-gradient-from: rgb(70 5 70 / 0.35) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-amber-50 {
-  --tw-gradient-from: rgb(55 32 5 / 0.35) var(--tw-gradient-from-position) !important;
-}
-html.dark .from-slate-50 {
-  --tw-gradient-from: rgb(26 26 38) var(--tw-gradient-from-position) !important;
-}
-
-/* ---- ЦВЕТНЫЕ ПИЛЛЫ / БЕЙДЖИ ---- */
-html.dark .bg-violet-50       { background-color: rgb(50 20 110 / 0.28) !important; }
-html.dark .bg-violet-100      { background-color: rgb(50 20 110 / 0.38) !important; }
-html.dark .bg-violet-200      { background-color: rgb(50 20 110 / 0.50) !important; }
-html.dark .bg-blue-50         { background-color: rgb(20 60 52 / 0.35) !important; }
-html.dark .bg-blue-50\/60     { background-color: rgb(20 60 52 / 0.28) !important; }
-html.dark .bg-blue-100        { background-color: rgb(20 60 52 / 0.48) !important; }
-html.dark .bg-emerald-50      { background-color: rgb(15 50 35 / 0.35) !important; }
-html.dark .bg-emerald-100     { background-color: rgb(15 50 35 / 0.48) !important; }
-html.dark .bg-rose-50         { background-color: rgb(65 10 10 / 0.32) !important; }
-html.dark .bg-rose-100        { background-color: rgb(65 10 10 / 0.45) !important; }
-html.dark .bg-red-50          { background-color: rgb(65 10 10 / 0.32) !important; }
-html.dark .bg-amber-50        { background-color: rgb(55 32 5 / 0.30) !important; }
-html.dark .bg-amber-50\/60    { background-color: rgb(55 32 5 / 0.24) !important; }
-
-/* ---- ВВОД (формы) ---- */
-html.dark input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
-html.dark textarea:not(.bg-transparent),
-html.dark select {
-  background-color: #1c1c1d !important;
-  color: rgb(236 237 245) !important;
-  border-color: rgb(255 255 255 / 0.10) !important;
-}
-html.dark textarea.bg-transparent {
-  background-color: transparent !important;
-}
-html.dark input::placeholder,
-html.dark textarea::placeholder {
-  color: rgb(100 104 140) !important;
-}
-html.dark input:focus:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
-html.dark textarea:focus {
-  border-color: rgb(255 255 255 / 0.10) !important;
-  box-shadow: none !important;
-}
-
-/* ---- СКРОЛЛБАР ---- */
-html.dark ::-webkit-scrollbar-track  { background: rgb(26 26 38); }
-html.dark ::-webkit-scrollbar-thumb  { background: #4a7a70; border-color: rgb(26 26 38); }
-html.dark ::-webkit-scrollbar-thumb:hover { background: #74AA9C; }
-html.dark * { scrollbar-color: #4a7a70 rgb(26 26 38); }
-
 
 .card {
   background: rgb(var(--card));

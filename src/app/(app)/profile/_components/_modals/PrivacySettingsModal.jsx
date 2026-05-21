@@ -13,6 +13,9 @@ export default function PrivacySettingsModal({ open, onClose, settings, onChange
   const [clearDone, setClearDone] = useState(false);
   const [sessionConfirmRequired, setSessionConfirmRequired] = useState(true);
 
+  const dataSharingOn = settings?.data_sharing_ai !== false;
+  const diaryContextOn = !!settings?.ai_personalization;
+
   useEffect(() => {
     if (!open) return;
     setSessionConfirmRequired(getSessionModeConfirmationRequired());
@@ -42,40 +45,47 @@ export default function PrivacySettingsModal({ open, onClose, settings, onChange
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-3xl border border-black/10 bg-white p-6 shadow-2xl dark:bg-[#0B0B0F] dark:border-white/10">
-        <div className="text-lg font-semibold text-black dark:text-white">{t("privacySettings")}</div>
-        <p className="mt-1 text-sm text-black/50 dark:text-white/40">
-          {t("privacyDescription")}
-        </p>
+      <div className="w-full max-w-lg rounded-3xl border border-black/10 bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="text-lg font-semibold text-black">{t("privacySettings")}</div>
+        <p className="mt-1 text-sm text-black/50">{t("privacyDescription")}</p>
 
         <div className="mt-5 space-y-3">
           <ToggleRow
-            title={t("privacyAiTitle")}
-            description={t("privacyAiDescription")}
-            value={!!settings?.data_sharing_ai}
-            onClick={() => onChange({ data_sharing_ai: !settings?.data_sharing_ai })}
+            title={t("privacyDataSharingTitle")}
+            description={t("privacyDataSharingDescription")}
+            value={dataSharingOn}
+            onClick={() => {
+              const next = !dataSharingOn;
+              if (!next) {
+                onChange({ data_sharing_ai: false, ai_personalization: false });
+              } else {
+                onChange({ data_sharing_ai: true });
+              }
+            }}
           />
           <ToggleRow
-            title={t("privacyChatTitle")}
-            description={t("privacyChatDescription")}
-            value={!!settings?.ai_personalization}
-            onClick={() => onChange({ ai_personalization: !settings?.ai_personalization })}
+            title={t("privacyDiaryContextTitle")}
+            description={t("privacyDiaryContextDescription")}
+            value={diaryContextOn && dataSharingOn}
+            disabled={!dataSharingOn}
+            disabledHint={t("privacyDiaryContextRequiresData")}
+            onClick={() => {
+              if (!dataSharingOn) return;
+              onChange({ ai_personalization: !diaryContextOn });
+            }}
           />
           <ToggleRow
-            title="Подтверждение режима сеанса"
-            description="Перед включением режима сеанса показывать окно с предупреждением о камере"
+            title={t("sessionModeConfirmTitle")}
+            description={t("sessionModeConfirmDescription")}
             value={sessionConfirmRequired}
             onClick={handleToggleSessionConfirm}
           />
 
-          {/* Clear chat history */}
-          <div className="rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-4 dark:bg-rose-900/10 dark:border-rose-900/30">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-sm font-medium text-rose-700 dark:text-rose-400">{t("clearChatTitle")}</div>
-                <div className="mt-0.5 text-xs text-rose-500/80 dark:text-rose-400/60">
-                  {t("clearChatDescription")}
-                </div>
+                <div className="text-sm font-medium text-rose-700">{t("clearChatTitle")}</div>
+                <div className="mt-0.5 text-xs text-rose-500/80">{t("clearChatDescription")}</div>
               </div>
               {clearDone ? (
                 <span className="shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
@@ -101,7 +111,7 @@ export default function PrivacySettingsModal({ open, onClose, settings, onChange
               ) : (
                 <button
                   onClick={() => setClearConfirm(true)}
-                  className="shrink-0 rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-600 hover:text-white dark:bg-transparent dark:border-rose-700 dark:text-rose-400"
+                  className="shrink-0 rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-600 hover:text-white"
                 >
                   {t("clear")}
                 </button>
@@ -113,9 +123,9 @@ export default function PrivacySettingsModal({ open, onClose, settings, onChange
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm hover:bg-black/[0.03] dark:bg-white/5 dark:border-white/10 dark:text-white"
+            className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm hover:bg-black/[0.03]"
           >
-            {t("cancel")}
+            {t("close")}
           </button>
         </div>
       </div>
@@ -123,18 +133,28 @@ export default function PrivacySettingsModal({ open, onClose, settings, onChange
   );
 }
 
-function ToggleRow({ title, description, value, onClick }) {
+function ToggleRow({ title, description, value, onClick, disabled = false, disabledHint }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-black/10 bg-white/70 px-4 py-4 dark:bg-white/5 dark:border-white/10">
-      <div>
-        <div className="text-sm font-medium text-black/80 dark:text-white/80">{title}</div>
-        {description && (
-          <div className="mt-0.5 text-xs text-black/40 dark:text-white/40">{description}</div>
+    <div
+      className={`flex items-center justify-between gap-4 rounded-2xl border border-black/10 px-4 py-4 ${
+        disabled ? "bg-slate-50 opacity-70" : "bg-white/70"
+      }`}
+    >
+      <div className="min-w-0">
+        <div className="text-sm font-medium text-black/80">{title}</div>
+        {description && <div className="mt-0.5 text-xs text-black/40">{description}</div>}
+        {disabled && disabledHint && (
+          <div className="mt-1 text-xs text-amber-700/90">{disabledHint}</div>
         )}
       </div>
       <button
+        type="button"
         onClick={onClick}
-        className={`h-7 w-12 shrink-0 rounded-full p-1 transition ${value ? "bg-black/80" : "bg-black/20"}`}
+        disabled={disabled}
+        className={`h-7 w-12 shrink-0 rounded-full p-1 transition ${
+          disabled ? "cursor-not-allowed bg-black/10" : value ? "bg-black/80" : "bg-black/20"
+        }`}
+        aria-label={title}
       >
         <div className={`h-5 w-5 rounded-full bg-white transition ${value ? "translate-x-5" : ""}`} />
       </button>

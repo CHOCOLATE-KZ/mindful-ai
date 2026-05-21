@@ -162,7 +162,7 @@ export default function PsychologistCharacter({
           initial="hidden"
           animate="visible"
         >
-          <div className="text-sm font-medium text-gray-800 dark:text-gray-100">
+          <div className="text-sm font-medium text-gray-800">
             {thoughtText}
           </div>
           <div className={styles.thoughtBubbleTail} />

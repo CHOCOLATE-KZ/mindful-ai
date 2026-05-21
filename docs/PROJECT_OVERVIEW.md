@@ -212,7 +212,7 @@ psychology_knowledge/            # MD-файлы по темам:
 | Таблица | Описание |
 |---|---|
 | `profiles` | Профили пользователей (avatar_url, bio и др.) |
-| `user_settings` | Настройки (theme, language, ai_personalization, data_sharing_ai) |
+| `user_settings` | Настройки (language, ai_personalization, data_sharing_ai, reminders и др.) |
 | `ai_messages` | История диалога с ИИ |
 | `chat_notes` | Анкоры/заметки из чата |
 | `notes` | Записи дневника (mood, sleep, текст) |

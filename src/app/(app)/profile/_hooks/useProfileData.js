@@ -92,13 +92,12 @@ export function useProfileData(supabase) {
         .upsert(
           {
             user_id: userId,
-            theme: "light",
             language: "ru",
             ai_personalization: true,
             data_sharing_ai: true,
             anonymous_analytics: true,
             activity_tracking: false,
-            push_notifications: false,
+            push_enabled: false,
           },
           { onConflict: "user_id" }
         )

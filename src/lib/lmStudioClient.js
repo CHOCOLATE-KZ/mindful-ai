@@ -56,47 +56,9 @@ export async function askAIWithHistory(userMessage, history = [], userContext = 
   return result.reply || "Извините, не могу ответить на этот вопрос.";
 }
 
-/**
- * Строит контекст о пользователе из MSSQL
- * @param {string} userId - UUID пользователя
- * @returns {Promise<string>} Контекст
- */
-import { query } from "./mssqlClient.js";
+import { buildUserContext } from "./chat/buildUserContext.js";
 
-export async function buildUserContext(userId) {
-  // Получаем профиль
-  const profileRes = await query(
-    "SELECT name FROM profiles WHERE id = @userId",
-    { userId }
-  );
-  const profile = profileRes.recordset[0] || {};
-
-  // Получаем настройки
-  const settingsRes = await query(
-    "SELECT language, data_sharing_ai FROM user_settings WHERE user_id = @userId",
-    { userId }
-  );
-  const settings = settingsRes.recordset[0] || {};
-
-  // Получаем последнюю заметку
-  const noteRes = await query(
-    "SELECT TOP 1 date, mood, sleep FROM notes WHERE user_id = @userId ORDER BY date DESC",
-    { userId }
-  );
-  const note = noteRes.recordset[0] || {};
-
-  if (settings.data_sharing_ai === false) return "";
-
-  const parts = [];
-  if (profile.name) parts.push(`Имя: ${profile.name}`);
-  if (settings.language) parts.push(`Язык: ${settings.language}`);
-  if (note.date || note.mood != null || note.sleep != null) {
-    parts.push(
-      `Последняя заметка: дата=${note.date || "?"}, настроение=${note.mood ?? "?"}/10, сон=${note.sleep ?? "?"} мин`
-    );
-  }
-  return parts.length ? parts.join(". ") : "";
-}
+export { buildUserContext };
 
 const lmStudioClient = {
   callLmStudio,

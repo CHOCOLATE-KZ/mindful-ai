@@ -21,7 +21,7 @@ export function WelcomingCharacter() {
         animated={true}
       />
       <motion.div
-        className="text-center mt-16 text-lg font-semibold text-gray-700 dark:text-gray-300"
+        className="text-center mt-16 text-lg font-semibold text-gray-700"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
@@ -105,14 +105,14 @@ export function CharacterScene({
   const Component = componentMap[type] || WelcomingCharacter;
 
   return (
-    <div className={`relative w-full py-12 ${showBackground ? 'bg-blue-50 dark:bg-gray-900' : ''}`}>
+    <div className={`relative w-full py-12 ${showBackground ? 'bg-blue-50' : ''}`}>
       <div className="relative min-h-[400px] flex items-center justify-center">
         <Component />
       </div>
 
       {subtitle && (
         <motion.div
-          className="text-center mt-8 text-gray-600 dark:text-gray-400"
+          className="text-center mt-8 text-gray-600"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
