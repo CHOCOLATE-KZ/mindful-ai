@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { writeCrisisTopicModeToStorage } from "@/lib/chat/crisisSession";
 
 // Приветственное сообщение для новых пользователей (без истории)
 const WELCOME_MESSAGE = {
@@ -30,8 +31,9 @@ export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
         .from("ai_messages")
         .select("role, content, created_at")
         .eq("user_id", uid)
+        .eq("source", "web")
         .order("created_at", { ascending: true })
-        .limit(50);
+        .limit(80);
 
       if (!active) return;
 
@@ -56,7 +58,11 @@ export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
     const ok = confirm("Очистить историю чата? Это действие нельзя отменить.");
     if (!ok) return;
 
-    const { error } = await supabase.from("ai_messages").delete().eq("user_id", uid);
+    const { error } = await supabase
+      .from("ai_messages")
+      .delete()
+      .eq("user_id", uid)
+      .eq("source", "web");
     if (error) {
       console.error(error);
       alert("Не удалось очистить чат");
@@ -64,6 +70,12 @@ export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
     }
 
     setMessages([WELCOME_MESSAGE]);
+    writeCrisisTopicModeToStorage(null);
+    try {
+      await fetch("/api/chat/clear", { method: "POST", credentials: "include" });
+    } catch (err) {
+      console.warn("[chat] clear summary/crisis mode:", err);
+    }
     onHistoryCleared?.();
   }, [getUserId, onHistoryCleared, supabase]);
 

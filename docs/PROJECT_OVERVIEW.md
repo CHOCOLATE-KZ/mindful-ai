@@ -20,7 +20,7 @@
 | Frontend | Next.js 16 (App Router), React, Tailwind CSS, Framer Motion |
 | Backend | Next.js API Routes (Edge / Node) |
 | БД | Supabase (PostgreSQL + RLS + Auth) |
-| ИИ | LM Studio (local LLM, gpt-oss-20b) + RAG + safety/prompt pipeline |
+| ИИ | LM Studio (meta-llama-3.1-8b-instruct) + RAG + safety/prompt pipeline |
 | Telegram | Webhook + Polling (node-telegram-bot-api) |
 | Деплой | Docker, docker-compose |
 | Аутентификация | Supabase Auth (email/password, OAuth Google/Apple) |
@@ -35,7 +35,6 @@ src/
     (public)/           # Публичные страницы (без авторизации)
       page.js           # Главная / лендинг
       auth/             # sign-in, sign-up, callback
-      courses/          # Каталог курсов
       psychology/       # Психологические статьи
       news/             # Новости
       about/, faq/, contacts/, privacy/, terms/
@@ -65,7 +64,6 @@ src/
 |---|---|---|
 | Лендинг | `/` | Hero (email/OAuth регистрация), демо-чат, фичи, FAQ, волновой градиент фон |
 | Психология | `/psychology` | Статьи по психологическим темам |
-| Курсы | `/courses` | Каталог курсов с фильтрами |
 | Новости | `/news` | Новости проекта |
 | FAQ | `/faq` | Частые вопросы |
 | Войти | `/auth/sign-in` | Email + Google/Apple OAuth |
@@ -103,10 +101,9 @@ chat/_components/
   ChatComposer.jsx       # Поле ввода + кнопки (голос, сеанс, отправка)
   ChatConversation.jsx   # Список сообщений
   ChatHeader.jsx         # Шапка чата с меню
-  ChatSidebar.jsx        # Боковая панель (заметки/анкоры)
   ChatSidebarNav.jsx     # Иконки навигации слева
   VoiceConversationPanel.jsx  # Полноэкранный голосовой режим
-  AnchorsModal.jsx       # Модалка сохранённых анкоров
+  ChatNotesModal.jsx     # Модалка заметок чата
   ChatBackground.jsx     # Фоновые эффекты
 ```
 
@@ -278,7 +275,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 LMSTUDIO_BASE_URL=http://127.0.0.1:1234
-LMSTUDIO_MODEL=gpt-oss-20b
+LMSTUDIO_MODEL=meta-llama-3.1-8b-instruct
 LMSTUDIO_TIMEOUT_MS=15000
 LMSTUDIO_TEMPERATURE=0.6
 ENABLE_PSYCHOLOGY_RAG=true

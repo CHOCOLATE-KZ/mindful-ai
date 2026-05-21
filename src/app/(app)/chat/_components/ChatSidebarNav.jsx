@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { Home, BookOpen, MessageSquare, LogOut, User, Languages, Newspaper, Wrench, Lightbulb, Anchor } from "lucide-react";
+import { Home, MessageSquare, LogOut, User, Languages, Newspaper, Wrench, Lightbulb, StickyNote } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { useAppSettings } from "@/components/AppShell";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 
-export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
+export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
   const { user, settings, updateSettings } = useAppSettings();
   const isDark = settings?.theme === "dark";
   const lang = settings?.language || "ru";
@@ -46,7 +46,6 @@ export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
     { icon: Home, href: "/", title: t("home") },
     { icon: MessageSquare, href: "/chat", title: t("chat") },
     { icon: Lightbulb, href: "/psychology", title: t("psychology") },
-    { icon: BookOpen, href: "/courses", title: t("courses") },
     { icon: Newspaper, href: "/news", title: t("news") },
     { icon: Wrench, href: "/exercises", title: t("exercises") },
   ], [t]);
@@ -122,13 +121,12 @@ export default function ChatSidebarNav({ onAnchorsClick, isOpen = true }) {
 
       {/* Bottom controls */}
       <div className="flex flex-col gap-1 items-center w-full px-2 flex-shrink-0">
-        {/* Anchors button */}
         <button
-          onClick={onAnchorsClick}
-          title={t("anchors")}
+          onClick={onNotesClick}
+          title={t("chatNotes")}
           className="flex items-center justify-center h-9 w-9 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer"
         >
-          <Anchor className="w-4 h-4" />
+          <StickyNote className="w-4 h-4" />
         </button>
 
         {/* Language dropdown */}

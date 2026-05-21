@@ -90,17 +90,6 @@ export function SectionTabs({ activeSection, setActiveSection, t }) {
   );
 }
 
-// Заглушка для раздела курсов (экспорт вне других функций)
-export function CoursesSection({ activeSection, t }) {
-  if (activeSection !== PSYCHOLOGY_SECTIONS.COURSES) return null;
-  return (
-    <section className="rounded-2xl border border-blue-200 bg-blue-50 p-8 my-8">
-      <h2 className="text-3xl font-bold mb-4 text-blue-700">{t("coursesTitle") || "Видеокурсы по психологии"}</h2>
-      <p className="text-base text-blue-900 mb-4">В этом разделе появятся структурированные видеокурсы с отслеживанием прогресса пользователя. Следите за обновлениями!</p>
-      {/* Здесь будет список курсов, видеоуроки и прогресс */}
-    </section>
-  );
-}
 const symptomChips = [
   "Тревога",
   "Паника",

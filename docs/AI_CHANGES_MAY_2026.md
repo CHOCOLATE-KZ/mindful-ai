@@ -45,7 +45,7 @@ This file is a handoff summary for diploma writing. It reflects the current AI i
 ## Current model and retrieval stack
 
 - Primary inference backend: LM Studio (OpenAI-compatible API)
-- Default chat model: `gpt-oss-20b`
+- Default chat model: `meta-llama-3.1-8b-instruct`
 - Embedding model: `text-embedding-nomic-embed-text-v1.5`
 - Retrieval data source: `psychology_knowledge` table + markdown source files in `psychology_knowledge/`
 
@@ -67,8 +67,6 @@ This file is a handoff summary for diploma writing. It reflects the current AI i
 - `LMSTUDIO_EMBED_MODEL`
 
 Optional (alternative provider):
-- `OLLAMA_BASE_URL`
-- `OLLAMA_MODEL`
 
 ## Database entities relevant to AI
 
@@ -87,7 +85,7 @@ Use this phrasing to match implementation:
 
 ## Implementation notes and limitations
 
-1. The primary runtime path is LM Studio. Ollama remains optional and is not the default chat path.
+1. The primary runtime path is LM Studio (`meta-llama-3.1-8b-instruct` for chat, nomic embed for RAG).
 2. Retrieval quality depends on `psychology_knowledge` data completeness and embedding availability.
 3. Safety filters reduce harmful outputs but do not replace human clinical supervision.
 4. The system is a support assistant and does not provide medical diagnosis.

@@ -21,10 +21,9 @@ services:
       
       # LM Studio
       - LMSTUDIO_BASE_URL=${LMSTUDIO_BASE_URL:-http://host.docker.internal:1234}
-      - LMSTUDIO_MODEL=${LMSTUDIO_MODEL:-gpt-oss-20b}
-      
-      # Ollama embeddings
-      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - LMSTUDIO_MODEL=${LMSTUDIO_MODEL:-meta-llama-3.1-8b-instruct}
+      - LMSTUDIO_EMBED_MODEL=${LMSTUDIO_EMBED_MODEL:-text-embedding-nomic-embed-text-v1.5}
+      - LMSTUDIO_TIMEOUT_MS=${LMSTUDIO_TIMEOUT_MS:-60000}
       
       # Telegram
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}

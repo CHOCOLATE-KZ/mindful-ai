@@ -53,7 +53,7 @@ AI-powered mental health support platform with personalized psychological assist
 - LM Studio (local OpenAI-compatible inference)
 - Prompt orchestration with dynamic mode classification
 - RAG system via Supabase RPC + keyword fallback
-- Optional Ollama integration (alternative local provider)
+- Local LLM via LM Studio (`meta-llama-3.1-8b-instruct`)
 
 **Database:**
 - Supabase (PostgreSQL + Auth)
@@ -103,27 +103,31 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # LM Studio
 LMSTUDIO_BASE_URL=http://127.0.0.1:1234
-LMSTUDIO_MODEL=gpt-oss-20b
-LMSTUDIO_TIMEOUT_MS=15000
+LMSTUDIO_MODEL=meta-llama-3.1-8b-instruct
+LMSTUDIO_TIMEOUT_MS=60000
 LMSTUDIO_TEMPERATURE=0.6
-
-# Optional chat mode tuning
-LM_MODE_LISTENING_TEMPERATURE=0.78
-LM_MODE_LISTENING_MAX_TOKENS=180
-LM_MODE_ANALYSIS_TEMPERATURE=0.5
-LM_MODE_ANALYSIS_MAX_TOKENS=360
-LM_MODE_GUIDANCE_TEMPERATURE=0.3
-LM_MODE_GUIDANCE_MAX_TOKENS=520
 
 # RAG controls
 ENABLE_PSYCHOLOGY_RAG=true
 RAG_LIMIT=3
 RAG_MIN_QUERY_LENGTH=8
+RAG_MAX_CHARS=2000
+RAG_CHUNK_MAX_CHARS=650
+# RAG embeddings (отдельная модель в LM Studio)
 LMSTUDIO_EMBED_MODEL=text-embedding-nomic-embed-text-v1.5
 
-# Optional Ollama (if used)
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_MODEL=llama3.1
+# Chat memory (sliding window + semantic summary)
+CHAT_DB_HISTORY_LIMIT=80
+CHAT_RECENT_MESSAGES_LIMIT=12
+CHAT_SUMMARY_MIN_OLDER_MESSAGES=4
+CHAT_SUMMARY_UPDATE_BATCH=4
+CHAT_SUMMARY_MAX_CHARS=1000
+CHAT_BRIDGE_MAX_CHARS=900
+
+# Context budget (LM Studio n_ctx; overflow → compress + retry)
+CHAT_MAX_CONTEXT_TOKENS=6000
+LMSTUDIO_CONTEXT_TOKENS=4096
+CHAT_RESERVE_OUTPUT_TOKENS=512
 
 # Telegram Bot (optional)
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token
@@ -134,6 +138,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### Database Setup
+
+For long-chat memory, apply `supabase/migrations/20260520120000_add_chat_summary_to_user_settings.sql` in the Supabase SQL Editor (adds `chat_summary` columns to `user_settings`). Without it, the sliding window still works; summaries are not persisted between restarts.
 
 ```bash
 # Database schema is managed directly in Supabase.
@@ -192,8 +198,8 @@ diplomaproject/
 
 - `POST /api/chat` - AI chat completion
 - `POST /api/chat/clear` - Clear user chat history
-- `GET /api/chat/notes` - Get anchored notes
-- `POST /api/chat/notes` - Save anchored note
+- `GET /api/chat/notes` - Get chat notes
+- `POST /api/chat/notes` - Save chat note
 - `POST /api/notes/analyze` - Analyze note sentiment
 - `POST /api/ai/profile-report` - Generate AI profile/weekly report
 - `GET /api/ai/profile-report` - Get saved AI reports
@@ -253,5 +259,5 @@ IITU Psychology AI Team
 ## 🙏 Acknowledgments
 
 - Psychology knowledge base compiled from evidence-based resources
-- AI models powered by LM Studio and Ollama
+- AI models powered by LM Studio
 - UI inspired by modern mental health apps

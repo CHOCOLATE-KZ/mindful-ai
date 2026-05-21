@@ -4,6 +4,9 @@
 import { supabaseAdmin } from './supabase/admin.js';
 import { getUnifiedEmbedding } from './llm/unifiedClient.js';
 
+const RAG_MAX_CHARS = Number(process.env.RAG_MAX_CHARS || 2000);
+const RAG_CHUNK_MAX_CHARS = Number(process.env.RAG_CHUNK_MAX_CHARS || 650);
+
 function getSupabaseClient() {
   return supabaseAdmin;
 }
@@ -78,9 +81,14 @@ export async function searchPsychologyKnowledge(userMessage, limit = 3) {
       if (item.section) {
         knowledgeContext += `Раздел: ${item.section}\n`;
       }
-      knowledgeContext += `${item.content_chunk}\n\n`;
+      knowledgeContext += `${String(item.content_chunk || "").slice(0, RAG_CHUNK_MAX_CHARS)}\n\n`;
+      if (knowledgeContext.length >= RAG_MAX_CHARS) break;
     }
-    
+
+    if (knowledgeContext.length > RAG_MAX_CHARS) {
+      knowledgeContext = `${knowledgeContext.slice(0, RAG_MAX_CHARS)}\n[…]`;
+    }
+
     console.log(`[RAG]  Контекст ${knowledgeContext.length} символов добавлен в ответ`);
     return knowledgeContext;
   } catch (error) {
@@ -132,9 +140,14 @@ async function searchByKeywords(userMessage, limit = 3) {
       if (item.section) {
         knowledgeContext += `Раздел: ${item.section}\n`;
       }
-      knowledgeContext += `${item.content_chunk}\n\n`;
+      knowledgeContext += `${String(item.content_chunk || "").slice(0, RAG_CHUNK_MAX_CHARS)}\n\n`;
+      if (knowledgeContext.length >= RAG_MAX_CHARS) break;
     }
-    
+
+    if (knowledgeContext.length > RAG_MAX_CHARS) {
+      knowledgeContext = `${knowledgeContext.slice(0, RAG_MAX_CHARS)}\n[…]`;
+    }
+
     return knowledgeContext;
   } catch (error) {
     console.error('Ошибка при поиске по ключевым словам:', error);

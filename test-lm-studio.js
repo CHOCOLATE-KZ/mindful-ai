@@ -28,7 +28,7 @@ async function testLmStudio() {
   ];
 
   console.log("📤 Отправляю запрос:");
-  console.log("   - Model: gpt-oss-20b");
+  console.log("   - Model: meta-llama-3.1-8b-instruct");
   console.log("   - System prompt: ", systemPrompt.slice(0, 60) + "...");
   console.log("   - User message: ", testMessage);
   console.log();
@@ -38,7 +38,7 @@ async function testLmStudio() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-oss-20b",
+        model: "meta-llama-3.1-8b-instruct",
         messages,
         temperature: 0.6,
         max_tokens: 256,
@@ -87,7 +87,7 @@ async function testLmStudio() {
     console.error(error.message);
     console.log("\n💡 Проверьте что:");
     console.log("   1. LM Studio запущен на http://127.0.0.1:1234");
-    console.log("   2. Модель gpt-oss-20b загружена");
+    console.log("   2. Модель meta-llama-3.1-8b-instruct загружена");
   }
 }
 

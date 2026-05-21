@@ -29,17 +29,16 @@ const NEGATIVE_REPLY_FLAGS = [
 const TECHNICAL_HEADING_WORDS = [
   "отражение",
   "механизм",
-  "шаг",
   "шаги",
-  "вопрос",
   "прямой ответ",
   "вывод",
   "заголовок",
 ];
 const MODE_LIMITS = {
-  LISTENING: { maxSentences: 3, maxChars: 380 },
-  ANALYSIS: { maxSentences: 6, maxChars: 900 },
-  GUIDANCE: { maxSentences: 8, maxChars: 1200 },
+  CHAT: { maxSentences: 8, maxChars: 900 },
+  LISTENING: { maxSentences: 8, maxChars: 900 },
+  ANALYSIS: { maxSentences: 8, maxChars: 900 },
+  GUIDANCE: { maxSentences: 8, maxChars: 900 },
 };
 
 function normalize(text) {
@@ -48,6 +47,40 @@ function normalize(text) {
     .replace(/ё/g, "е")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function hasCyrillic(text) {
+  return /[а-яё]/i.test(String(text || ""));
+}
+
+/** Строки дневника «Сон: 7», а не слова «сном», «сонный» в обычном тексте. */
+function replyHasDiaryStatMarkers(text) {
+  const t = String(text || "");
+  return (
+    /(?:^|\n)\s*дата\s*:/im.test(t) ||
+    /(?:^|\n)\s*настроение\s*:/im.test(t) ||
+    /(?:^|\n)\s*сон\s*:/im.test(t) ||
+    /\bстатистика\b/i.test(t)
+  );
+}
+
+const ENGLISH_TO_RUSSIAN = [
+  [/\bdifferently\b/gi, "по-другому"],
+  [/\bhowever\b/gi, "однако"],
+  [/\bactually\b/gi, "на самом деле"],
+  [/\banyway\b/gi, "в любом случае"],
+  [/\bmaybe\b/gi, "может быть"],
+  [/\bfeel\b/gi, "чувствовать"],
+  [/\bfeeling\b/gi, "чувство"],
+];
+
+function fixEnglishLeaksInRussianReply(reply) {
+  let text = String(reply || "");
+  if (!hasCyrillic(text)) return text.trim();
+  for (const [pattern, replacement] of ENGLISH_TO_RUSSIAN) {
+    text = text.replace(pattern, replacement);
+  }
+  return text.trim();
 }
 
 export function replyHasUnwarrantedNegativity(text) {
@@ -96,6 +129,78 @@ function stripStatLines(reply) {
   return filtered.join("\n").trim();
 }
 
+const CONTEXTUAL_FOLLOW_UP_QUESTIONS = [
+  {
+    test: /суицид|самоубий|убить себя|не хочу жить|покончить|умереть|kill myself|suicide/i,
+    question: "Что сейчас сильнее всего — сама мысль или страх, что станет хуже?",
+  },
+  {
+    test: /одинок|никому|не с кем|никто не|брошен|покинут/i,
+    question: "Есть ли человек, с которым тебе хотя бы немного безопасно быть на связи?",
+  },
+  {
+    test: /страшн|боюсь|паник|тревог/i,
+    question: "Когда это чувство обычно усиливается — днём, вечером или ночью?",
+  },
+  {
+    test: /депресс|безнадеж|нет смысла|пусто|апати/i,
+    question: "Как давно ты замечаешь, что тебе так тяжело?",
+  },
+  {
+    test: /ужасн|плохо|тяжел|тяжёл|не могу|выгор/i,
+    question: "Хочешь рассказать, с чего всё началось сегодня или на этой неделе?",
+  },
+];
+
+function normalizeIntentText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .replace(/[.,!?;:()"'`«»]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isCasualGreetingMessage(userMessage = "") {
+  const n = normalizeIntentText(userMessage);
+  if (!n) return false;
+  const smallTalk = /\bкак дела\b/.test(n) || /\bкак ты\b/.test(n) || /^как дела/.test(n);
+  const hasHi = /\b(привет|здравствуй|салам|hello|hi|hey)\b/.test(n) || /^привет/.test(n);
+  const heavy = /суицид|депресс|плохо|ужасн|тревог|убить|не хочу жить/.test(n);
+  if (heavy) return false;
+  return (hasHi && smallTalk) || /^привет\s+как дела/.test(n);
+}
+
+export function pickContextualFollowUpQuestion(userMessage = "") {
+  const text = String(userMessage || "");
+  const n = normalizeIntentText(text);
+
+  if (isCasualGreetingMessage(text)) {
+    return "А у тебя как сейчас — что больше радует или беспокоит?";
+  }
+
+  for (const { test, question } of CONTEXTUAL_FOLLOW_UP_QUESTIONS) {
+    if (test.test(text)) return question;
+  }
+  return "Расскажи чуть подробнее — что для тебя сейчас главное?";
+}
+
+/**
+ * Гарантирует один открытый вопрос в конце (для продолжения диалога).
+ */
+export function ensureClosingQuestion(reply, userMessage = "") {
+  let text = String(reply || "").trim();
+  if (!text) return pickContextualFollowUpQuestion(userMessage);
+
+  if (/\?/.test(text)) {
+    return removeDuplicateQuestions(text);
+  }
+
+  const base = text.replace(/[.!…]+$/u, "").trim();
+  const question = pickContextualFollowUpQuestion(userMessage);
+  return `${base}. ${question}`;
+}
+
 function removeDuplicateQuestions(reply) {
   const text = String(reply || "").trim();
   if (!text) return text;
@@ -133,7 +238,7 @@ function removeTechnicalHeadings(reply) {
   return text.replace(/\s{2,}/g, " ").trim();
 }
 
-function stripGuidanceGreeting(reply, mode = "LISTENING", isFirstMessage = true) {
+function stripGuidanceGreeting(reply, mode = "CHAT", isFirstMessage = true) {
   if (isFirstMessage) return String(reply || "").trim();
   if (!["ANALYSIS", "GUIDANCE"].includes(mode)) return String(reply || "").trim();
 
@@ -195,8 +300,8 @@ function dedupeSentences(reply) {
   return { text: kept.join(" ").trim(), changed: kept.length !== sentences.length };
 }
 
-function applyModeLengthLimit(reply, mode = "LISTENING") {
-  const safeMode = MODE_LIMITS[mode] ? mode : "LISTENING";
+function applyModeLengthLimit(reply, mode = "CHAT") {
+  const safeMode = MODE_LIMITS[mode] ? mode : "CHAT";
   const { maxSentences, maxChars } = MODE_LIMITS[safeMode];
 
   let text = String(reply || "").trim();
@@ -221,13 +326,18 @@ function applyModeLengthLimit(reply, mode = "LISTENING") {
 
 export function validateAndSanitizeReply({
   reply,
-  mode = "LISTENING",
+  mode = "CHAT",
   isFirstMessage = true,
   userAffectClass = "neutral",
+  requireClosingQuestion = false,
+  userMessage = "",
+  isCasualGreeting = false,
   positiveFallback = "Рад слышать, что у тебя всё хорошо. Что хочешь сделать сегодня для себя, чтобы сохранить это состояние?",
-  genericFallback = "Как дела?",
+  greetingFallback = "Привет! Рад тебя видеть. Расскажи, как ты сейчас?",
+  genericFallback = "Расскажи, пожалуйста, чуть подробнее — я рядом и слушаю.",
 }) {
-  let cleaned = String(reply || "").trim();
+  const originalReply = String(reply || "").trim();
+  let cleaned = originalReply;
   const meta = {
     changed: false,
     noStatistics: true,
@@ -254,16 +364,11 @@ export function validateAndSanitizeReply({
     meta.greetingRemoved = true;
   }
 
-  const beforeStatStrip = cleaned;
-  cleaned = stripStatTriggerBlocks(cleaned);
-  cleaned = stripStatLines(cleaned);
-  if (cleaned !== beforeStatStrip) meta.changed = true;
-
-  if (cleaned.toLowerCase().includes("статистика")) {
-    const parts = cleaned.split(/статистика[^а-яёa-z]*/i);
-    const candidate = parts[parts.length - 1]?.trim();
-    cleaned = candidate && candidate.length > 10 ? candidate : genericFallback;
-    meta.changed = true;
+  if (replyHasDiaryStatMarkers(cleaned)) {
+    const beforeStatStrip = cleaned;
+    cleaned = stripStatTriggerBlocks(cleaned);
+    cleaned = stripStatLines(cleaned);
+    if (cleaned !== beforeStatStrip) meta.changed = true;
   }
 
   const beforeQuestionLimit = cleaned;
@@ -291,10 +396,28 @@ export function validateAndSanitizeReply({
     meta.smartTrimApplied = true;
   }
 
-  if (!cleaned || cleaned.length < 15 || /дата|настроение|сон/i.test(cleaned)) {
-    const paragraphs = cleaned.split(/\n\n+/).filter((p) => p.trim().length > 0);
-    cleaned = paragraphs.length > 1 ? paragraphs[paragraphs.length - 1] : genericFallback;
-    meta.changed = true;
+  cleaned = fixEnglishLeaksInRussianReply(cleaned);
+  if (cleaned !== originalReply) meta.changed = true;
+
+  const minLength = isCasualGreeting ? 8 : 10;
+  const shortFallback = isCasualGreeting ? greetingFallback : genericFallback;
+
+  if (!cleaned || cleaned.length < minLength) {
+    if (originalReply.length >= minLength && !replyHasDiaryStatMarkers(originalReply)) {
+      cleaned = fixEnglishLeaksInRussianReply(originalReply);
+      meta.changed = true;
+    } else {
+      const paragraphs = String(cleaned || "")
+        .split(/\n\n+/)
+        .filter((p) => p.trim().length >= minLength);
+      cleaned =
+        paragraphs.length > 0
+          ? paragraphs[paragraphs.length - 1]
+          : originalReply.length >= minLength
+            ? fixEnglishLeaksInRussianReply(originalReply)
+            : shortFallback;
+      meta.changed = true;
+    }
   }
 
   if (userAffectClass === "positive" && replyHasUnwarrantedNegativity(cleaned)) {
@@ -303,9 +426,28 @@ export function validateAndSanitizeReply({
     meta.affectMatch = false;
   }
 
-  meta.noStatistics = !/дата:|настроение:|сон:|статистика/i.test(cleaned);
+  if (requireClosingQuestion) {
+    const beforeEnsure = cleaned;
+    cleaned = ensureClosingQuestion(cleaned, userMessage);
+    if (cleaned !== beforeEnsure) {
+      meta.changed = true;
+      meta.closingQuestionEnsured = true;
+    }
+  }
+
+  if (isCasualGreeting && !/\?/.test(cleaned)) {
+    const beforeEnsure = cleaned;
+    cleaned = ensureClosingQuestion(cleaned, userMessage);
+    if (cleaned !== beforeEnsure) {
+      meta.changed = true;
+      meta.closingQuestionEnsured = true;
+    }
+  }
+
+  meta.noStatistics = !replyHasDiaryStatMarkers(cleaned);
   meta.oneQuestionOnly = (cleaned.match(/\?/g) || []).length <= 1;
   meta.mode = mode;
 
-  return { reply: cleaned.trim() || genericFallback, meta };
+  const finalFallback = isCasualGreeting ? greetingFallback : genericFallback;
+  return { reply: cleaned.trim() || finalFallback, meta };
 }

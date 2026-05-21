@@ -66,8 +66,6 @@ export default function PsychologyPage() {
 
         <PracticeSection activeSection={activeSection} t={t} />
 
-        {/* <CoursesSection activeSection={activeSection} t={t} /> */}
-
         <EducationalBanner activeSection={activeSection} t={t} />
       </main>
 

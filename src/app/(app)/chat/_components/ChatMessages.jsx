@@ -3,21 +3,69 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { extractAnchors } from "@/lib/utils/extractAnchors";
 import CrisisAlert from "./CrisisAlert";
 import { motion } from "framer-motion";
 
-export default function ChatMessages({ messages, userAvatarUrl, loading, atBottom, scrollRef, onAnchorSelect, showAnchors = true, hasAmbientBg = false, ambientBg = "none" }) {
+export default function ChatMessages({
+  messages,
+  userAvatarUrl,
+  loading,
+  atBottom,
+  scrollRef,
+  bottomInset = 180,
+  onContinueAfterCrisis,
+  onDeclineCrisisTopic,
+  hasAmbientBg = false,
+  ambientBg = "none",
+}) {
   const endRef = useRef(null);
-  const prevMessagesLenRef = useRef(messages.length);
+  const prevMessagesLenRef = useRef(0);
+  const historyHydratedRef = useRef(false);
   const typingTimerRef = useRef(null);
+  const userPinnedRef = useRef(false);
   const [dismissedCrisis, setDismissedCrisis] = useState(new Set());
   const [typingIndex, setTypingIndex] = useState(null);
   const [typingText, setTypingText] = useState("");
 
+  const scrollToEnd = (behavior = "auto") => {
+    const root = scrollRef?.current;
+    if (!root || root.scrollHeight - root.clientHeight <= 1) {
+      endRef.current?.scrollIntoView({ behavior, block: "end" });
+      return;
+    }
+    root.scrollTo({
+      top: root.scrollHeight - root.clientHeight,
+      behavior,
+    });
+  };
+
+  // Следим, ушёл ли пользователь от низа — не перехватываем скролл во время typewriter.
+  useEffect(() => {
+    const root = scrollRef?.current;
+    if (!root) return;
+
+    const onScroll = () => {
+      const gap = root.scrollHeight - root.scrollTop - root.clientHeight;
+      userPinnedRef.current = gap > 120;
+    };
+
+    onScroll();
+    root.addEventListener("scroll", onScroll, { passive: true });
+    return () => root.removeEventListener("scroll", onScroll);
+  }, [scrollRef]);
+
   useEffect(() => {
     const prevLen = prevMessagesLenRef.current;
     const currentLen = messages.length;
+
+    // Первая загрузка истории с сервера — без анимации
+    if (!historyHydratedRef.current) {
+      if (currentLen > 0) {
+        historyHydratedRef.current = true;
+        prevMessagesLenRef.current = currentLen;
+      }
+      return;
+    }
 
     if (currentLen <= prevLen) {
       prevMessagesLenRef.current = currentLen;
@@ -27,7 +75,13 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
     const lastIndex = currentLen - 1;
     const lastMessage = messages[lastIndex];
 
-    if (!lastMessage || lastMessage.role !== "assistant" || lastMessage.crisis || !lastMessage.content) {
+    if (
+      !lastMessage ||
+      lastMessage.role !== "assistant" ||
+      lastMessage.crisis ||
+      lastMessage.isWelcome ||
+      !lastMessage.content
+    ) {
       prevMessagesLenRef.current = currentLen;
       return;
     }
@@ -40,6 +94,12 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
     setTypingIndex(lastIndex);
     setTypingText("");
 
+    const root = scrollRef?.current;
+    if (root) {
+      const gap = root.scrollHeight - root.scrollTop - root.clientHeight;
+      userPinnedRef.current = gap > 120;
+    }
+
     let cursor = 0;
     const fullText = String(lastMessage.content);
     const step = fullText.length > 800 ? 4 : 3;
@@ -51,6 +111,8 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
       if (cursor >= fullText.length) {
         window.clearInterval(typingTimerRef.current);
         typingTimerRef.current = null;
+        setTypingIndex(null);
+        setTypingText("");
       }
     }, 12);
 
@@ -64,23 +126,38 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
     };
   }, [messages]);
 
-  // Автоскролл: если пользователь уже у нижней границы, держим ленту внизу на новых сообщениях.
+  // Автоскролл после layout (важно при росте текста typewriter).
+  useEffect(() => {
+    if (userPinnedRef.current) return;
+
+    const root = scrollRef?.current;
+    if (!root) return;
+
+    const gap = root.scrollHeight - root.scrollTop - root.clientHeight;
+    const isTyping = typingIndex !== null;
+    const shouldFollow = gap <= 160 || loading || isTyping;
+    if (!shouldFollow) return;
+
+    const run = () => scrollToEnd("auto");
+    run();
+    const raf = requestAnimationFrame(run);
+    return () => cancelAnimationFrame(raf);
+  }, [messages, loading, scrollRef, typingText, typingIndex, bottomInset]);
+
   useEffect(() => {
     const root = scrollRef?.current;
+    const content = endRef.current?.parentElement;
+    if (!root || !content) return;
 
-    if (root && root.scrollHeight - root.clientHeight > 1) {
+    const ro = new ResizeObserver(() => {
+      if (userPinnedRef.current) return;
       const gap = root.scrollHeight - root.scrollTop - root.clientHeight;
-      const isTypingActive = typingIndex !== null;
-      const shouldFollow = gap <= 100 || loading || isTypingActive;
-      if (!shouldFollow) return;
+      if (gap <= 160) scrollToEnd("auto");
+    });
 
-      // Keep exact bottom to avoid tiny "snap-up" when user is near the end.
-      root.scrollTo({ top: root.scrollHeight - root.clientHeight, behavior: "auto" });
-      return;
-    }
-
-    endRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
-  }, [messages, loading, scrollRef, typingText, typingIndex]);
+    ro.observe(content);
+    return () => ro.disconnect();
+  }, [scrollRef, typingIndex]);
 
   const markdownComponents = useMemo(
     () => ({
@@ -121,18 +198,35 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
 
           // Кризисное сообщение
           if (isAI && m.crisis && !dismissedCrisis.has(idx)) {
+            const triggerMessage =
+              m.triggerMessage ||
+              (idx > 0 && messages[idx - 1]?.role === "user" ? messages[idx - 1].content : "");
+
             return (
               <CrisisAlert
                 key={idx}
+                busy={loading}
                 onDismiss={() => setDismissedCrisis((s) => new Set([...s, idx]))}
+                onContinueTopic={
+                  onContinueAfterCrisis && triggerMessage
+                    ? () => {
+                        setDismissedCrisis((s) => new Set([...s, idx]));
+                        void onContinueAfterCrisis(triggerMessage);
+                      }
+                    : undefined
+                }
+                onDeclineTopic={
+                  onDeclineCrisisTopic
+                    ? () => {
+                        setDismissedCrisis((s) => new Set([...s, idx]));
+                        void onDeclineCrisisTopic(triggerMessage);
+                      }
+                    : undefined
+                }
               />
             );
           }
           if (isAI && m.crisis) return null;
-
-          const anchors = isAI
-            ? (Array.isArray(m.anchors) && m.anchors.length ? m.anchors : extractAnchors(m.content))
-            : [];
 
           return (
             <motion.div
@@ -141,7 +235,6 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 32, duration: 0.32 }}
-              layout
             >
               {isAI && !hideAvatars && (
                 <div className="h-10 w-10 rounded-full bg-[#74AA9C] ring-1 ring-[#5d9088]/40 flex items-center justify-center flex-shrink-0">
@@ -176,37 +269,6 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
                       : ""}
                   </p>
                 </div>
-
-                {isAI && anchors.length > 0 && showAnchors && (
-                  <div
-                    className={`mt-2 rounded-2xl border px-4 py-3 shadow-sm ${
-                      hasAmbientBg
-                        ? "border-white/20 bg-black/40 backdrop-blur-sm"
-                        : "border-black/10 bg-white/70"
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className={`text-xs uppercase tracking-wide shrink-0 ${hasAmbientBg ? "text-white/75" : "text-slate-500"}`}>
-                        Якоря разговора
-                      </p>
-                      {anchors.map((anchor) => (
-                        <button
-                          key={anchor}
-                          type="button"
-                          onClick={() => onAnchorSelect?.(anchor)}
-                          className={`rounded-full border px-3 py-1 text-xs transition ${
-                            hasAmbientBg
-                              ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
-                              : "border-[#74AA9C]/40 bg-[#74AA9C]/10 text-[#5d9088] hover:bg-[#74AA9C]/20"
-                          }`}
-                          title="Обсудить тему"
-                        >
-                          {anchor}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
 
               {!isAI && !hideAvatars && (
@@ -244,7 +306,12 @@ export default function ChatMessages({ messages, userAvatarUrl, loading, atBotto
           </div>
         )}
 
-        <div ref={endRef} />
+        <div
+          ref={endRef}
+          aria-hidden
+          className="h-px w-full shrink-0"
+          style={{ scrollMarginBottom: bottomInset }}
+        />
       </div>
     </>
   );

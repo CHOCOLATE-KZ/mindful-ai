@@ -26,7 +26,7 @@ async function testLMStudio() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-oss-20b",
+        model: "meta-llama-3.1-8b-instruct",
         messages,
         temperature: 0.6,
         max_tokens: 512,

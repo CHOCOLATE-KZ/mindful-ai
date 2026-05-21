@@ -36,7 +36,7 @@ async function testFullPrompt() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-oss-20b",
+        model: "meta-llama-3.1-8b-instruct",
         messages,
         temperature: 0.6,
         max_tokens: 512,
@@ -70,7 +70,7 @@ async function testFullPrompt() {
     
     if (reply.includes("Дата:") || reply.includes("Настроение:") || reply.includes("статистика")) {
       console.log("\n⚠️  ВЫВОД: System prompt НЕ работает эффективно на этой модели!");
-      console.log("Нужно переключиться на qwen2.5-7b");
+      console.log("Проверьте LMSTUDIO_MODEL=meta-llama-3.1-8b-instruct в .env.local");
     } else {
       console.log("\n✅ ВЫВОД: System prompt работает!");
     }

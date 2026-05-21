@@ -1,7 +1,7 @@
 "use client";
 
 import { HelpCircle, Mic, Send } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getSessionModeConfirmationRequired,
   setSessionModeConfirmationRequired,
@@ -20,7 +20,9 @@ export default function ChatComposer({
   onToggleSessionMode,
   sidebarOpen = true,
   hasAmbientBg = false,
+  onHeightChange,
 }) {
+  const shellRef = useRef(null);
   const { t } = useLanguage("chat");
   const {
     listening,
@@ -35,6 +37,18 @@ export default function ChatComposer({
   useEffect(() => {
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    const el = shellRef.current;
+    if (!el || !onHeightChange) return;
+
+    const report = () => onHeightChange(el.offsetHeight);
+    report();
+
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onHeightChange]);
 
   const micDisabled = !hydrated || !mounted || !browserSupportsSpeechRecognition || !isSecure;
   const [showSessionModeModal, setShowSessionModeModal] = useState(false);
@@ -80,6 +94,7 @@ export default function ChatComposer({
   return (
     <>
       <div
+        ref={shellRef}
         className={`fixed bottom-0 right-0 z-50 transition-all duration-300 ease-out ${
           sidebarOpen ? "left-16" : "left-0"
         }`}

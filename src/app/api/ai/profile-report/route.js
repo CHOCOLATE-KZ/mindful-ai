@@ -1,7 +1,8 @@
 import { supabaseServer } from "@/lib/supabase/server";
+import { unifiedLlmConfig } from "@/lib/llm/unifiedClient";
 
-const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
-const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
+const LMSTUDIO_BASE_URL = unifiedLlmConfig.baseUrl;
+const LMSTUDIO_MODEL = unifiedLlmConfig.model;
 
 function avg(list) {
   if (!list.length) return null;

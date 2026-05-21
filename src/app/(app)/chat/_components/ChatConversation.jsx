@@ -2,7 +2,18 @@
 
 import ChatMessages from "./ChatMessages";
 
-export default function ChatConversation({ messages, userAvatarUrl, loading, atBottom, scrollRef, onAnchorSelect, showAnchors, hasAmbientBg, ambientBg = "none" }) {
+export default function ChatConversation({
+  messages,
+  userAvatarUrl,
+  loading,
+  atBottom,
+  scrollRef,
+  bottomInset = 180,
+  onContinueAfterCrisis,
+  onDeclineCrisisTopic,
+  hasAmbientBg,
+  ambientBg = "none",
+}) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
       <main className="w-full">
@@ -13,8 +24,9 @@ export default function ChatConversation({ messages, userAvatarUrl, loading, atB
             loading={loading}
             atBottom={atBottom}
             scrollRef={scrollRef}
-            onAnchorSelect={onAnchorSelect}
-            showAnchors={showAnchors}
+            bottomInset={bottomInset}
+            onContinueAfterCrisis={onContinueAfterCrisis}
+            onDeclineCrisisTopic={onDeclineCrisisTopic}
             hasAmbientBg={hasAmbientBg}
             ambientBg={ambientBg}
           />

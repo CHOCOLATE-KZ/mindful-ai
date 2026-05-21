@@ -52,7 +52,6 @@ export default function Navbar() {
     () => [
       { href: "/", label: t("home") },
       { href: "/psychology", label: t("psychology") },
-      { href: "/courses", label: t("courses") },
       { href: "/chat", label: t("chat") },
       { href: "/news", label: t("news") },
     ],

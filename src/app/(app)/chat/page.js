@@ -4,14 +4,11 @@ import ChatHeader from "./_components/ChatHeader";
 import ChatComposer from "./_components/ChatComposer";
 import ChatBackground from "./_components/ChatBackground";
 import ChatAmbient from "./_components/ChatAmbient";
-import ChatSidebar from "./_components/ChatSidebar";
 import ChatSidebarNav from "./_components/ChatSidebarNav";
-import AnchorsModal from "./_components/AnchorsModal";
-import AnchorTooltip from "./_components/AnchorTooltip";
+import ChatNotesModal from "./_components/ChatNotesModal";
 import ScrollToTopButton from "./_components/ScrollToTopButton";
 import ChatConversation from "./_components/ChatConversation";
 import VoiceConversationPanel from "./_components/VoiceConversationPanel";
-import CharacterController from "@/components/CharacterController";
 import { useChatPageModel } from "./_hooks/useChatPageModel";
 import EmotionTracker from "@/components/EmotionTracker";
 import { useState } from "react";
@@ -19,8 +16,7 @@ import { FileJson, FileText, X } from "lucide-react";
 
 
 export default function ChatPage() {
-  const [anchorsModalOpen, setAnchorsModalOpen] = useState(false);
-  const [showAnchorsInChat, setShowAnchorsInChat] = useState(true);
+  const [notesModalOpen, setNotesModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [ambientBg, setAmbientBg] = useState("none");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -35,11 +31,9 @@ export default function ChatPage() {
     savedNotes,
     notesLoading,
     notesError,
-    savingAnchor,
-    showAnchorTooltip,
-    tooltipPosition,
+    savingNote,
     scrollRef,
-    helpIconRef,
+    setScrollContainerRef,
     menuOpen,
     setMenuOpen,
     menuRef,
@@ -53,17 +47,17 @@ export default function ChatPage() {
     toggleVoiceConversation,
     toggleSessionMode,
     stopVoiceConversation,
-    latestAnchors,
     exportMyData,
     clearChatHistory,
-    handleHelpIconHover,
-    hideAnchorTooltip,
-    applyAnchorToInput,
+    applyNoteToInput,
     saveChatNote,
     setInput,
     send,
+    continueAfterCrisis,
+    declineCrisisTopic,
     scrollToTop,
     scrollToBottom,
+    toggleScrollEdge,
     atTop,
   } = useChatPageModel();
 
@@ -71,18 +65,15 @@ export default function ChatPage() {
 
 
   return (
-    <div className="min-h-dvh flex text-slate-900 dark:text-slate-100">
+    <div className="h-dvh flex overflow-hidden text-slate-900 dark:text-slate-100">
       <ChatBackground />
       <ChatAmbient selectedBg={ambientBg} setSelectedBg={setAmbientBg} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       {sessionModeEnabled && <EmotionTracker userId={currentUserId} />}
       
-      {/* Left sidebar nav */}
-      <ChatSidebarNav onAnchorsClick={() => setAnchorsModalOpen(true)} isOpen={sidebarOpen} />
+      <ChatSidebarNav onNotesClick={() => setNotesModalOpen(true)} isOpen={sidebarOpen} />
 
-      {/* Main content area */}
-      <div className={`flex flex-1 transition-all duration-300 ease-out ${sidebarOpen ? "ml-16" : "ml-0"}`}>
-        {/* Center: Chat */}
-        <div className="flex flex-col flex-1 min-w-0">
+      <div className={`flex flex-1 min-h-0 transition-all duration-300 ease-out ${sidebarOpen ? "ml-16" : "ml-0"}`}>
+        <div className="flex flex-col flex-1 min-w-0 min-h-0">
           <ChatHeader
             menuOpen={menuOpen}
             setMenuOpen={setMenuOpen}
@@ -104,33 +95,19 @@ export default function ChatPage() {
             </div>
           ) : (
             <>
-              <div ref={scrollRef} className="flex-1 overflow-y-auto pb-24 md:pb-28 flex flex-col items-center">
+              <div ref={setScrollContainerRef} className="flex-1 min-h-0 overflow-y-auto pb-24 md:pb-28 flex flex-col items-center">
                 <ChatConversation
                   messages={messages}
                   userAvatarUrl={userAvatarUrl}
                   loading={loading}
                   atBottom={atBottom}
                   scrollRef={scrollRef}
-                  onAnchorSelect={applyAnchorToInput}
-                  showAnchors={showAnchorsInChat}
+                  onContinueAfterCrisis={continueAfterCrisis}
+                  onDeclineCrisisTopic={declineCrisisTopic}
                   hasAmbientBg={ambientBg !== "none"}
                   ambientBg={ambientBg}
                 />
               </div>
-
-              {/* Персонаж фиксирован справа с большим отступом */}
-              {/* Персонаж временно отключён */}
-              {/*
-              <div className="fixed right-32 bottom-38 z-40">
-                <CharacterController
-                  chatMessages={messages}
-                  isLoading={loading}
-                  position="center"
-                  size="medium"
-                  showCharacter={false}
-                />
-              </div>
-              */}
 
               <div className="h-0">
                 <ChatComposer
@@ -153,33 +130,22 @@ export default function ChatPage() {
           {!voiceModeEnabled && (
             <ScrollToTopButton
               atTop={atTop}
-              onClick={atTop ? scrollToBottom : scrollToTop}
+              onClick={toggleScrollEdge}
               ambientBg={ambientBg}
             />
           )}
-          <AnchorTooltip show={showAnchorTooltip} position={tooltipPosition} />
         </div>
       </div>
 
-      {/* Anchors Modal */}
-      <AnchorsModal
-        isOpen={anchorsModalOpen}
-        onClose={() => setAnchorsModalOpen(false)}
-        latestAnchors={latestAnchors}
-        helpIconRef={helpIconRef}
-        onHelpEnter={handleHelpIconHover}
-        onHelpLeave={hideAnchorTooltip}
-        onAnchorClick={(anchor) => {
-          applyAnchorToInput(anchor);
-          setAnchorsModalOpen(false);
-        }}
-        onSaveAnchor={saveChatNote}
-        savingAnchor={savingAnchor}
+      <ChatNotesModal
+        isOpen={notesModalOpen}
+        onClose={() => setNotesModalOpen(false)}
+        onNoteClick={applyNoteToInput}
+        onSaveNote={saveChatNote}
+        savingNote={savingNote}
         savedNotes={savedNotes}
         notesLoading={notesLoading}
         notesError={notesError}
-        showAnchorsInChat={showAnchorsInChat}
-        onToggleAnchorsInChat={() => setShowAnchorsInChat((v) => !v)}
       />
       {exportModalOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4">

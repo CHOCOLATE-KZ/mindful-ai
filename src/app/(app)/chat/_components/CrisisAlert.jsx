@@ -4,13 +4,17 @@ import { Phone, Heart, X } from "lucide-react";
 
 /**
  * Кризисный экран — отображается когда API вернул { crisis: true }.
- * Показывает номера телефонов доверия и призыв обратиться за помощью.
+ * Показывает номера телефонов доверия и спрашивает, продолжать ли тяжёлую тему.
  */
-export default function CrisisAlert({ onDismiss }) {
+export default function CrisisAlert({
+  onDismiss,
+  onContinueTopic,
+  onDeclineTopic,
+  busy = false,
+}) {
   return (
     <div className="mx-auto max-w-lg my-4">
       <div className="rounded-3xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
-        {/* Иконка */}
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0 h-11 w-11 rounded-full bg-rose-100 flex items-center justify-center">
             <Heart className="h-6 w-6 text-rose-500" />
@@ -21,8 +25,11 @@ export default function CrisisAlert({ onDismiss }) {
               Похоже, тебе сейчас очень тяжело
             </h3>
             <p className="mt-1 text-sm text-rose-700 leading-relaxed">
-              Эти чувства реальны, и ты не одинок. Пожалуйста, немедленно
-              обратись за поддержкой к живому человеку.
+              Эти чувства реальны, и ты не одинок. Пожалуйста, обратись за поддержкой к
+              живому человеку — ниже линии доверия.
+            </p>
+            <p className="mt-3 text-sm font-medium text-rose-800">
+              Хочешь продолжить разговор об этой теме?
             </p>
           </div>
 
@@ -36,18 +43,12 @@ export default function CrisisAlert({ onDismiss }) {
           </button>
         </div>
 
-        {/* Телефоны */}
         <div className="mt-5 space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">
             Линии экстренной психологической помощи
           </p>
 
-          <HotlineItem
-            flag="🇰🇿"
-            country="Казахстан"
-            number="150"
-            hint="Бесплатно, 24/7"
-          />
+          <HotlineItem flag="🇰🇿" country="Казахстан" number="150" hint="Бесплатно, 24/7" />
           <HotlineItem
             flag="🇷🇺"
             country="Россия"
@@ -62,13 +63,31 @@ export default function CrisisAlert({ onDismiss }) {
           />
         </div>
 
-        {/* Призыв */}
         <div className="mt-5 rounded-2xl bg-white/70 px-4 py-3 border border-rose-100">
           <p className="text-sm text-slate-700 leading-relaxed">
-            <strong>Я здесь, чтобы поддержать тебя</strong>, но в кризисной
-            ситуации живой специалист справится гораздо лучше. Позвони
-            прямо сейчас — это важнее всего.
+            <strong>Я здесь, чтобы поддержать тебя</strong>, но в кризисной ситуации живой
+            специалист справится гораздо лучше. Если хочешь поговорить о другом — я
+            переключусь и не буду возвращаться к этой теме без твоего запроса.
           </p>
+        </div>
+
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <button
+            type="button"
+            onClick={onDeclineTopic}
+            disabled={busy || !onDeclineTopic}
+            className="inline-flex items-center justify-center rounded-2xl border border-rose-200 bg-white px-5 py-2.5 text-sm font-semibold text-rose-800 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {busy ? "Подождите…" : "Поговорить о другом"}
+          </button>
+          <button
+            type="button"
+            onClick={onContinueTopic}
+            disabled={busy || !onContinueTopic}
+            className="inline-flex items-center justify-center rounded-2xl bg-[#74AA9C] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5d9088] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {busy ? "Готовлю ответ…" : "Продолжить эту тему"}
+          </button>
         </div>
       </div>
     </div>

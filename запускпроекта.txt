@@ -3,5 +3,5 @@ npm run telegram:poll
 в diplomaproject 
 
 !
-Открыть LM Studio запустить qwen2.5 -7b
+Открыть LM Studio, загрузить meta-llama-3.1-8b-instruct (+ text-embedding-nomic-embed-text-v1.5 для RAG)
 Открыть Supabase

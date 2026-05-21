@@ -1,9 +1,16 @@
+import {
+  applyAggressiveContextBudget,
+  applyContextBudget,
+  isContextOverflowError,
+} from "./contextBudget.js";
+import { resolveLmStudioEmbedModel, resolveLmStudioModel } from "./modelConfig.js";
+
 const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
-const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
-const LMSTUDIO_EMBED_MODEL = (process.env.LMSTUDIO_EMBED_MODEL || "text-embedding-nomic-embed-text-v1.5").trim();
+const LMSTUDIO_MODEL = resolveLmStudioModel();
+const LMSTUDIO_EMBED_MODEL = resolveLmStudioEmbedModel();
 const LMSTUDIO_TIMEOUT_MS = Number(process.env.LMSTUDIO_TIMEOUT_MS || 15000);
 
-export async function callUnifiedLlm(messages, options = {}) {
+async function requestLlm(messages, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Number(options.timeoutMs || LMSTUDIO_TIMEOUT_MS));
 
@@ -38,12 +45,55 @@ export async function callUnifiedLlm(messages, options = {}) {
     return { reply };
   } catch (error) {
     if (error?.name === "AbortError") {
-      return { error: `LM Studio request timeout after ${Number(options.timeoutMs || LMSTUDIO_TIMEOUT_MS)}ms` };
+      return {
+        error: `LM Studio request timeout after ${Number(options.timeoutMs || LMSTUDIO_TIMEOUT_MS)}ms`,
+      };
     }
     return { error: error?.message || String(error) };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+export async function callUnifiedLlm(messages, options = {}) {
+  const skipBudget = options.skipContextBudget === true;
+  const budgetResult = skipBudget
+    ? {
+        messages: messages || [],
+        trimmed: false,
+        estimatedTokens: 0,
+        maxPromptTokens: 0,
+        steps: [],
+      }
+    : applyContextBudget(messages);
+
+  if (budgetResult.trimmed) {
+    console.warn(
+      `[LM] Context compressed: ~${budgetResult.estimatedTokens}/${budgetResult.maxPromptTokens} tok`,
+      budgetResult.steps?.length ? `(${budgetResult.steps.join(", ")})` : ""
+    );
+  }
+
+  let result = await requestLlm(budgetResult.messages, options);
+
+  if (
+    result.error &&
+    isContextOverflowError(result.error) &&
+    !options._contextRetry &&
+    !skipBudget
+  ) {
+    const aggressive = applyAggressiveContextBudget(messages);
+    console.warn(
+      `[LM] Context overflow — retry with semantic compression:`,
+      aggressive.steps?.join(", ") || "aggressive"
+    );
+    result = await requestLlm(aggressive.messages, {
+      ...options,
+      _contextRetry: true,
+    });
+  }
+
+  return result;
 }
 
 export async function getUnifiedEmbedding(text, options = {}) {
@@ -74,7 +124,10 @@ export async function getUnifiedEmbedding(text, options = {}) {
     return { embedding };
   } catch (error) {
     if (error?.name === "AbortError") {
-      return { error: `LM Studio embeddings timeout after ${Number(options.timeoutMs || LMSTUDIO_TIMEOUT_MS)}ms`, embedding: null };
+      return {
+        error: `LM Studio embeddings timeout after ${Number(options.timeoutMs || LMSTUDIO_TIMEOUT_MS)}ms`,
+        embedding: null,
+      };
     }
     return { error: error?.message || String(error), embedding: null };
   } finally {

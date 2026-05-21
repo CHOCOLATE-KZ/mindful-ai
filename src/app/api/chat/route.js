@@ -1,11 +1,24 @@
 import { supabaseServer } from "@/lib/supabase/server";
-import { extractAnchors } from "@/lib/utils/extractAnchors";
-import { callUnifiedLlm } from "@/lib/llm/unifiedClient";
+import { callUnifiedLlm, unifiedLlmConfig } from "@/lib/llm/unifiedClient";
 import { generateSafePsychReply } from "@/lib/chat/unifiedResponder";
+import {
+  prepareConversationMemory,
+  persistConversationSummary,
+} from "@/lib/chat/conversationMemory";
+import {
+  loadCrisisTopicMode,
+  saveCrisisTopicMode,
+  normalizeCrisisTopicMode,
+  isDeclineCrisisTopicMessage,
+  isAffirmContinueCrisisTopicMessage,
+} from "@/lib/chat/crisisSession";
 
-const LMSTUDIO_BASE_URL = (process.env.LMSTUDIO_BASE_URL || "http://127.0.0.1:1234").trim();
-const LMSTUDIO_MODEL = (process.env.LMSTUDIO_MODEL || "gpt-oss-20b").trim();
-const LMSTUDIO_TIMEOUT_MS = Number(process.env.LMSTUDIO_TIMEOUT_MS || 15000);
+const CRISIS_DECLINE_PIVOT_REPLY =
+  "Хорошо, я понял. Давай поговорим о том, что для тебя сейчас важнее — о чём хочешь поговорить?";
+
+const LMSTUDIO_BASE_URL = unifiedLlmConfig.baseUrl;
+const LMSTUDIO_MODEL = unifiedLlmConfig.model;
+const LMSTUDIO_TIMEOUT_MS = unifiedLlmConfig.timeoutMs;
 const LMSTUDIO_TEMPERATURE = Number(process.env.LMSTUDIO_TEMPERATURE || 0.6);
 const ENABLE_PSYCHOLOGY_RAG = (process.env.ENABLE_PSYCHOLOGY_RAG || "true").trim().toLowerCase() !== "false";
 const RAG_LIMIT = Number(process.env.RAG_LIMIT || 3);
@@ -73,7 +86,6 @@ const CRISIS_TRIGGERS = [
   "өзімді өлтіргім", "өлгім келеді",
 ];
 
-const GREETING_REGEX = /^(привет|здравствуй|здравствуйте|салам|hello|hi|hey|добрый\s*(день|вечер|утро))(?:[!.,\s]*)$/i;
 const POSITIVE_MARKERS = [
   "отлично",
   "все хорошо",
@@ -130,12 +142,6 @@ function normalizeForIntent(text) {
     .replace(/[.,!?;:()"'`«»]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function isGreetingOnly(text) {
-  const normalized = String(text || "").trim();
-  if (!normalized) return false;
-  return GREETING_REGEX.test(normalized);
 }
 
 function isPositiveCheckin(text) {
@@ -365,86 +371,6 @@ async function classifyMode(userMessage) {
   return MODES.includes(mode) ? mode : "LISTENING";
 }
 
-function normalizeAnchorList(rawAnchors) {
-  if (!Array.isArray(rawAnchors)) return [];
-
-  const cleaned = rawAnchors
-    .map((a) => String(a || "").replace(/^[-*\d.)\s]+/, "").trim())
-    // Убираем кавычки по краям и лишние знаки
-    .map((a) => a.replace(/^["'«»]+|["'«».,;:!?]+$/g, "").trim())
-    .filter((a) => a.length >= 3 && a.length <= 40)
-    // Фильтруем якоря, похожие на обрезки предложений (много слов)
-    .filter((a) => a.split(/\s+/).length <= 4)
-    .map((a) => (a.length > 40 ? a.slice(0, 40).trim() : a));
-
-  // Deduplicate while preserving order
-  return [...new Set(cleaned)].slice(0, 4);
-}
-
-function parseAnchorsFromText(raw) {
-  const text = String(raw || "").trim();
-  if (!text) return [];
-
-  // Handle fenced JSON like: ```json\n{ "anchors": [...] }\n```
-  const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  if (fencedMatch?.[1]) {
-    const fencedPayload = fencedMatch[1].trim();
-    try {
-      const parsedFenced = JSON.parse(fencedPayload);
-      const anchorsFromFenced = normalizeAnchorList(parsedFenced?.anchors ?? parsedFenced);
-      if (anchorsFromFenced.length) return anchorsFromFenced;
-    } catch {
-      // Continue with other strategies.
-    }
-  }
-
-  // Try strict JSON first
-  try {
-    const parsed = JSON.parse(text);
-    return normalizeAnchorList(parsed?.anchors ?? parsed);
-  } catch {
-    // ignore and try fallback parsing
-  }
-
-  // Fallback: parse newline/bullet list
-  const lines = text
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l !== "```" && !/^```\w*$/i.test(l))
-    .filter(Boolean);
-
-  return normalizeAnchorList(lines);
-}
-
-async function generateAnchorsWithAI(replyText) {
-  if (!replyText || replyText.length < 20) return [];
-
-  const anchorMessages = [
-    {
-      role: "system",
-      content:
-        "Ты извлекаешь ключевые психологические темы из текста. " +
-        "Верни ТОЛЬКО JSON: { \"anchors\": [\"...\", \"...\"] } — массив из 3 элементов. " +
-        "Каждый якорь: СУЩЕСТВИТЕЛЬНОЕ + ПРИЛАГАТЕЛЬНОЕ или два существительных. " +
-        "Максимум 3 слова на якорь. Никаких цитат предложений. " +
-        "Примеры хороших якорей: \"Страх неудачи\", \"Личные границы\", \"Учебный стресс\", " +
-        "\"Поиск идентичности\", \"Тревога ожидания\", \"Техника дыхания\". " +
-        "Язык якорей должен совпадать с языком текста.",
-    },
-    {
-      role: "user",
-      content:
-        "Текст ответа психолога:\n\n" + replyText +
-        "\n\nВерни только JSON с ключевыми психологическими концепциями из этого текста.",
-    },
-  ];
-
-  const lm = await callLmStudio(anchorMessages, { temperature: 0.2, maxTokens: 80 });
-  if (lm.error) return [];
-
-  return parseAnchorsFromText(lm.reply);
-}
-
 // Получение последней эмоции пользователя из глобального хранилища
 function getLastUserEmotion(userId) {
   if (globalThis.userEmotions && globalThis.userEmotions[userId]) {
@@ -461,12 +387,16 @@ export async function POST(req) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const message = (body?.message || "").toString().trim();
-  if (!message) {
+  const crisisTopicChoice = body?.crisisTopicChoice || null;
+  const message = (body?.message || body?.triggerMessage || "").toString().trim();
+
+  if (!message && crisisTopicChoice !== "decline") {
     return Response.json({ error: "Empty message" }, { status: 400 });
   }
 
-  const greetingMode = isGreetingOnly(message);
+  let continueAfterCrisis =
+    body?.continueAfterCrisis === true || crisisTopicChoice === "continue";
+  const skipUserInsert = body?.skipUserInsert === true || Boolean(crisisTopicChoice);
 
   const supabase = await supabaseServer();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -474,43 +404,89 @@ export async function POST(req) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  let { mode: crisisTopicMode } = await loadCrisisTopicMode(supabase, user.id);
+  const clientCrisisMode = normalizeCrisisTopicMode(body?.crisisTopicMode);
+  if (clientCrisisMode) crisisTopicMode = clientCrisisMode;
+
+  if (crisisTopicChoice === "decline") {
+    await saveCrisisTopicMode(supabase, user.id, "declined");
+    const { error: insErr } = await supabase.from("ai_messages").insert({
+      user_id: user.id,
+      role: "assistant",
+      content: CRISIS_DECLINE_PIVOT_REPLY,
+      source: "web",
+    });
+    if (insErr) {
+      return Response.json({ error: insErr.message }, { status: 500 });
+    }
+    return Response.json({
+      reply: CRISIS_DECLINE_PIVOT_REPLY,
+      crisisTopicMode: "declined",
+    });
+  }
+
+  if (crisisTopicChoice === "continue") {
+    await saveCrisisTopicMode(supabase, user.id, "continuing");
+    crisisTopicMode = "continuing";
+    continueAfterCrisis = true;
+  }
+
   // Получаем последнюю эмоцию пользователя
-  const userEmotion = getLastUserEmotion(user.id);
-  console.log('[CHAT API]  Эмоция пользователя:', userEmotion);
+  const historyLimit = readEnvInt("CHAT_DB_HISTORY_LIMIT", 80);
 
   const { data: historyData, error: histErr } = await supabase
     .from("ai_messages")
     .select("role, content")
     .eq("user_id", user.id)
+    .eq("source", "web")
     .order("created_at", { ascending: true })
-    .limit(50);
+    .limit(historyLimit);
 
   if (histErr) {
     return Response.json({ error: histErr.message }, { status: 500 });
   }
 
   const history = historyData || [];
+  const memory = await prepareConversationMemory({
+    supabase,
+    userId: user.id,
+    history,
+  });
   const context = await buildUserContext(supabase, user.id);
 
-  const { error: insUserErr } = await supabase.from("ai_messages").insert({
-    user_id: user.id,
-    role: "user",
-    content: message,
-    source: "web",
-  });
+  if (isDeclineCrisisTopicMessage(message)) {
+    await saveCrisisTopicMode(supabase, user.id, "declined");
+    crisisTopicMode = "declined";
+  } else if (isAffirmContinueCrisisTopicMessage(message)) {
+    await saveCrisisTopicMode(supabase, user.id, "continuing");
+    crisisTopicMode = "continuing";
+    continueAfterCrisis = true;
+  }
 
-  if (insUserErr) {
-    return Response.json({ error: insUserErr.message }, { status: 500 });
+  if (!skipUserInsert && !continueAfterCrisis) {
+    const { error: insUserErr } = await supabase.from("ai_messages").insert({
+      user_id: user.id,
+      role: "user",
+      content: message,
+      source: "web",
+    });
+
+    if (insUserErr) {
+      return Response.json({ error: insUserErr.message }, { status: 500 });
+    }
   }
 
   const safeResult = await generateSafePsychReply({
     message,
-    history,
+    history: memory.recentHistory,
+    conversationSummary: memory.conversationSummary,
+    bridgeContext: memory.bridgeContext,
     userContext: context,
-    userEmotion,
-    enableRag: ENABLE_PSYCHOLOGY_RAG,
+    enableRag: ENABLE_PSYCHOLOGY_RAG && !continueAfterCrisis,
     ragLimit: RAG_LIMIT,
     ragMinQueryLength: RAG_MIN_QUERY_LENGTH,
+    continueAfterCrisis,
+    crisisTopicMode,
   });
 
   if (safeResult.error) {
@@ -518,34 +494,38 @@ export async function POST(req) {
   }
 
   if (safeResult.crisis) {
-    return Response.json({ crisis: true }, { status: 200 });
+    return Response.json({ crisis: true, crisisReopen: safeResult.crisisReopen === true }, { status: 200 });
+  }
+
+  if (safeResult.crisisTopicDeclined) {
+    await saveCrisisTopicMode(supabase, user.id, "declined");
+    crisisTopicMode = "declined";
   }
 
   let reply = (safeResult.reply || "").trim() || "...";
-  const mode = safeResult.mode || "LISTENING";
+  const mode = safeResult.mode || "CHAT";
 
   console.log('[LM STUDIO]  ФИНАЛЬНЫЙ ответ:', reply);
   console.log('[LM STUDIO]  Unified safety pipeline mode:', mode);
 
-  // Запускаем сохранение в БД и генерацию якорей параллельно
-  const anchorPromise = greetingMode
-    ? Promise.resolve({ anchors: [], source: "disabled:greeting" })
-    : generateAnchorsWithAI(reply)
-        .then((ai) =>
-          ai.length > 0
-            ? { anchors: ai, source: "ai" }
-            : { anchors: extractAnchors(reply), source: "heuristic" }
+  const persistSummaryPromise =
+    memory.shouldPersist && memory.conversationSummary
+      ? persistConversationSummary(
+          supabase,
+          user.id,
+          memory.conversationSummary,
+          memory.summarizedMessageCount
         )
-        .catch(() => ({ anchors: extractAnchors(reply), source: "heuristic" }));
+      : Promise.resolve(true);
 
-  const [dbResult, { anchors, source: anchorSource }] = await Promise.all([
+  const [dbResult] = await Promise.all([
     supabase.from("ai_messages").insert({
       user_id: user.id,
       role: "assistant",
       content: reply,
       source: "web",
     }),
-    anchorPromise,
+    persistSummaryPromise,
   ]);
 
   if (dbResult.error) {
@@ -558,10 +538,16 @@ export async function POST(req) {
         ragEnabled: ENABLE_PSYCHOLOGY_RAG,
         ragLimit: RAG_LIMIT,
         ragContextChars: safeResult.psychologyContextChars || 0,
-        anchorSource,
         mode,
+        memory: memory.meta,
+        summaryChars: memory.conversationSummary?.length || 0,
+        recentHistoryCount: memory.recentHistory?.length || 0,
       }
     : undefined;
 
-  return Response.json({ reply, anchors, debug });
+  return Response.json({
+    reply,
+    debug,
+    crisisTopicMode: crisisTopicMode || undefined,
+  });
 }

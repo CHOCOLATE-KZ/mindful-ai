@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
-import { extractAnchors } from "@/lib/utils/extractAnchors";
 import { buildPleasantRussianUtterance, pickBestSpeechVoice, waitForSpeechVoices } from "@/lib/utils/speechVoice";
 import { useOutsideClick } from "./useOutsideClick";
 import { useVoiceInput } from "./useVoiceInput";
@@ -15,8 +14,6 @@ export function useChatPageModel() {
   const supabase = useMemo(() => supabaseBrowser(), []);
 
   const [input, setInput] = useState("");
-  const [showAnchorTooltip, setShowAnchorTooltip] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [voiceModeEnabled, setVoiceModeEnabled] = useState(false);
   const [sessionModeEnabled, setSessionModeEnabled] = useState(false);
     const toggleSessionMode = useCallback(() => {
@@ -34,8 +31,16 @@ export function useChatPageModel() {
   const startingVoiceRef = useRef(false);
   const lastSpokenAssistantRef = useRef("");
 
-  const { atTop, atBottom, scrolledDown, scrollRef, scrollToTop, scrollToBottom } = useChatScroll();
-  const helpIconRef = useRef(null);
+  const {
+    atTop,
+    atBottom,
+    scrolledDown,
+    scrollRef,
+    setScrollContainerRef,
+    scrollToTop,
+    scrollToBottom,
+    toggleScrollEdge,
+  } = useChatScroll();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -101,7 +106,7 @@ export function useChatPageModel() {
     savedNotes,
     notesLoading,
     notesError,
-    savingAnchor,
+    savingNote,
     saveChatNote,
   } = useChatNotes();
 
@@ -115,7 +120,7 @@ export function useChatPageModel() {
     onHistoryCleared: () => setMenuOpen(false),
   });
 
-  const { loading, send: sendMessage } = useChatSend({
+  const { loading, send: sendMessage, continueAfterCrisis, declineCrisisTopic } = useChatSend({
     setMessages,
     onBeforeSend: () => setInput(""),
   });
@@ -315,24 +320,6 @@ export function useChatPageModel() {
     };
   }, [stopSpeaking, stopVoice]);
 
-  const latestAnchors = useMemo(() => {
-    const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
-    if (!lastAssistant) return [];
-    if (Array.isArray(lastAssistant.anchors) && lastAssistant.anchors.length) return lastAssistant.anchors;
-    return extractAnchors(lastAssistant.content);
-  }, [messages]);
-
-  const handleHelpIconHover = useCallback(() => {
-    if (helpIconRef.current) {
-      const rect = helpIconRef.current.getBoundingClientRect();
-      setTooltipPosition({
-        top: rect.bottom + 8,
-        left: rect.left - 100,
-      });
-      setShowAnchorTooltip(true);
-    }
-  }, []);
-
   const exportMyData = useCallback(async (format = "json") => {
     try {
       const res = await fetch("/api/profile/export", { method: "GET", credentials: "include" });
@@ -461,12 +448,8 @@ export function useChatPageModel() {
 
   const send = useCallback((e) => sendMessage(e, input), [sendMessage, input]);
 
-  const applyAnchorToInput = useCallback((anchor) => {
-    setInput(`Хочу обсудить: ${anchor}`);
-  }, []);
-
-  const hideAnchorTooltip = useCallback(() => {
-    setShowAnchorTooltip(false);
+  const applyNoteToInput = useCallback((title) => {
+    setInput(`Хочу обсудить: ${title}`);
   }, []);
 
   return {
@@ -479,11 +462,9 @@ export function useChatPageModel() {
     savedNotes,
     notesLoading,
     notesError,
-    savingAnchor,
-    showAnchorTooltip,
-    tooltipPosition,
+    savingNote,
     scrollRef,
-    helpIconRef,
+    setScrollContainerRef,
     menuOpen,
     setMenuOpen,
     menuRef,
@@ -497,17 +478,17 @@ export function useChatPageModel() {
     toggleVoiceConversation,
     toggleSessionMode,
     stopVoiceConversation,
-    latestAnchors,
     exportMyData,
     clearChatHistory,
-    handleHelpIconHover,
-    hideAnchorTooltip,
-    applyAnchorToInput,
+    applyNoteToInput,
     saveChatNote,
     setInput,
     send,
+    continueAfterCrisis,
+    declineCrisisTopic,
     scrollToTop,
     scrollToBottom,
+    toggleScrollEdge,
     atTop,
     scrolledDown,
   };

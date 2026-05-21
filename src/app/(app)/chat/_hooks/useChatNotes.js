@@ -6,7 +6,7 @@ export function useChatNotes() {
   const [savedNotes, setSavedNotes] = useState([]);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notesError, setNotesError] = useState("");
-  const [savingAnchor, setSavingAnchor] = useState("");
+  const [savingNote, setSavingNote] = useState("");
 
   const loadChatNotes = useCallback(async () => {
     setNotesLoading(true);
@@ -24,16 +24,16 @@ export function useChatNotes() {
     }
   }, []);
 
-  const saveChatNote = useCallback(async (anchor) => {
-    if (!anchor || savingAnchor) return;
-    setSavingAnchor(anchor);
+  const saveChatNote = useCallback(async (title) => {
+    if (!title || savingNote) return;
+    setSavingNote(title);
     setNotesError("");
     try {
       const res = await fetch("/api/chat/notes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title: anchor }),
+        body: JSON.stringify({ title }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Notes save error");
@@ -42,9 +42,9 @@ export function useChatNotes() {
       console.error(err);
       setNotesError("Не удалось сохранить заметку");
     } finally {
-      setSavingAnchor("");
+      setSavingNote("");
     }
-  }, [savingAnchor]);
+  }, [savingNote]);
 
   useEffect(() => {
     loadChatNotes();
@@ -54,7 +54,7 @@ export function useChatNotes() {
     savedNotes,
     notesLoading,
     notesError,
-    savingAnchor,
+    savingNote,
     saveChatNote,
     reloadChatNotes: loadChatNotes,
   };

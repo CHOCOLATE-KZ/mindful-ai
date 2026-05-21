@@ -30,7 +30,6 @@ export async function askAI(userMessage, userContext = '') {
     message: userMessage,
     history: [],
     userContext,
-    userEmotion: "neutral",
   });
 
   if (result.error) throw new Error(result.error);
@@ -50,7 +49,6 @@ export async function askAIWithHistory(userMessage, history = [], userContext = 
     message: userMessage,
     history: Array.isArray(history) ? history : [],
     userContext,
-    userEmotion: "neutral",
   });
 
   if (result.error) throw new Error(result.error);
@@ -59,31 +57,44 @@ export async function askAIWithHistory(userMessage, history = [], userContext = 
 }
 
 /**
- * Строит контекст о пользователе из данных Supabase
- * @param {Object} supabase - Клиент Supabase
+ * Строит контекст о пользователе из MSSQL
  * @param {string} userId - UUID пользователя
  * @returns {Promise<string>} Контекст
  */
-export async function buildUserContext(supabase, userId) {
-  const [{ data: profile }, { data: settings }, { data: lastNote }] = await Promise.all([
-    supabase.from("profiles").select("name").eq("id", userId).maybeSingle(),
-    supabase.from("user_settings").select("language, data_sharing_ai").eq("user_id", userId).maybeSingle(),
-    supabase.from("notes").select("date, mood, sleep").eq("user_id", userId).order("date", { ascending: false }).limit(1),
-  ]);
+import { query } from "./mssqlClient.js";
 
-  if (settings?.data_sharing_ai === false) return "";
+export async function buildUserContext(userId) {
+  // Получаем профиль
+  const profileRes = await query(
+    "SELECT name FROM profiles WHERE id = @userId",
+    { userId }
+  );
+  const profile = profileRes.recordset[0] || {};
+
+  // Получаем настройки
+  const settingsRes = await query(
+    "SELECT language, data_sharing_ai FROM user_settings WHERE user_id = @userId",
+    { userId }
+  );
+  const settings = settingsRes.recordset[0] || {};
+
+  // Получаем последнюю заметку
+  const noteRes = await query(
+    "SELECT TOP 1 date, mood, sleep FROM notes WHERE user_id = @userId ORDER BY date DESC",
+    { userId }
+  );
+  const note = noteRes.recordset[0] || {};
+
+  if (settings.data_sharing_ai === false) return "";
 
   const parts = [];
-  if (profile?.name) parts.push(`Имя: ${profile.name}`);
-  if (settings?.language) parts.push(`Язык: ${settings.language}`);
-
-  const note = Array.isArray(lastNote) ? lastNote[0] : lastNote;
-  if (note?.date || note?.mood != null || note?.sleep != null) {
+  if (profile.name) parts.push(`Имя: ${profile.name}`);
+  if (settings.language) parts.push(`Язык: ${settings.language}`);
+  if (note.date || note.mood != null || note.sleep != null) {
     parts.push(
-      `Последняя заметка: дата=${note?.date || "?"}, настроение=${note?.mood ?? "?"}/10, сон=${note?.sleep ?? "?"} мин`
+      `Последняя заметка: дата=${note.date || "?"}, настроение=${note.mood ?? "?"}/10, сон=${note.sleep ?? "?"} мин`
     );
   }
-
   return parts.length ? parts.join(". ") : "";
 }
 
