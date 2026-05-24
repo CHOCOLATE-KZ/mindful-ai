@@ -96,7 +96,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_right,rgba(16,44,39,0.20)_0%,transparent_58%)]" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-48 bg-gradient-to-t from-[#f7f4ec]/55 via-[#f7f4ec]/20 to-transparent" />
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(92vh-4.5rem)] w-full max-w-7xl items-start px-4 pt-16 pb-8 lg:pt-30 lg:pb-10">
+      <div className="relative z-10 mx-auto flex min-h-[calc(92vh-4.5rem)] w-full max-w-7xl items-start px-4 pt-16 pb-8 lg:pt-28 lg:pb-10">
         <div className="grid w-full items-start gap-8 lg:grid-cols-2">
           {/* Left */}
           <div>

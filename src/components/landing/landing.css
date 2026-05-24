@@ -1,0 +1,20 @@
+@keyframes landing-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.landing-showcase-bg {
+  background-size: 200% 200%;
+  animation: landing-gradient-shift 20s ease infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-showcase-bg {
+    animation: none;
+  }
+}

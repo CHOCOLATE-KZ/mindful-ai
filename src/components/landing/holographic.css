@@ -10,21 +10,33 @@
 }
 
 .holographic-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(0deg, transparent, transparent 30%, rgba(0,255,255,0.3));
+  background: linear-gradient(
+    0deg,
+    transparent,
+    transparent 30%,
+    rgba(159, 217, 203, 0.35)
+  );
   transform: rotate(-45deg);
   transition: all 0.5s ease;
   opacity: 0;
 }
 .holographic-card:hover {
-  box-shadow: 0 0 20px rgba(0,255,255,0.5);
+  box-shadow: 0 0 24px rgba(116, 170, 156, 0.35);
 }
 .holographic-card:hover::before {
   opacity: 1;
   transform: rotate(-45deg) translateY(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holographic-card,
+  .holographic-card::before {
+    transition: none;
+  }
 }

@@ -1,51 +1,52 @@
 "use client";
 
+import Image from "next/image";
 import Reveal from "@/components/ui/Reveal";
 import Link from "next/link";
-import { ShieldCheck, Brain, Sparkles, ArrowRight, HeartPulse } from "lucide-react";
+import { ShieldCheck, Brain, ArrowRight, HeartPulse, MessageCircle, BarChart3 } from "lucide-react";
+import SectionLabel from "@/components/landing/SectionLabel";
 import "./holographic.css";
 
 const cards = [
   {
-    title: "Рост вашего состояния",
-    body: "Отслеживайте эмоциональный прогресс и фиксируйте позитивные изменения каждый день.",
+    title: "Отслеживай своё состояние",
+    body: "Фиксируй настроение, сон и мысли — замечай изменения и позитивную динамику.",
     Icon: HeartPulse,
-    image: "https://ast.ru/upload/resize_cache/iblock/4cb/lw2v00kwv1o2e50wk01blhy332tssk2w/600_315_2/psycho_1200.jpg",
+    image: "/psychology_statistics.png",
+    tag: "Дневник",
   },
   {
-    title: "Всегда рядом, всегда поддержит",
-    body: "Поддержка 24/7 без осуждения — получите ответ в любой момент, когда это нужно.",
-    Icon: Brain,
-    image: "https://today.troy.edu/wp-content/uploads/2021/02/Psychology-Illustration_byMaddie.jpeg",
+    title: "Поддержка без осуждения",
+    body: "Спокойный диалог с ИИ в любой момент — в веб-чате или Telegram.",
+    Icon: MessageCircle,
+    image: "/phone_mockup.jpg",
+    tag: "Чат 24/7",
   },
   {
-    title: "100% конфиденциально",
-    body: "Ваши данные полностью защищены. Никаких утечек и третьих лиц — только вы и ИИ.",
+    title: "Конфиденциально и бережно",
+    body: "Твои записи и переписка доступны только тебе. Данные не уходят третьим лицам.",
     Icon: ShieldCheck,
-    image: "https://cdn.sanity.io/images/bl383u0v/production/a0c9e9ed8a5a5e76040db8ac735e76adb7c661cc-8000x4000.jpg?w=412&h=206&q=80&fit=max&auto=format&dpr=2.625",
+    image: "/mind.png",
+    tag: "Приватность",
   },
 ];
 
 export default function FeaturesSection() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16">
+    <section id="features" className="mx-auto max-w-7xl px-4 py-16 md:py-20">
       <div className="overflow-hidden rounded-3xl border border-black/10 bg-white shadow-sm">
-
-        {/* ── Top row: heading left + description right ── */}
-        <div className="flex flex-col gap-6 px-8 pt-10 pb-8 sm:flex-row sm:items-end sm:justify-between lg:px-12">
+        <div className="flex flex-col gap-6 px-6 pt-10 pb-8 sm:flex-row sm:items-end sm:justify-between md:px-10 lg:px-12">
           <Reveal>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#74AA9C]">
-                Why choose MindfulAI
-              </p>
-              <h2 className="text-3xl font-semibold tracking-tight text-black sm:text-4xl">
-                Что делает нас<br className="hidden sm:block" /> особенными?
+              <SectionLabel>Почему MindfulAI</SectionLabel>
+              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#10211f] sm:text-4xl">
+                Что делает нас особенными?
               </h2>
               <Link
                 href="/chat"
-                className="group mt-5 inline-flex items-center gap-2 rounded-full border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold text-black shadow-sm transition hover:bg-black hover:text-white"
+                className="group mt-5 inline-flex items-center gap-2 rounded-full border border-[#74AA9C]/25 bg-white px-5 py-2.5 text-sm font-semibold text-[#10211f] shadow-sm transition hover:bg-[#74AA9C] hover:text-white"
               >
-                Попробовать
+                Попробовать чат
                 <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
@@ -53,48 +54,61 @@ export default function FeaturesSection() {
 
           <Reveal delay={0.1}>
             <p className="max-w-sm text-sm leading-relaxed text-black/60 sm:text-right">
-              Современный формат психологической поддержки — приватный чат,
-              персональные рекомендации и ежедневные практики в одном месте.
+              Приватный чат, персональные рекомендации и ежедневные практики — в одном
+              спокойном пространстве для заботы о себе.
             </p>
           </Reveal>
         </div>
 
-        {/* ── Bottom row: 3 dark cards ── */}
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-12 gap-y-8 px-12 pb-12">
-          {cards.map(({ title, body, Icon, image }, i) => (
+        <div className="grid grid-cols-1 gap-6 px-6 pb-10 sm:grid-cols-3 sm:gap-4 md:px-10 lg:px-12 lg:pb-12">
+          {cards.map(({ title, body, Icon, image, tag }, i) => (
             <Reveal key={title} delay={i * 0.08}>
               <div
-                className={["holographic-card flex h-full flex-col justify-between p-4 sm:p-5 transition bg-[#74AA9C] sm:border-x sm:border-white/10",
+                className={[
+                  "holographic-card flex h-full flex-col overflow-hidden rounded-2xl bg-[#5d9088] sm:rounded-none",
                   i === 0 ? "sm:rounded-bl-3xl" : "",
                   i === cards.length - 1 ? "sm:rounded-br-3xl" : "",
                 ].join(" ")}
               >
-                {/* Картинка над карточкой */}
-                <div className="w-full flex justify-center mb-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                <div className="relative h-32 w-full overflow-hidden sm:h-36">
+                  <Image
                     src={image}
-                    alt={title}
-                    style={{ width: "100%", maxHeight: 120, objectFit: "cover", borderRadius: 12 }}
+                    alt=""
+                    fill
+                    className="object-cover opacity-90"
+                    sizes="(max-width: 640px) 100vw, 33vw"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#5d9088] via-[#5d9088]/40 to-transparent" />
+                  <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#5d9088]">
+                    {tag}
+                  </span>
                 </div>
-                <div>
-                  <div className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#74AA9C]/20 text-[#74AA9C]">
-                    <Icon size={16} />
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-white">
+                    <Icon size={18} />
                   </div>
-                  <h3 className="mt-5 text-base font-semibold leading-snug text-white">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/55">{body}</p>
+                  <h3 className="mt-4 text-base font-semibold leading-snug text-white">{title}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/70">{body}</p>
                 </div>
-
-                {/* убран Sparkles */}
               </div>
             </Reveal>
           ))}
         </div>
 
+        <div className="flex flex-wrap items-center justify-center gap-6 border-t border-black/8 bg-[#f7fbf9] px-6 py-5 text-sm text-black/55">
+          <span className="inline-flex items-center gap-2">
+            <Brain className="h-4 w-4 text-[#74AA9C]" />
+            AI-рекомендации
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-[#74AA9C]" />
+            Аналитика недели
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-[#74AA9C]" />
+            Конфиденциальность
+          </span>
+        </div>
       </div>
     </section>
   );

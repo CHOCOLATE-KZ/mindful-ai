@@ -1,61 +1,62 @@
 import Link from "next/link";
 import Image from "next/image";
-import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
-import { SiTiktok } from "react-icons/si";
+import { FaTelegramPlane } from "react-icons/fa";
+
+const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || "IITUpsychologyAIbot";
+const telegramLink = `https://t.me/${botUsername}`;
 
 export default function Footer() {
-  const socialIcons = [
-    { icon: <FaFacebookF />, name: "Facebook", href: "#" },
-    { icon: <FaInstagram />, name: "Instagram", href: "#" },
-    { icon: <FaTwitter />, name: "X/Twitter", href: "#" },
-    { icon: <SiTiktok />, name: "TikTok", href: "#" },
-  ];
-
   return (
-    <footer className="relative text-white overflow-hidden">
-      {/* Background image */}
+    <footer className="relative overflow-hidden text-white">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/footerimg.png')" }}
       />
-      {/* Dark overlay for readability */}
-      <div className="absolute inset-0 bg-black/60" />
+      <div className="absolute inset-0 bg-[#10211f]/65" />
+
       <div className="relative mx-auto max-w-7xl px-4 py-16">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="h-10 w-10 rounded-full bg-white/15 grid place-items-center font-bold transition-transform duration-300 group-hover:scale-110">
-                <Image src="/white-logo.svg" alt="MindfulAI" width={24} height={24} className="w-6 h-6 object-contain" />
-              </div>
-              <div className="text-2xl font-semibold transition-colors duration-300 group-hover:text-blue-200">
-                MindfulAI
-              </div>
-            </Link>
-          </div>
+          <Link href="/" className="group flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-full bg-white/15 transition group-hover:scale-105">
+              <Image
+                src="/white-logo.svg"
+                alt="MindfulAI"
+                width={24}
+                height={24}
+                className="h-6 w-6 object-contain"
+              />
+            </div>
+            <div className="text-2xl font-semibold transition group-hover:text-[#9fdfd0]">
+              MindfulAI
+            </div>
+          </Link>
 
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
-              <div className="text-sm font-semibold uppercase tracking-wide text-white/80">
+              <div className="text-sm font-semibold uppercase tracking-wide text-white/75">
                 Информация
               </div>
               <ul className="mt-4 space-y-3 text-white/90">
                 <li>
-                  <Link href="/about" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+                  <Link href="/about" className="transition hover:text-[#9fdfd0] hover:underline">
                     О приложении
                   </Link>
                 </li>
                 <li>
-                  <Link href="/psychology" className="hover:underline hover:text-blue-200 transition-colors duration-300">
-                    База знаний по психологии
+                  <Link
+                    href="/psychology"
+                    className="transition hover:text-[#9fdfd0] hover:underline"
+                  >
+                    База знаний
                   </Link>
                 </li>
                 <li>
-                  <Link href="/faq" className="hover:underline hover:text-blue-200 transition-colors duration-300">
-                    Часто задаваемые вопросы
+                  <Link href="/faq" className="transition hover:text-[#9fdfd0] hover:underline">
+                    FAQ
                   </Link>
                 </li>
                 <li>
-                  <Link href="/news" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+                  <Link href="/news" className="transition hover:text-[#9fdfd0] hover:underline">
                     Новости
                   </Link>
                 </li>
@@ -63,22 +64,28 @@ export default function Footer() {
             </div>
 
             <div>
-              <div className="text-sm font-semibold uppercase tracking-wide text-white/80">
+              <div className="text-sm font-semibold uppercase tracking-wide text-white/75">
                 Помощь
               </div>
               <ul className="mt-4 space-y-3 text-white/90">
                 <li>
-                  <Link href="/chat" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+                  <Link href="/chat" className="transition hover:text-[#9fdfd0] hover:underline">
                     Чат с поддержкой
                   </Link>
                 </li>
                 <li>
-                  <Link href="/contacts" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+                  <Link
+                    href="/contacts"
+                    className="transition hover:text-[#9fdfd0] hover:underline"
+                  >
                     Связаться с нами
                   </Link>
                 </li>
                 <li>
-                  <a href="mailto:support@mindfulai.app" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+                  <a
+                    href="mailto:support@mindfulai.app"
+                    className="transition hover:text-[#9fdfd0] hover:underline"
+                  >
                     support@mindfulai.app
                   </a>
                 </li>
@@ -86,34 +93,34 @@ export default function Footer() {
             </div>
 
             <div>
-              <div className="text-sm font-semibold uppercase tracking-wide text-white/80">
-                Сообщество
+              <div className="text-sm font-semibold uppercase tracking-wide text-white/75">
+                Telegram
               </div>
-              <div className="mt-4 flex items-center gap-3 text-white/90">
-                {socialIcons.map((item, idx) => (
-                  <a
-                    key={idx}
-                    href={item.href}
-                    title={item.name}
-                    className="h-10 w-10 rounded-full bg-white/15 grid place-items-center transition-all duration-300 hover:bg-white/25 hover:scale-110 hover:text-blue-200 text-lg"
-                  >
-                    {item.icon}
-                  </a>
-                ))}
-              </div>
+              <p className="mt-4 text-sm text-white/70">
+                Бот для быстрого входа и поддержки в привычном мессенджере.
+              </p>
+              <a
+                href={telegramLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Telegram-бот MindfulAI"
+                className="mt-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-lg transition hover:scale-105 hover:bg-white/25 hover:text-[#9fdfd0]"
+              >
+                <FaTelegramPlane />
+              </a>
             </div>
           </div>
         </div>
 
         <div className="mt-12 h-px bg-white/20" />
 
-        <div className="mt-8 flex flex-col gap-4 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
-          <div>Copyright © 2026 MindfulAI. Все права защищены.</div>
+        <div className="mt-8 flex flex-col gap-4 text-sm text-white/75 sm:flex-row sm:items-center sm:justify-between">
+          <div>© 2026 MindfulAI. Все права защищены.</div>
           <div className="flex gap-6">
-            <Link href="/privacy" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+            <Link href="/privacy" className="transition hover:text-[#9fdfd0] hover:underline">
               Приватность
             </Link>
-            <Link href="/terms" className="hover:underline hover:text-blue-200 transition-colors duration-300">
+            <Link href="/terms" className="transition hover:text-[#9fdfd0] hover:underline">
               Условия использования
             </Link>
           </div>

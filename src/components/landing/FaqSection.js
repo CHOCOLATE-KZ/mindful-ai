@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ArrowRight,
   Brain,
@@ -8,6 +9,7 @@ import {
   LockKeyhole,
   NotebookPen,
 } from "lucide-react";
+import SectionLabel from "@/components/landing/SectionLabel";
 
 function CategoryCard({ item, active, onClick }) {
   const Icon = item.icon;
@@ -45,23 +47,33 @@ function CategoryCard({ item, active, onClick }) {
 }
 
 function ArticleCard({ item }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <article className="group py-1">
+    <article className="group rounded-2xl border border-transparent py-1 transition hover:border-[#74AA9C]/15 hover:bg-[#f7fbf9]/80 hover:px-3">
       <div className="flex items-start gap-2.5">
         <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center text-[#5d9088]">
           <item.icon className="h-3.5 w-3.5" />
         </div>
-        <div className="min-w-0">
-          <h3 className="text-[18px] font-semibold leading-snug text-black transition-colors duration-200 group-hover:text-[#5d9088]">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[17px] font-semibold leading-snug text-[#10211f] transition-colors group-hover:text-[#5d9088]">
             {item.q}
           </h3>
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-black/55">{item.a}</p>
+          <p
+            className={`mt-2 text-sm leading-relaxed text-black/55 ${open ? "" : "line-clamp-2"}`}
+          >
+            {item.a}
+          </p>
           <button
             type="button"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[#5d9088] transition-colors hover:text-[#74AA9C]"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#5d9088] transition-colors hover:text-[#74AA9C]"
           >
-            Подробнее
-            <ArrowRight className="h-4 w-4" />
+            {open ? "Свернуть" : "Подробнее"}
+            <ArrowRight
+              className={`h-4 w-4 transition-transform ${open ? "rotate-90" : ""}`}
+            />
           </button>
         </div>
       </div>
@@ -75,7 +87,7 @@ export default function FaqSection() {
   const categories = [
     {
       key: "support",
-      kicker: "Support",
+      kicker: "Поддержка",
       title: "Поддержка и границы ИИ",
       description: "Что умеет MindfulAI и в каких рамках он работает.",
       icon: HeartHandshake,
@@ -83,7 +95,7 @@ export default function FaqSection() {
     },
     {
       key: "trust",
-      kicker: "Privacy",
+      kicker: "Приватность",
       title: "Конфиденциальность и безопасность",
       description: "Как хранятся данные и что можно удалить.",
       icon: LockKeyhole,
@@ -91,7 +103,7 @@ export default function FaqSection() {
     },
     {
       key: "practice",
-      kicker: "Practice",
+      kicker: "Практики",
       title: "Дневник и практики",
       description: "Как получать пользу от заметок и упражнений.",
       icon: NotebookPen,
@@ -99,7 +111,7 @@ export default function FaqSection() {
     },
     {
       key: "product",
-      kicker: "Product",
+      kicker: "Сервис",
       title: "Как устроен сервис",
       description: "Язык, доступность и повседневное использование.",
       icon: Brain,
@@ -188,9 +200,10 @@ export default function FaqSection() {
   );
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-20">
+    <section id="faq" className="mx-auto max-w-7xl bg-white px-6 py-16 md:py-20">
       <div>
-        <h2 className="text-4xl font-semibold tracking-tight text-black sm:text-5xl">
+        <SectionLabel>Частые вопросы</SectionLabel>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-[#10211f] sm:text-4xl">
           Чем мы можем помочь?
         </h2>
         <p className="mt-3 max-w-2xl text-lg leading-relaxed text-black/60">
@@ -229,21 +242,21 @@ export default function FaqSection() {
       <div className="mt-14 rounded-3xl border border-black/8 bg-[#f7fbf9] px-6 py-10 text-center sm:px-10">
         <h3 className="text-2xl font-semibold text-black">Не нашли нужный ответ?</h3>
         <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-black/60">
-          Если нужной информации нет в разделе FAQ, пользователь может перейти к контактам или открыть чат и продолжить взаимодействие внутри сервиса.
+          Напиши нам или открой полный раздел FAQ — там ещё больше ответов о сервисе.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a
+          <Link
             href="/contacts"
             className="inline-flex items-center justify-center rounded-full bg-[#74AA9C] px-6 py-3 font-semibold text-white transition hover:bg-[#5d9088]"
           >
             Связаться с нами
-          </a>
-          <a
-            href="/chat"
+          </Link>
+          <Link
+            href="/faq"
             className="inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-6 py-3 font-semibold text-black/75 transition hover:border-[#74AA9C]/30 hover:text-[#5d9088]"
           >
-            Открыть чат
-          </a>
+            Все вопросы
+          </Link>
         </div>
       </div>
     </section>

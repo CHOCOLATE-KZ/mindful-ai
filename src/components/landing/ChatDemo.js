@@ -38,7 +38,11 @@ export default function ChatDemo() {
   );
 
   const [step, setStep] = useState(0);
-  const [mode, setMode] = useState("nextbot");
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
   const [messages, setMessages] = useState([
     {
       id: "m0",
@@ -63,6 +67,14 @@ export default function ChatDemo() {
   }
 
   useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = () => setReducedMotion(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
@@ -85,6 +97,14 @@ export default function ChatDemo() {
     clearTimers();
     setTyping(false);
     setInput("");
+
+    if (reducedMotion) {
+      pushMessage("user", userText);
+      pushMessage("assistant", botText);
+      lockRef.current = false;
+      if (nextStep) setStep((s) => (s + 1) % script.length);
+      return;
+    }
 
     const baseDelay = 45;
     const startDelay = 100;
@@ -130,6 +150,7 @@ export default function ChatDemo() {
   }
 
   useEffect(() => {
+    if (reducedMotion) return;
     if (isRunningRef.current) return;
     isRunningRef.current = true;
     runTurn(current.user, current.bot, true);
@@ -140,9 +161,10 @@ export default function ChatDemo() {
       lockRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reducedMotion]);
 
   useEffect(() => {
+    if (reducedMotion) return;
     if (!isRunningRef.current) return;
 
     setMessages((prev) => {
@@ -154,7 +176,7 @@ export default function ChatDemo() {
 
     runTurn(current.user, current.bot, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, EXTRA_BOT_DELAY_MS]);
+  }, [step, EXTRA_BOT_DELAY_MS, reducedMotion]);
 
   function onChipClick(text) {
     const fallbackMap = {
@@ -189,7 +211,7 @@ export default function ChatDemo() {
           </div>
         </div>
         <div className="relative group">
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-sm text-blue-700 animate-pulse cursor-default">
+          <span className="cursor-default rounded-full bg-[#74AA9C]/12 px-3 py-1 text-sm font-medium text-[#4a7a70]">
             Демо
           </span>
 
@@ -238,16 +260,16 @@ export default function ChatDemo() {
                   className={[
                     "max-w-[78%] rounded-2xl px-3.5 py-2.5 text-sm",
                     isUser
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "bg-black/[0.03] text-black/80 border border-black/10",
+                      ? "bg-[#74AA9C] text-white shadow-sm"
+                      : "border border-[#74AA9C]/12 bg-[#f7fbf9] text-black/80",
                   ].join(" ")}
                 >
                   {m.text}
                 </div>
 
                 {isUser && (
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-200">
-                    <UserRound size={15} className="text-blue-800" />
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#d9eeea]">
+                    <UserRound size={15} className="text-[#4a7a70]" />
                   </div>
                 )}
               </div>
@@ -285,7 +307,7 @@ export default function ChatDemo() {
           <button
             type="button"
             onClick={() => router.push("/chat")}
-            className="h-11 rounded-2xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
+            className="h-11 rounded-2xl bg-[#74AA9C] px-5 text-sm font-semibold text-white shadow-sm transition hover:brightness-105"
             aria-label="Перейти в чат"
           >
             Попробовать
@@ -300,7 +322,7 @@ function BotAvatar({ size = "md" }) {
   const boxSize = size === "lg" ? "h-9 w-9" : "h-8 w-8";
 
   return (
-    <div className={`${boxSize} rounded-full bg-blue-100 grid place-items-center shrink-0 overflow-hidden border border-blue-200/70`}>
+    <div className={`${boxSize} grid shrink-0 place-items-center overflow-hidden rounded-full border border-[#74AA9C]/20 bg-[#d9eeea]`}>
       <Image
         src="/mindfullailogo.svg"
         alt="MindfulAI logo"

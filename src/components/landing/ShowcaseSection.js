@@ -1,26 +1,35 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Bot, Brain, NotebookPen, ShieldCheck } from "lucide-react";
-import { useEffect, useRef } from "react";
+import SectionLabel from "@/components/landing/SectionLabel";
 
 export default function ShowcaseSection() {
   return (
-    <section className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden py-24 text-white">
-      {/* WebGL Shader Background */}
-      <ShaderBackground />
+    <section
+      id="showcase"
+      className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 overflow-hidden py-20 text-white md:py-24"
+    >
+      <div
+        className="landing-showcase-bg absolute inset-0 z-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(ellipse 85% 65% at 15% 35%, rgba(159, 217, 203, 0.42), transparent),
+            radial-gradient(ellipse 70% 55% at 85% 75%, rgba(26, 46, 42, 0.55), transparent),
+            linear-gradient(135deg, #3a6058 0%, #74AA9C 42%, #4a7a70 100%)
+          `,
+        }}
+      />
+      <div className="absolute inset-0 z-0 bg-[#10211f]/10" />
 
       <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="max-w-xl">
-          <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9fdfd0]">
-            MindfulAI everywhere
-          </div>
-          <h2 className="mt-5 text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-[3.45rem] lg:leading-[1.02]">
-            Поддержка там, где человеку удобнее всего
+          <SectionLabel light>MindfulAI на всех платформах</SectionLabel>
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-[3.2rem] lg:leading-[1.05]">
+            Поддержка там, где тебе удобнее всего
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-white/72 sm:text-lg">
-            Веб-интерфейс помогает вести дневник, смотреть аналитику и практики, а Telegram-бот дает быстрый, приватный контакт с MindfulAI в привычном мобильном формате.
+          <p className="mt-6 text-base leading-relaxed text-white/75 sm:text-lg">
+            Веб-интерфейс для дневника, аналитики и практик. Telegram-бот — для быстрого
+            приватного контакта с MindfulAI в привычном мобильном формате.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -33,9 +42,9 @@ export default function ShowcaseSection() {
             </Link>
             <Link
               href="/notes"
-              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-5 py-3 font-semibold text-white/90 backdrop-blur-sm transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-5 py-3 font-semibold text-white/90 backdrop-blur-sm transition hover:bg-white/12"
             >
-              Посмотреть дневник
+              Дневник настроения
             </Link>
           </div>
 
@@ -46,119 +55,13 @@ export default function ShowcaseSection() {
           </div>
         </div>
 
-        <div className="relative flex min-h-[500px] items-center justify-center lg:min-h-[620px]">
+        <div className="relative flex min-h-[420px] items-center justify-center sm:min-h-[500px] lg:min-h-[620px]">
+          <MobileDashboardCard />
           <DesktopMock />
           <PhoneMock />
         </div>
       </div>
     </section>
-  );
-}
-
-function ShaderBackground() {
-  const ref = useRef();
-
-  useEffect(() => {
-    let renderer;
-    let scene;
-    let camera;
-    let uniforms;
-    let animationId;
-    let handleResize;
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    const mountNode = ref.current;
-
-    if (!mountNode) return;
-
-    (async () => {
-      const three = await import("three");
-      scene = new three.Scene();
-      camera = new three.Camera();
-      camera.position.z = 1;
-      renderer = new three.WebGLRenderer({ alpha: true });
-      renderer.setSize(width, height);
-      renderer.setClearColor(0x0f172a, 1);
-      mountNode.appendChild(renderer.domElement);
-
-      uniforms = {
-        time: { value: 0 },
-        resolution: { value: new three.Vector2(width, height) },
-      };
-
-      const material = new three.ShaderMaterial({
-        uniforms,
-        vertexShader: `
-          void main() {
-            gl_Position = vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform float time;
-          uniform vec2 resolution;
-          void main() {
-            vec2 uv = gl_FragCoord.xy / resolution.xy;
-
-            // Мягкая анимация вокруг #74AA9C
-            vec3 base = vec3(0.455, 0.667, 0.612); // #74AA9C
-            vec3 finalColor = base;
-            finalColor.g += 0.06 * sin(time + uv.x * 4.0); // чуть-чуть по зелёному
-            finalColor.b += 0.04 * cos(time + uv.y * 5.0); // чуть-чуть по синему
-            finalColor.r += 0.03 * sin(time + uv.x * 2.0 + uv.y * 2.0); // чуть по красному
-            gl_FragColor = vec4(finalColor, 1.0);
-          }
-        `,
-      });
-
-      const geometry = new three.PlaneGeometry(2, 2);
-      const mesh = new three.Mesh(geometry, material);
-      scene.add(mesh);
-
-      function animate() {
-        animationId = requestAnimationFrame(animate);
-        uniforms.time.value += 0.02;
-        renderer.render(scene, camera);
-      }
-      animate();
-
-      handleResize = () => {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        renderer.setSize(width, height);
-        uniforms.resolution.value.x = width;
-        uniforms.resolution.value.y = height;
-      };
-      window.addEventListener("resize", handleResize);
-    })();
-
-    return () => {
-      if (handleResize) {
-        window.removeEventListener("resize", handleResize);
-      }
-      if (renderer) {
-        renderer.dispose();
-        if (mountNode.contains(renderer.domElement)) {
-          mountNode.removeChild(renderer.domElement);
-        }
-      }
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      style={{
-        position: "absolute",
-        inset: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: 0,
-        pointerEvents: "none",
-      }}
-    />
   );
 }
 
@@ -168,6 +71,28 @@ function FeaturePill({ icon: Icon, text }) {
       <div className="flex items-center gap-2.5 text-sm font-medium text-white/88">
         <Icon className="h-4 w-4 text-[#9fdfd0]" />
         <span>{text}</span>
+      </div>
+    </div>
+  );
+}
+
+function MobileDashboardCard() {
+  return (
+    <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/15 bg-[#eef6f3] p-4 text-black shadow-xl lg:hidden">
+      <div className="flex items-center gap-2 border-b border-black/8 pb-3">
+        <Image src="/mindfullailogo.svg" alt="" width={24} height={24} />
+        <div>
+          <div className="text-sm font-semibold">MindfulAI</div>
+          <div className="text-xs text-black/45">веб-панель</div>
+        </div>
+      </div>
+      <p className="mt-3 text-sm text-black/65">
+        Дневник, AI-анализ и рекомендации — в одном спокойном интерфейсе.
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        <MiniStat value="5.8" label="настроение" />
+        <MiniStat value="6" label="записей" />
+        <MiniStat value="AI" label="анализ" />
       </div>
     </div>
   );
@@ -183,7 +108,7 @@ function DesktopMock() {
             <Image src="/mindfullailogo.svg" alt="MindfulAI" width={28} height={28} />
             <div>
               <div className="text-sm font-semibold text-black">MindfulAI</div>
-              <div className="text-xs text-black/45">web dashboard</div>
+              <div className="text-xs text-black/45">веб-панель</div>
             </div>
           </div>
           <div className="rounded-full bg-[#74AA9C]/10 px-3 py-1 text-xs font-semibold text-[#5d9088]">
@@ -194,10 +119,12 @@ function DesktopMock() {
         <div className="grid gap-5 p-5 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-4">
             <div className="rounded-[1.4rem] bg-white p-5 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5d9088]">Дневник состояния</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5d9088]">
+                Дневник состояния
+              </div>
               <div className="mt-3 text-2xl font-semibold text-black">Настроение, сон и мысли</div>
               <div className="mt-2 text-sm leading-relaxed text-black/60">
-                Ежедневные записи, ABC-разбор ситуаций и аккуратная аналитика в одном месте.
+                Ежедневные записи, ABC-разбор и аккуратная аналитика в одном месте.
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3">
                 <MiniStat value="5.8" label="среднее настроение" />
@@ -217,19 +144,28 @@ function DesktopMock() {
                 </div>
               </div>
               <div className="mt-4 rounded-2xl bg-[#f5faf8] p-4 text-sm leading-relaxed text-black/70">
-                Сегодня полезно сделать короткий check-in, зафиксировать мысль и сравнить реакцию с тем, как ты видел ситуацию вчера.
+                Сегодня полезно сделать короткий check-in, зафиксировать мысль и сравнить реакцию
+                с тем, как ты видел ситуацию вчера.
               </div>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="rounded-[1.4rem] bg-[#10362f] p-5 text-white shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#a9e2d6]">AI-анализ</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#a9e2d6]">
+                AI-анализ
+              </div>
               <div className="mt-3 text-lg font-semibold">Паттерны недели</div>
               <div className="mt-3 space-y-3 text-sm text-white/78">
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">Тревога усиливается в учебные дни</div>
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">Сон ниже 6 часов влияет на настроение</div>
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">ABC-записи помогают снизить напряжение</div>
+                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                  Тревога усиливается в учебные дни
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                  Сон ниже 6 часов влияет на настроение
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+                  ABC-записи помогают снизить напряжение
+                </div>
               </div>
             </div>
 
@@ -237,7 +173,11 @@ function DesktopMock() {
               <div className="text-sm font-semibold text-black">Прогресс по неделе</div>
               <div className="mt-4 flex h-28 items-end gap-3">
                 {[42, 78, 56, 88, 64, 92, 73].map((h, i) => (
-                  <div key={i} className="flex-1 rounded-t-2xl bg-[linear-gradient(180deg,#9fd9cb,#74AA9C)]" style={{ height: `${h}%` }} />
+                  <div
+                    key={i}
+                    className="flex-1 rounded-t-2xl bg-[linear-gradient(180deg,#9fd9cb,#74AA9C)]"
+                    style={{ height: `${h}%` }}
+                  />
                 ))}
               </div>
             </div>
@@ -261,26 +201,20 @@ function MiniStat({ value, label }) {
 
 function PhoneMock() {
   return (
-    <div className="relative z-10 w-[320px] max-w-[94vw] lg:absolute lg:right-4 lg:top-14 lg:rotate-[6deg]">
-      {/* Phone frame */}
+    <div className="relative z-10 mt-6 w-[280px] max-w-[88vw] sm:w-[300px] lg:absolute lg:right-4 lg:top-14 lg:mt-0 lg:w-[320px] lg:max-w-[94vw] lg:rotate-[6deg]">
       <div className="relative rounded-[2.45rem] border border-white/20 bg-[linear-gradient(180deg,#1b2122,#101415)] p-3 shadow-[0_40px_90px_rgba(0,0,0,0.52)]">
-        {/* Side button */}
         <div className="absolute right-0 top-[18%] h-[28%] w-1.5 rounded-r-xl bg-white/12" />
-        {/* Top notch */}
         <div className="absolute left-1/2 top-2 h-1.5 w-20 -translate-x-1/2 rounded-full bg-white/12" />
-        {/* Screenshot fills the screen area */}
         <div className="overflow-hidden rounded-[1.9rem]">
           <Image
             src="/phone_mockup.jpg"
-            alt="MindfulAI Telegram chat screenshot"
+            alt="MindfulAI в Telegram"
             width={600}
             height={1300}
             className="w-full object-cover"
-            priority
           />
         </div>
       </div>
-      {/* Shadow under phone */}
       <div className="absolute -bottom-5 left-[14%] h-10 w-[72%] rounded-full bg-black/40 blur-2xl" />
     </div>
   );
