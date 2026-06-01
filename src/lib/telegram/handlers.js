@@ -3,8 +3,20 @@
 
 import { linkTelegramAccount, getUserIdByTelegramId, isValidUser } from './userManager.js';
 import { supabaseAdmin } from '../supabase/admin.js';
-import { askAI, askAIWithHistory, buildUserContext } from '../lmStudioClient.js';
+import { askAI } from '../lmStudioClient.js';
+import {
+  processChatTurn,
+  clearUserChat,
+  CRISIS_TELEGRAM_PROMPT,
+} from '../chat/processChatTurn.js';
 import { getBot } from './botConfig.js';
+
+const CRISIS_INLINE_KEYBOARD = {
+  inline_keyboard: [
+    [{ text: 'Продолжить разговор', callback_data: 'crisis_continue' }],
+    [{ text: 'Другая тема', callback_data: 'crisis_decline' }],
+  ],
+};
 
 /**
  * Главное меню с Reply Keyboard кнопками
@@ -28,7 +40,65 @@ export async function showMainMenu(ctx) {
 }
 
 /**
- * Обработчик callback кнопок (больше не используется, оставлен для совместимости)
+ * Кризисные inline-кнопки (продолжить / другая тема)
+ */
+export async function handleCrisisCallback(ctx) {
+  const data = ctx.callbackQuery?.data;
+  if (data !== 'crisis_continue' && data !== 'crisis_decline') {
+    return handleCallbackQuery(ctx);
+  }
+
+  try {
+    await ctx.answerCbQuery();
+
+    const userId = await getUserIdByTelegramId(ctx.from.id);
+    if (!userId) {
+      return ctx.reply(' Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
+    }
+
+    const triggerMessage = String(ctx.session?.pendingCrisis?.triggerMessage || "").trim();
+    if (!triggerMessage && data === 'crisis_continue') {
+      return ctx.reply(' Не удалось восстановить сообщение. Напишите снова, о чём хочешь поговорить.');
+    }
+
+    await ctx.sendChatAction('typing');
+
+    const result = await processChatTurn({
+      supabase: supabaseAdmin,
+      userId,
+      message: triggerMessage || 'продолжить',
+      source: 'telegram',
+      crisisTopicChoice: data === 'crisis_continue' ? 'continue' : 'decline',
+      continueAfterCrisis: data === 'crisis_continue',
+      skipUserInsert: true,
+    });
+
+    if (ctx.session) {
+      delete ctx.session.pendingCrisis;
+    }
+
+    if (result.error) {
+      return ctx.reply(' Извините, произошла ошибка. Попробуйте написать сообщение снова.');
+    }
+
+    if (result.crisis) {
+      ctx.session = ctx.session || {};
+      ctx.session.pendingCrisis = { triggerMessage };
+      return ctx.reply(CRISIS_TELEGRAM_PROMPT, {
+        parse_mode: 'Markdown',
+        reply_markup: CRISIS_INLINE_KEYBOARD,
+      });
+    }
+
+    return ctx.reply(result.reply || '...', { parse_mode: 'Markdown' });
+  } catch (error) {
+    console.error('Ошибка в handleCrisisCallback:', error);
+    return ctx.reply(' Извините, произошла ошибка. Попробуйте позже.');
+  }
+}
+
+/**
+ * Обработчик прочих callback-кнопок
  */
 export async function handleCallbackQuery(ctx) {
   try {
@@ -115,9 +185,41 @@ export async function handleHelp(ctx) {
     '⏰ *Напоминания*\n' +
     '/remind - установить напоминание\n\n' +
     ' *AI-ассистент*\n' +
-    'Просто напишите сообщение - я помогу! ',
+    'Просто напишите сообщение — я помогу!\n\n' +
+    ' /clear — очистить историю чата и резюме сессии',
     { parse_mode: 'Markdown' }
   );
+}
+
+/**
+ * Очистка истории чата (общая с сайтом) и резюме сессии
+ */
+export async function handleClearChat(ctx) {
+  try {
+    const userId = await getUserIdByTelegramId(ctx.from.id);
+    if (!userId) {
+      return ctx.reply(' Ваш аккаунт не связан с сайтом.\nИспользуйте /link для инструкций.');
+    }
+
+    const { error } = await clearUserChat(supabaseAdmin, userId);
+    if (error) {
+      console.error('handleClearChat:', error);
+      return ctx.reply(' Не удалось очистить чат. Попробуйте позже.');
+    }
+
+    if (ctx.session) {
+      delete ctx.session.pendingCrisis;
+    }
+
+    return ctx.reply(
+      ' История чата и резюме сессии очищены.\n\n' +
+        'Диалог на сайте и в Telegram теперь общий — всё сброшено. Можешь начать заново.',
+      { reply_markup: { remove_keyboard: false } }
+    );
+  } catch (error) {
+    console.error('Ошибка в handleClearChat:', error);
+    return ctx.reply(' Ошибка при очистке чата.');
+  }
 }
 
 /**
@@ -581,42 +683,63 @@ export async function handleMessage(ctx) {
 
     await ctx.sendChatAction('typing');
 
-    const { data: history } = await supabaseAdmin
-      .from('ai_messages')
-      .select('role, content')
-      .eq('user_id', userId)
-      .eq('source', 'telegram')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    const result = await processChatTurn({
+      supabase: supabaseAdmin,
+      userId,
+      message,
+      source: 'telegram',
+    });
 
-    const messageHistory = history ? history.reverse() : [];
-    const baseContext = await buildUserContext(supabaseAdmin, userId);
-    const userContext = [
-      baseContext,
-      'Платформа: Telegram. Markdown поддерживается (*жирный*, _курсив_, `код`), но НЕ используй таблицы и ## заголовки — они не рендерятся. Не упоминай ссылки на сайт.',
-    ].filter(Boolean).join(' ');
-
-    const aiResponse = await askAIWithHistory(message, messageHistory, userContext);
-
-    // Сохраняем только если ответ не является сообщением об ошибке
-    if (aiResponse && !aiResponse.includes('временно недоступен') && !aiResponse.includes('произошла ошибка')) {
-      await supabaseAdmin.from('ai_messages').insert([
-        {
-          user_id: userId,
-          role: 'user',
-          content: message,
-          source: 'telegram',
-        },
-        {
-          user_id: userId,
-          role: 'assistant',
-          content: aiResponse,
-          source: 'telegram',
-        },
-      ]);
+    if (result.error) {
+      if (String(result.error).toLowerCase().includes('lm')) {
+        return ctx.reply(
+          ' AI-ассистент временно недоступен.\n\nПопробуйте позже или используйте команды: /help'
+        );
+      }
+      return ctx.reply('Извините, произошла ошибка. Попробуйте позже.\n\nИли используйте команды: /help');
     }
 
-    return ctx.reply(aiResponse, { parse_mode: 'Markdown' });
+    if (result.crisis) {
+      ctx.session = ctx.session || {};
+      ctx.session.pendingCrisis = { triggerMessage: message };
+      return ctx.reply(CRISIS_TELEGRAM_PROMPT, {
+        parse_mode: 'Markdown',
+        reply_markup: CRISIS_INLINE_KEYBOARD,
+      });
+    }
+
+    let replyText = result.reply || '...';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const recs = result.testRecommendations || {};
+    const recParts = [];
+
+    if (recs.generated?.href) {
+      recParts.push(
+        `*Персональный тест:* ${recs.generated.title}\n` +
+          `${recs.generated.rationale}\n` +
+          `[Пройти](${siteUrl}${recs.generated.href})`
+      );
+    }
+    if (recs.catalog?.href) {
+      recParts.push(
+        `*Из каталога:* ${recs.catalog.title}\n` +
+          `${recs.catalog.rationale}\n` +
+          `[Пройти](${siteUrl}${recs.catalog.href})`
+      );
+    }
+
+    if (recParts.length > 0) {
+      replyText += `\n\n${recParts.join('\n\n')}`;
+    } else if (result.testRecommendation?.href) {
+      replyText +=
+        `\n\n*Рекомендованный тест:* ${result.testRecommendation.title}\n` +
+        `${result.testRecommendation.rationale}\n` +
+        `[Пройти на сайте](${siteUrl}${result.testRecommendation.href})`;
+    } else if (result.testsGate?.justUnlocked) {
+      replyText += '\n\n_Диагностические тесты разблокированы — откройте раздел «Упражнения» на сайте._';
+    }
+
+    return ctx.reply(replyText, { parse_mode: 'Markdown' });
   } catch (error) {
     console.error('Ошибка в handleMessage:', error);
     

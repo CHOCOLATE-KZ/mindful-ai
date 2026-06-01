@@ -9,6 +9,7 @@ import { useChatNotes } from "./useChatNotes";
 import { useChatHistory } from "./useChatHistory";
 import { useChatScroll } from "./useChatScroll";
 import { useChatSend } from "./useChatSend";
+import { useTestsStatus } from "@/app/(app)/exercises/_hooks/useTestsStatus";
 
 export function useChatPageModel() {
   const supabase = useMemo(() => supabaseBrowser(), []);
@@ -120,10 +121,61 @@ export function useChatPageModel() {
     onHistoryCleared: () => setMenuOpen(false),
   });
 
+  const {
+    pendingRecommendations: statusPendingRecs,
+    refresh: refreshTestsStatus,
+    gate: testsGate,
+  } = useTestsStatus();
+
+  const [testRecommendations, setTestRecommendations] = useState({
+    generated: null,
+    catalog: null,
+  });
+
+  useEffect(() => {
+    if (statusPendingRecs?.generated || statusPendingRecs?.catalog) {
+      setTestRecommendations(statusPendingRecs);
+    }
+  }, [statusPendingRecs]);
+
   const { loading, send: sendMessage, continueAfterCrisis, declineCrisisTopic } = useChatSend({
     setMessages,
     onBeforeSend: () => setInput(""),
+    onChatMeta: (meta) => {
+      if (meta?.testRecommendations) {
+        setTestRecommendations(meta.testRecommendations);
+        refreshTestsStatus();
+      } else if (meta?.testRecommendation) {
+        const rec = meta.testRecommendation;
+        setTestRecommendations((prev) => ({
+          generated: rec.approach === "generated" ? rec : prev.generated,
+          catalog: rec.approach === "catalog" ? rec : prev.catalog,
+        }));
+        refreshTestsStatus();
+      }
+      if (meta?.testsGate?.justUnlocked) {
+        refreshTestsStatus();
+      }
+    },
   });
+
+  const skipTestRecommendation = useCallback(async (id) => {
+    await fetch("/api/ai/recommend-test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ skipId: id }),
+    });
+    setTestRecommendations((prev) => ({
+      generated: prev.generated?.id === id ? null : prev.generated,
+      catalog: prev.catalog?.id === id ? null : prev.catalog,
+    }));
+    refreshTestsStatus();
+  }, [refreshTestsStatus]);
+
+  const dismissTestRecommendation = useCallback(() => {
+    setTestRecommendations({ generated: null, catalog: null });
+  }, []);
 
   const stopSpeaking = useCallback(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -491,5 +543,9 @@ export function useChatPageModel() {
     toggleScrollEdge,
     atTop,
     scrolledDown,
+    testRecommendations,
+    skipTestRecommendation,
+    dismissTestRecommendation,
+    testsGate,
   };
 }

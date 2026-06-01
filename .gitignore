@@ -33,6 +33,16 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Diploma thesis & private Word copies (do not commit)
+docs/*.docx
+docs/_version3_copy.docx
+docs/_version3_extracted.txt
+docs/_final_final_extracted.txt
+**/*Diploma*.docx
+**/*diploma*.docx
+**/*Version*IT2CCO*.docx
+**/*Final*Final*.docx
+
 # vercel
 .vercel
 

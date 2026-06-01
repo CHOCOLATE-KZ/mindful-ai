@@ -1,5 +1,11 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { unifiedLlmConfig } from "@/lib/llm/unifiedClient";
+import {
+  buildStructuredFromRawReply,
+  composeDisplayMarkdown,
+  formatStoredReportText,
+  polishReportText,
+} from "@/lib/ai/formatProfileReport";
 
 const LMSTUDIO_BASE_URL = unifiedLlmConfig.baseUrl;
 const LMSTUDIO_MODEL = unifiedLlmConfig.model;
@@ -228,7 +234,7 @@ async function callLmStudio(messages) {
         model: LMSTUDIO_MODEL,
         messages,
         temperature: 0.6,
-        max_tokens: 1024,
+        max_tokens: 2048,
       }),
     });
 
@@ -247,98 +253,6 @@ async function callLmStudio(messages) {
   } catch (e) {
     return { error: e?.message || String(e) };
   }
-}
-
-function extractJsonCandidate(text) {
-  const source = String(text || "").trim();
-  if (!source) return null;
-
-  const fencedMatch = source.match(/```json\s*([\s\S]*?)```/i) || source.match(/```\s*([\s\S]*?)```/i);
-  if (fencedMatch?.[1]) {
-    return fencedMatch[1].trim();
-  }
-
-  const firstBrace = source.indexOf("{");
-  const lastBrace = source.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    return source.slice(firstBrace, lastBrace + 1);
-  }
-
-  return null;
-}
-
-function parseStructuredAiReply(text) {
-  const candidate = extractJsonCandidate(text);
-  if (!candidate) return null;
-  try {
-    return JSON.parse(candidate);
-  } catch {
-    return null;
-  }
-}
-
-function asStringArray(value, limit = 6) {
-  if (!Array.isArray(value)) return [];
-  return value
-    .map((item) => String(item || "").trim())
-    .filter(Boolean)
-    .slice(0, limit);
-}
-
-function toSummaryText(value, fallback = "") {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item || "").trim())
-      .filter(Boolean)
-      .join("\n")
-      .trim();
-  }
-  const single = String(value || "").trim();
-  return single || String(fallback || "").trim();
-}
-
-function normalizeStructuredAnalysis(raw, fallbackText = "") {
-  if (!raw || typeof raw !== "object") return null;
-
-  const summaryText = toSummaryText(
-    raw.summaryText || raw.summary || raw.reportText || raw.text,
-    fallbackText
-  );
-
-  const normalized = {
-    summaryText,
-    keyFindings: asStringArray(raw.keyFindings || raw.findings, 6),
-    likelyDrivers: asStringArray(raw.likelyDrivers || raw.drivers, 6),
-    plan24h: asStringArray(raw.plan24h || raw.dayPlan || raw.microPlan24h, 6),
-    plan7d: asStringArray(raw.plan7d || raw.weekPlan, 8),
-    expectedSignals: asStringArray(raw.expectedSignals || raw.successSignals, 8),
-    checkInQuestions: asStringArray(raw.checkInQuestions || raw.reviewQuestions, 5),
-  };
-
-  const hasContent =
-    normalized.summaryText ||
-    normalized.keyFindings.length ||
-    normalized.likelyDrivers.length ||
-    normalized.plan24h.length ||
-    normalized.plan7d.length ||
-    normalized.expectedSignals.length ||
-    normalized.checkInQuestions.length;
-
-  return hasContent ? normalized : null;
-}
-
-function buildStructuredFallback(plainText, analysisMeta) {
-  return {
-    summaryText: String(plainText || "").trim(),
-    keyFindings: [],
-    likelyDrivers: (analysisMeta?.evidence?.topSignals || []).map(
-      (signal) => `${signal.name}: ${signal.count}`
-    ),
-    plan24h: [],
-    plan7d: [],
-    expectedSignals: [],
-    checkInQuestions: [],
-  };
 }
 
 export async function GET(req) {
@@ -360,7 +274,12 @@ export async function GET(req) {
     return Response.json({ reports: [] });
   }
 
-  return Response.json({ reports: data || [] });
+  const reports = (data || []).map((row) => ({
+    ...row,
+    text: formatStoredReportText(row.text, row.mode || "profile"),
+  }));
+
+  return Response.json({ reports });
 }
 
 export async function POST(req) {
@@ -552,7 +471,7 @@ export async function POST(req) {
       language === "kz" ? "kk-KZ" : language === "en" ? "en-US" : "ru-RU"
     );
     previousContext =
-      `\n\nPREVIOUS REPORT (${prevDate}):\n${prev.text.slice(0, 800)}\n\n` +
+      `\n\nPREVIOUS REPORT (${prevDate}):\n${formatStoredReportText(prev.text, prev.mode || mode).slice(0, 800)}\n\n` +
       `IMPORTANT: Compare current data with the previous report. Explicitly mention what improved, what got worse, what stayed the same. This comparison is a key required section.`;
   }
 
@@ -591,60 +510,57 @@ export async function POST(req) {
   };
 
   const weeklyPrompt =
-    `Ты — MindfulAI, когнитивно-аналитический помощник. Напиши НЕДЕЛЬНЫЙ ОТЧЁТ на ${language === "ru" ? "русском" : language === "kz" ? "казахском" : "английском"} языке.
+    `Ты — MindfulAI. Напиши НЕДЕЛЬНЫЙ ОТЧЁТ на ${language === "ru" ? "русском" : language === "kz" ? "казахском" : "английском"} языке.
 
-ФОРМАТ ОТВЕТА: строгий JSON без markdown-обёрток, без \`\`\`. Ключи:
-- summaryText (строка с markdown: используй **жирный** для ключевых инсайтов, эмодзи для разделов)
-- keyFindings (массив строк — конкретные наблюдения, ссылаясь на реальный текст дневника)
-- likelyDrivers (массив строк — конкретные слова-маркеры и темы, найденные в дневнике)
-- plan24h (массив строк — 2-3 конкретных действия на сегодня)
-- plan7d (массив строк — 3-4 цели на неделю)
-- expectedSignals (массив строк — как пользователь узнает, что стало лучше)
-- checkInQuestions (массив строк — 2-3 рефлексивных вопроса к себе)
+ФОРМАТ: только Markdown-текст. ЗАПРЕЩЕНО: JSON, { }, ключи summaryText/keyFindings, тройные кавычки """, повтор разделов.
 
-ПРАВИЛА ДЛЯ summaryText:
-1. 📋 **Итоги недели** — напиши уникальный вводный абзац. Если в дневнике упомянуты конкретные люди, события или страхи — говори о них прямо (например, «на этой неделе ты несколько раз упоминал экзамены и ощущение давления»).
-2. 📊 **Ключевые метрики** — только сон, настроение, энергия. Без количества сообщений и записей. Если данных нет — пропусти.
-3. 🔑 **Темы недели** — вытащи 3-5 конкретных слов-маркеров прямо из текстов дневника. Объясни, что они говорят о состоянии.
-4. ⚠️ **Сигналы риска** — если есть тревожные паттерны (негативные слова, низкое настроение, плохой сон), подсвети их прямо. Не сглаживай.
-5. 💡 **Главный инсайт недели** — одно самое важное наблюдение жирным шрифтом.
+Разделы (каждый один раз):
 
-ВАЖНО:
-- Не придумывай факты, которых нет в данных.
-- Не упоминай технические поля (user_id, JSON-ключи).
-- Если в дневнике мало текстов — честно скажи, что анализ ограничен, и опирайся на цифры.
-- Тон: тёплый, прямой, как коллега-психолог, а не статистик.
+## Итоги недели
+(главное за 7 дней, с цифрами из данных)
+
+## Изменения
+(что улучшилось/ухудшилось vs прошлая неделя, если есть прошлый отчёт)
+
+## Сигналы
+(тревожные и поддерживающие паттерны из дневника и чата)
+
+## Советы
+(3–5 конкретных шагов списком через "-")
+
+Не придумывай факты. Тон: тёплый, прямой.
 ${previousContext ? `\nСРАВНЕНИЕ С ПРОШЛЫМ ОТЧЁТОМ:\n${previousContext}` : ""}
 
 ДАННЫЕ ПОЛЬЗОВАТЕЛЯ:
 ${JSON.stringify(weeklyPayload, null, 2)}`;
 
   const profilePrompt = `
-Ты — MindfulAI, экспертный психолог-аналитик с глубоким пониманием когнитивно-поведенческой терапии. 
-Твоя задача: составить ПОЛНЫЙ ПСИХОЛОГИЧЕСКИЙ ПОРТРЕТ пользователя на основе его данных.
+Ты — MindfulAI, психолог-аналитик. Составь полный психологический портрет пользователя.
 
-ОТВЕТЬ СТРОГО В ФОРМАТЕ JSON (без разметки \`\`\`, только чистый объект).
-Ключи: summaryText, keyFindings, likelyDrivers, plan24h, plan7d, expectedSignals, checkInQuestions.
+ФОРМАТ: строго Markdown на русском. Каждый раздел начинается с заголовка «## Название» (с решётками), затем пустая строка, затем текст.
 
-ТРЕБОВАНИЯ К СОДЕРЖАНИЮ:
-1. **summaryText (Главный анализ):** 
-   - Используй Markdown (жирный текст, эмодзи). 
-   - Это должен быть связный текст, разделенный на логические блоки: «Общее состояние», «Динамика и тренды», «Темы и триггеры», «Риски и ресурсы».
-   - **ВАЖНО:** Проведи контент-анализ. Найди в дневнике конкретные слова-маркеры (например: "ректор", "наказание", "учеба", "страх"). Не сглаживай острые углы — если есть тревожные темы, опиши их прямо.
-   - Ищи связи: как события (учеба, встречи) влияют на метрики (сон, настроение).
+ЗАПРЕЩЕНО:
+- JSON, { }, ключи API, тройные """
+- заголовки без ## (нельзя писать просто «Общее» на отдельной строке)
+- вопросы к пользователю и скобки «(вы чувствуете…?)»
+- советы «продолжайте пользоваться системой / приложением»
+- маркеры «*» — только «- » для списков
 
-2. **keyFindings (Наблюдения):** Список из 4-5 глубоких инсайтов. Не пиши "сон 4 часа", пиши "Дефицит сна коррелирует с ростом агрессивных мыслей в дневнике".
+Разделы (ровно один раз):
 
-3. **likelyDrivers (Триггеры):** Список конкретных тем, людей или событий, которые больше всего влияют на состояние пользователя сейчас.
+## Общее — 2–4 предложения с цифрами настроения, сна, энергии.
 
-4. **Риски (внутри summaryText или keyFindings):** Если есть упоминания самоповреждения, агрессии или глубокой депрессии — выдели это как приоритетную зону внимания.
+## Тенденции — динамика vs прошлая неделя, с цифрами.
 
-5. **Планы (plan24h, plan7d):** Конкретные психологические упражнения или действия, а не просто "отдохни". Например: "Техника децентрации при мыслях о ректоре".
+## Темы — одно вступление (1 предложение), затем 3–6 строк «- тема: факт из дневника» (студия, тревога, сон…).
 
-СТИЛЬ:
-- Профессиональный, эмпатичный, но аналитически точный. 
-- Избегай общих фраз типа "все будет хорошо".
-- ТОЛЬКО на русском языке.
+## Что помогает — 2–4 строки «- …» только из заметок и чатов.
+
+## Риски — 2–4 строки «- …» с конкретными паттернами из данных, без диагнозов.
+
+## Следующие шаги — 3–5 строк «- …», конкретные действия (сон, дыхание, дневник), не «ходите в приложение».
+
+Стиль: тёплый, фактологичный. Только данные из payload.
 ${previousContext ? `\nСРАВНЕНИЕ С ПРОШЛЫМ ОТЧЁТОМ:\n${previousContext}` : ""}
 
 ДАННЫЕ ДЛЯ АНАЛИЗА:
@@ -661,11 +577,24 @@ ${JSON.stringify(payload, null, 2)}`;
     return Response.json({ error: lm.error }, { status: 502 });
   }
 
-  const structuredParsed = parseStructuredAiReply(lm.reply);
-  const structuredAnalysis =
-    normalizeStructuredAnalysis(structuredParsed, "") ||
-    buildStructuredFallback(lm.reply || "", analysisMeta);
-  const finalText = structuredAnalysis?.summaryText || lm.reply || "";
+  const rawReply = lm.reply || "";
+  let structuredAnalysis = buildStructuredFromRawReply(rawReply, mode, analysisMeta);
+  const finalText =
+    polishReportText(composeDisplayMarkdown(structuredAnalysis, mode) || rawReply, mode) || "";
+
+  // Портрет: весь смысл в markdown, без дублирующих JSON-блоков под текстом
+  if (mode === "profile" && finalText.trim()) {
+    structuredAnalysis = {
+      ...structuredAnalysis,
+      summaryText: finalText,
+      keyFindings: [],
+      likelyDrivers: [],
+      plan24h: [],
+      plan7d: [],
+      expectedSignals: [],
+      checkInQuestions: [],
+    };
+  }
 
   const generatedAt = new Date().toISOString();
 

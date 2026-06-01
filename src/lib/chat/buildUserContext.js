@@ -14,7 +14,7 @@ export async function buildUserContext(supabase, userId) {
 
   if (settings?.data_sharing_ai === false) return "";
 
-  const [{ data: profile }, { data: recentNotes }] = await Promise.all([
+  const [{ data: profile }, { data: recentNotes }, { data: recentTests }] = await Promise.all([
     supabase.from("profiles").select("name").eq("id", userId).maybeSingle(),
     supabase
       .from("notes")
@@ -22,6 +22,12 @@ export async function buildUserContext(supabase, userId) {
       .eq("user_id", userId)
       .order("date", { ascending: false })
       .limit(settings?.ai_personalization ? 7 : 1),
+    supabase
+      .from("tests_log")
+      .select("test_key, result, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(3),
   ]);
 
   const parts = [];
@@ -87,6 +93,18 @@ export async function buildUserContext(supabase, userId) {
     parts.push(
       `Инструкция: используй этот контекст, чтобы отвечать более персонально — учитывай тренды, упоминай конкретные цифры только если это уместно и помогает диалогу. Не выводи статистику спонтанно.`
     );
+  }
+
+  const tests = Array.isArray(recentTests) ? recentTests : [];
+  if (tests.length > 0) {
+    const testLines = tests
+      .map((t) => {
+        const level = t.result?.level || t.result?.interpretation || "";
+        const score = t.result?.score != null ? ` балл ${t.result.score}` : "";
+        return `${t.test_key}${score}${level ? ` (${level})` : ""}`;
+      })
+      .join("; ");
+    parts.push(`Недавние результаты тестов: ${testLines}`);
   }
 
   return parts.length ? parts.join(". ") : "";

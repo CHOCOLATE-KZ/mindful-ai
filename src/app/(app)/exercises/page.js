@@ -1,15 +1,22 @@
 "use client";
 
+import { useEffect } from "react";
 import ExercisesHeader from "./_components/ExercisesHeader";
 import TestsSection from "./_components/TestsSection";
 import ExercisesCarousel from "./_components/ExercisesCarousel";
 import BenefitsSection from "./_components/BenefitsSection";
 import { useTestsFilter } from "./_hooks/useTestsFilter";
 import { useExercisesCarousel } from "./_hooks/useExercisesCarousel";
+import { useTestsStatus } from "./_hooks/useTestsStatus";
 
 export default function ExercisesPage() {
   const testsFilter = useTestsFilter();
   const carousel = useExercisesCarousel();
+  const testsStatus = useTestsStatus();
+
+  useEffect(() => {
+    testsStatus.refresh();
+  }, [testsStatus.refresh]);
 
   return (
     <>
@@ -30,7 +37,11 @@ export default function ExercisesPage() {
         
         <div className="mx-auto w-24 h-1 rounded-full bg-gradient-to-r from-transparent via-teal-200 to-transparent opacity-50" />
         
-        <TestsSection filter={testsFilter} />
+        <TestsSection
+          filter={testsFilter}
+          gate={testsStatus.gate}
+          pendingRecommendations={testsStatus.pendingRecommendations}
+        />
         
         <BenefitsSection />
       </div>

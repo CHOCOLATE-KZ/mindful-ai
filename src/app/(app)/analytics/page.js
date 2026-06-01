@@ -21,6 +21,8 @@ import TestStatsCards from "./_components/TestStatsCards";
 import TestCharts from "./_components/TestCharts";
 import TestHistory from "./_components/TestHistory";
 import BackButtons from "./_components/BackButtons";
+import { useTestsStatus } from "@/app/(app)/exercises/_hooks/useTestsStatus";
+import TestsGateBanner from "@/app/(app)/exercises/_components/TestsGateBanner";
 
 export default function AnalyticsPage() {
   const { settings } = useAppSettings();
@@ -28,6 +30,7 @@ export default function AnalyticsPage() {
   const t = useTranslation("analytics", lang);
 
   const { user, loading, testResults, notes } = useAnalyticsData();
+  const testsStatus = useTestsStatus();
   const [selectedTest, setSelectedTest] = useState(null);
   const initializedRef = useRef(false);
 
@@ -84,6 +87,12 @@ export default function AnalyticsPage() {
             )}
 
             <div className="rounded-[24px] border border-slate-200 bg-white p-4 sm:p-5 shadow-[0_14px_32px_rgba(15,23,42,0.06)] space-y-5">
+              <TestsGateBanner
+                gate={testsStatus.gate}
+                pendingRecommendations={testsStatus.pendingRecommendations}
+              />
+              {!testsStatus.unlocked ? null : (
+              <>
               <TestSelector
                 testResults={testResults}
                 selectedTest={selectedTest}
@@ -110,6 +119,8 @@ export default function AnalyticsPage() {
                     {t("noAnalyticsHint")}
                   </p>
                 </div>
+              )}
+              </>
               )}
             </div>
           </div>

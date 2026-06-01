@@ -16,7 +16,7 @@ function removeCrisisBubbles(messages) {
   return messages.filter((m) => !m.crisis);
 }
 
-export function useChatSend({ setMessages, onBeforeSend }) {
+export function useChatSend({ setMessages, onBeforeSend, onChatMeta }) {
   const [loading, setLoading] = useState(false);
 
   const send = useCallback(async (e, input) => {
@@ -46,6 +46,15 @@ export function useChatSend({ setMessages, onBeforeSend }) {
       if (!res.ok) throw new Error(data.error || "Chat error");
 
       applyCrisisTopicModeFromResponse(data);
+      onChatMeta?.({
+        testRecommendations:
+          data.testRecommendations || {
+            generated: null,
+            catalog: null,
+          },
+        testRecommendation: data.testRecommendation || null,
+        testsGate: data.testsGate || null,
+      });
 
       if (data.crisis) {
         writeCrisisTopicModeToStorage(null);
@@ -85,7 +94,7 @@ export function useChatSend({ setMessages, onBeforeSend }) {
     } finally {
       setLoading(false);
     }
-  }, [loading, onBeforeSend, setMessages]);
+  }, [loading, onBeforeSend, onChatMeta, setMessages]);
 
   const continueAfterCrisis = useCallback(
     async (triggerMessage) => {
@@ -111,6 +120,15 @@ export function useChatSend({ setMessages, onBeforeSend }) {
         if (!res.ok) throw new Error(data.error || "Chat error");
 
         applyCrisisTopicModeFromResponse(data);
+        onChatMeta?.({
+          testRecommendations:
+            data.testRecommendations || {
+              generated: null,
+              catalog: null,
+            },
+          testRecommendation: data.testRecommendation || null,
+          testsGate: data.testsGate || null,
+        });
 
         if (data.crisis) {
           return false;
@@ -141,7 +159,7 @@ export function useChatSend({ setMessages, onBeforeSend }) {
         setLoading(false);
       }
     },
-    [loading, setMessages]
+    [loading, onChatMeta, setMessages]
   );
 
   const declineCrisisTopic = useCallback(
@@ -167,6 +185,15 @@ export function useChatSend({ setMessages, onBeforeSend }) {
         if (!res.ok) throw new Error(data.error || "Chat error");
 
         applyCrisisTopicModeFromResponse(data);
+        onChatMeta?.({
+          testRecommendations:
+            data.testRecommendations || {
+              generated: null,
+              catalog: null,
+            },
+          testRecommendation: data.testRecommendation || null,
+          testsGate: data.testsGate || null,
+        });
 
         setMessages((messages) => [
           ...removeCrisisBubbles(messages),
@@ -192,7 +219,7 @@ export function useChatSend({ setMessages, onBeforeSend }) {
         setLoading(false);
       }
     },
-    [loading, setMessages]
+    [loading, onChatMeta, setMessages]
   );
 
   return {

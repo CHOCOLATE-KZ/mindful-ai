@@ -36,9 +36,6 @@ const TECHNICAL_HEADING_WORDS = [
 ];
 const MODE_LIMITS = {
   CHAT: { maxSentences: 8, maxChars: 900 },
-  LISTENING: { maxSentences: 8, maxChars: 900 },
-  ANALYSIS: { maxSentences: 8, maxChars: 900 },
-  GUIDANCE: { maxSentences: 8, maxChars: 900 },
 };
 
 function normalize(text) {
@@ -238,13 +235,8 @@ function removeTechnicalHeadings(reply) {
   return text.replace(/\s{2,}/g, " ").trim();
 }
 
-function stripGuidanceGreeting(reply, mode = "CHAT", isFirstMessage = true) {
-  if (isFirstMessage) return String(reply || "").trim();
-  if (!["ANALYSIS", "GUIDANCE"].includes(mode)) return String(reply || "").trim();
-
-  return String(reply || "")
-    .replace(/^\s*(привет|здравствуй(те)?|добрый\s+(день|вечер|утро)|hello|hi|hey)[!,.:\-\s]*/iu, "")
-    .trim();
+function stripGuidanceGreeting(reply) {
+  return String(reply || "").trim();
 }
 
 function trimBrokenTail(reply) {

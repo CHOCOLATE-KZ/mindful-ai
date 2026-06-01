@@ -6,6 +6,7 @@ import { useTranslation } from "@/lib/i18n/useTranslation";
 import Button from "@/components/ui/Button";
 import ReactMarkdown from "react-markdown";
 import { History, ChevronDown, ChevronUp } from "lucide-react";
+import { formatStoredReportText } from "@/lib/ai/formatProfileReport";
 
 const mdComponents = {
   h1: ({ children }) => <h1 className="text-base font-bold text-slate-900 mt-3 mb-1">{children}</h1>,
@@ -248,7 +249,9 @@ export default function AnalyticsAIReport() {
           <AnalysisMetaBlock data={weekly} t={t} />
           <StructuredPlanBlock data={weekly} t={t} />
           <div className="mt-4 rounded-2xl border border-white/45 bg-white/95 p-4">
-            <ReactMarkdown components={mdComponents}>{weekly.text}</ReactMarkdown>
+            <ReactMarkdown components={mdComponents}>
+              {formatStoredReportText(weekly.text, "weekly")}
+            </ReactMarkdown>
           </div>
           <button
             onClick={() => window.print()}
@@ -265,7 +268,9 @@ export default function AnalyticsAIReport() {
           <AnalysisMetaBlock data={report} t={t} />
           <StructuredPlanBlock data={report} t={t} />
           <div className="mt-4 rounded-2xl border border-white/45 bg-white/95 p-4">
-            <ReactMarkdown components={mdComponents}>{report.text}</ReactMarkdown>
+            <ReactMarkdown components={mdComponents}>
+              {formatStoredReportText(report.text, report.mode || "profile")}
+            </ReactMarkdown>
           </div>
           <button
             onClick={() => window.print()}

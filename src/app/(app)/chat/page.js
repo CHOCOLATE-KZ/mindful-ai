@@ -8,6 +8,7 @@ import ChatSidebarNav from "./_components/ChatSidebarNav";
 import ChatNotesModal from "./_components/ChatNotesModal";
 import ScrollToTopButton from "./_components/ScrollToTopButton";
 import ChatConversation from "./_components/ChatConversation";
+import ChatTestRecommendation from "./_components/ChatTestRecommendation";
 import VoiceConversationPanel from "./_components/VoiceConversationPanel";
 import { useChatPageModel } from "./_hooks/useChatPageModel";
 import EmotionTracker from "@/components/EmotionTracker";
@@ -92,6 +93,9 @@ export default function ChatPage() {
     scrollToBottom,
     toggleScrollEdge,
     atTop,
+    testRecommendations,
+    skipTestRecommendation,
+    dismissTestRecommendation,
   } = useChatPageModel();
 
 
@@ -148,6 +152,11 @@ export default function ChatPage() {
                   minimalComposer ? "pb-14 md:pb-16" : "pb-24 md:pb-28"
                 }`}
               >
+                <ChatTestRecommendation
+                  recommendations={testRecommendations}
+                  onSkip={skipTestRecommendation}
+                  onDismiss={dismissTestRecommendation}
+                />
                 <ChatConversation
                   messages={messages}
                   userAvatarUrl={userAvatarUrl}

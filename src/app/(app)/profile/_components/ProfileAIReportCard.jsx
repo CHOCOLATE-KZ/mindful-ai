@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Sparkles, RefreshCw, Copy, Check, ChevronDown, ChevronUp, History } from "lucide-react";
+import { ReportMarkdown, StructuredReportExtras } from "@/components/ai/ReportMarkdown";
+import { formatStoredReportText } from "@/lib/ai/formatProfileReport";
 
 export default function ProfileAIReportCard({ settings, t }) {
   const [loading, setLoading] = useState(false);
@@ -48,9 +50,13 @@ export default function ProfileAIReportCard({ settings, t }) {
     }
   }
 
+  function reportMarkdown(text, reportMode = "profile") {
+    return formatStoredReportText(text || "", reportMode);
+  }
+
   async function copyReport() {
     if (!report?.text) return;
-    await navigator.clipboard.writeText(report.text);
+    await navigator.clipboard.writeText(reportMarkdown(report.text, report.mode));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -121,7 +127,11 @@ export default function ProfileAIReportCard({ settings, t }) {
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
-          <ReportText text={report.text} />
+          <ReportMarkdown text={reportMarkdown(report.text, report.mode)} />
+          <StructuredReportExtras
+            structured={report.structuredAnalysis}
+            language={settings?.language || "ru"}
+          />
         </div>
       )}
 
@@ -156,7 +166,7 @@ export default function ProfileAIReportCard({ settings, t }) {
                   </button>
                   {expandedId === r.id && (
                     <div className="mt-3">
-                      <ReportText text={r.text} />
+                      <ReportMarkdown text={reportMarkdown(r.text, r.mode)} />
                     </div>
                   )}
                 </div>
@@ -169,49 +179,3 @@ export default function ProfileAIReportCard({ settings, t }) {
   );
 }
 
-function ReportText({ text }) {
-  // Simple markdown-like renderer: bold, headers, bullet lists
-  const lines = text.split("\n");
-  return (
-    <div className="space-y-1.5 text-sm text-slate-700 leading-relaxed">
-      {lines.map((line, i) => {
-        if (!line.trim()) return <div key={i} className="h-2" />;
-        if (/^#{1,3}\s/.test(line)) {
-          const content = line.replace(/^#{1,3}\s/, "");
-          return <p key={i} className="font-semibold text-slate-900 mt-2">{content}</p>;
-        }
-        if (/^\*\*(.+?)\*\*$/.test(line.trim())) {
-          return <p key={i} className="font-semibold text-slate-900 mt-2">{line.replace(/\*\*/g, "")}</p>;
-        }
-        if (/^[-•*]\s/.test(line.trim())) {
-          return (
-            <div key={i} className="flex gap-2">
-              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-              <span>{line.replace(/^[-•*]\s/, "")}</span>
-            </div>
-          );
-        }
-        if (/^\d+\.\s/.test(line.trim())) {
-          const num = line.match(/^(\d+)\.\s/)?.[1];
-          return (
-            <div key={i} className="flex gap-2">
-              <span className="shrink-0 font-semibold text-blue-600">{num}.</span>
-              <span>{line.replace(/^\d+\.\s/, "")}</span>
-            </div>
-          );
-        }
-        // inline bold
-        const parts = line.split(/(\*\*[^*]+\*\*)/g);
-        return (
-          <p key={i}>
-            {parts.map((part, j) =>
-              /^\*\*(.+)\*\*$/.test(part)
-                ? <strong key={j} className="font-semibold text-slate-900">{part.replace(/\*\*/g, "")}</strong>
-                : <span key={j}>{part}</span>
-            )}
-          </p>
-        );
-      })}
-    </div>
-  );
-}

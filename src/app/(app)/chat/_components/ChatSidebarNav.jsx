@@ -21,7 +21,9 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
   const [userAvatarUrl, setUserAvatarUrl] = useState("");
   const mounted = typeof window !== "undefined";
   const profileRef = useRef(null);
+  const profileMenuRef = useRef(null);
   const langRef = useRef(null);
+  const langMenuRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -56,12 +58,13 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setProfileOpen(false);
-      }
-      if (langRef.current && !langRef.current.contains(e.target)) {
-        setLangOpen(false);
-      }
+      const target = e.target;
+      const inProfile =
+        profileRef.current?.contains(target) || profileMenuRef.current?.contains(target);
+      const inLang = langRef.current?.contains(target) || langMenuRef.current?.contains(target);
+
+      if (!inProfile) setProfileOpen(false);
+      if (!inLang) setLangOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -134,7 +137,11 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
             <Languages className="w-4 h-4" />
           </button>
           {langOpen && mounted && createPortal(
-            <div className="fixed left-16 bottom-20 w-32 bg-white rounded-xl shadow-2xl border border-black/10 overflow-hidden" style={{ zIndex: 9999 }}>
+            <div
+              ref={langMenuRef}
+              className="fixed left-16 bottom-20 w-32 bg-white rounded-xl shadow-2xl border border-black/10 overflow-hidden"
+              style={{ zIndex: 9999 }}
+            >
               {[
                 { code: "ru", label: "Русский" },
                 { code: "en", label: "English" },
@@ -175,7 +182,11 @@ export default function ChatSidebarNav({ onNotesClick, isOpen = true }) {
             </button>
 
             {profileOpen && mounted && createPortal(
-              <div className="fixed left-16 bottom-4 w-44 bg-white rounded-xl shadow-2xl border border-black/10 overflow-hidden" style={{ zIndex: 9999 }}>
+              <div
+                ref={profileMenuRef}
+                className="fixed left-16 bottom-4 w-44 bg-white rounded-xl shadow-2xl border border-black/10 overflow-hidden"
+                style={{ zIndex: 9999 }}
+              >
                 <Link
                   href="/profile"
                   onClick={() => setProfileOpen(false)}

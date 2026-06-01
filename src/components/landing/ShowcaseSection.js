@@ -1,6 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Bot, Brain, NotebookPen, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Brain,
+  NotebookPen,
+  ShieldCheck,
+  Wifi,
+  Battery,
+} from "lucide-react";
 import SectionLabel from "@/components/landing/SectionLabel";
 
 export default function ShowcaseSection() {
@@ -55,9 +63,12 @@ export default function ShowcaseSection() {
           </div>
         </div>
 
-        <div className="relative flex min-h-[420px] items-center justify-center sm:min-h-[500px] lg:min-h-[620px]">
-          <MobileDashboardCard />
-          <DesktopMock />
+        <div className="relative flex min-h-[420px] items-center justify-center sm:min-h-[500px] lg:min-h-[560px]">
+          <TabletMock orientation="portrait" className="z-10 w-full max-w-[400px] lg:hidden" />
+          <TabletMock
+            orientation="landscape"
+            className="z-10 hidden w-full max-w-[540px] lg:block lg:-translate-x-10"
+          />
           <PhoneMock />
         </div>
       </div>
@@ -76,145 +87,244 @@ function FeaturePill({ icon: Icon, text }) {
   );
 }
 
-function MobileDashboardCard() {
+function TabletMock({ orientation = "portrait", className = "" }) {
+  const isLandscape = orientation === "landscape";
+
   return (
-    <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/15 bg-[#eef6f3] p-4 text-black shadow-xl lg:hidden">
-      <div className="flex items-center gap-2 border-b border-black/8 pb-3">
-        <Image src="/mindfullailogo.svg" alt="" width={24} height={24} />
+    <div className={["relative mx-auto", className].join(" ")}>
+      <div
+        className={[
+          "relative bg-[linear-gradient(145deg,#3d4548_0%,#1a1e20_45%,#0f1112_100%)]",
+          "shadow-[0_32px_80px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.12)]",
+          isLandscape ? "rounded-[1.25rem] p-3" : "rounded-[1.35rem] p-[10px] sm:p-3",
+        ].join(" ")}
+      >
+        <div
+          className={[
+            "pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.14)_0%,transparent_42%,transparent_78%,rgba(255,255,255,0.04)_100%)]",
+            isLandscape ? "rounded-[1.25rem]" : "rounded-[1.35rem]",
+          ].join(" ")}
+        />
+
+        <div
+          className={[
+            "absolute left-1/2 z-20 -translate-x-1/2 rounded-full bg-[#0a0c0d] ring-1 ring-white/10",
+            isLandscape ? "top-3 h-1.5 w-1.5" : "top-[14px] h-2 w-2",
+          ].join(" ")}
+        />
+
+        <div
+          className={[
+            "absolute -left-[3px] rounded-l-sm bg-[linear-gradient(90deg,#2a2e30,#1a1d1f)]",
+            isLandscape ? "top-[28%] h-7 w-[3px]" : "top-[22%] h-8 w-[3px]",
+          ].join(" ")}
+        />
+        <div
+          className={[
+            "absolute -left-[3px] rounded-l-sm bg-[linear-gradient(90deg,#2a2e30,#1a1d1f)]",
+            isLandscape ? "top-[40%] h-7 w-[3px]" : "top-[32%] h-8 w-[3px]",
+          ].join(" ")}
+        />
+
+        <div
+          className={[
+            "relative overflow-hidden border border-black/50 bg-[#0a0c0b]",
+            isLandscape ? "rounded-xl" : "rounded-[1.05rem]",
+          ].join(" ")}
+        >
+          <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,transparent_18%)]" />
+
+          {isLandscape ? <TabletLandscapeUI /> : <TabletPortraitUI />}
+
+          <div className="absolute bottom-1.5 left-1/2 z-20 h-1 w-14 -translate-x-1/2 rounded-full bg-black/25" />
+        </div>
+      </div>
+
+      <div
+        className={[
+          "absolute -bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/45 blur-2xl",
+          isLandscape ? "h-7 w-[72%]" : "h-8 w-[78%]",
+        ].join(" ")}
+      />
+    </div>
+  );
+}
+
+function TabletPortraitUI() {
+  return (
+    <div className="text-[10px] sm:text-[11px]">
+      <TabletStatusBar />
+      <TabletAppHeader compact />
+      <div className="space-y-2 bg-[#eef6f3] p-2.5 sm:p-3">
+        <DiaryCard compact />
+        <div className="grid grid-cols-2 gap-2">
+          <AiInsightsCard compact />
+          <ProgressCard compact />
+        </div>
+        <RecommendationStrip compact />
+      </div>
+    </div>
+  );
+}
+
+function TabletLandscapeUI() {
+  return (
+    <div className="text-[11px]">
+      <TabletStatusBar />
+      <TabletAppHeader />
+      <div className="grid grid-cols-[1.15fr_0.85fr] gap-3 bg-[#eef6f3] p-3">
+        <div className="space-y-2.5">
+          <DiaryCard />
+          <RecommendationStrip />
+        </div>
+        <div className="space-y-2.5">
+          <AiInsightsCard />
+          <ProgressCard tall />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabletStatusBar() {
+  return (
+    <div className="flex items-center justify-between bg-[#f8fbfa] px-3 py-1 text-black/55">
+      <span className="text-[9px] font-medium">9:41</span>
+      <div className="flex items-center gap-1">
+        <Wifi className="h-2.5 w-2.5" />
+        <Battery className="h-2.5 w-2.5" />
+      </div>
+    </div>
+  );
+}
+
+function TabletAppHeader({ compact = false }) {
+  return (
+    <div className="flex items-center justify-between border-b border-black/6 bg-white px-3 py-2">
+      <div className="flex items-center gap-2">
+        <Image src="/mindfullailogo.svg" alt="" width={compact ? 16 : 20} height={compact ? 16 : 20} />
         <div>
-          <div className="text-sm font-semibold">MindfulAI</div>
-          <div className="text-xs text-black/45">веб-панель</div>
+          <div className={`font-semibold text-black ${compact ? "text-[9px]" : "text-[11px]"}`}>
+            MindfulAI
+          </div>
+          {!compact && <div className="text-[9px] text-black/40">веб-панель</div>}
         </div>
       </div>
-      <p className="mt-3 text-sm text-black/65">
-        Дневник, AI-анализ и рекомендации — в одном спокойном интерфейсе.
-      </p>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <MiniStat value="5.8" label="настроение" />
-        <MiniStat value="6" label="записей" />
-        <MiniStat value="AI" label="анализ" />
+      <span className="rounded-full bg-[#74AA9C]/12 px-2 py-0.5 text-[8px] font-semibold text-[#5d9088]">
+        онлайн
+      </span>
+    </div>
+  );
+}
+
+function DiaryCard({ compact }) {
+  return (
+    <div className="rounded-xl bg-white p-3 shadow-sm">
+      <div className="text-[8px] font-semibold uppercase tracking-wider text-[#5d9088]">
+        Дневник состояния
+      </div>
+      <div className={`mt-1 font-semibold text-black ${compact ? "text-[11px]" : "text-sm"}`}>
+        Настроение, сон и мысли
+      </div>
+      {!compact && (
+        <p className="mt-1 text-[9px] leading-snug text-black/55">
+          Записи, ABC-разбор и аналитика в одном месте.
+        </p>
+      )}
+      <div className={`mt-2 grid grid-cols-3 gap-1.5 ${compact ? "" : "gap-2"}`}>
+        <TabletMiniStat value="5.8" label="настроение" />
+        <TabletMiniStat value="3ч29" label="сон" />
+        <TabletMiniStat value="6" label="записей" />
       </div>
     </div>
   );
 }
 
-function DesktopMock() {
+function AiInsightsCard({ compact }) {
   return (
-    <div className="pointer-events-none relative hidden w-[640px] max-w-full rounded-[2rem] border border-white/14 bg-[linear-gradient(180deg,#24302d,#161d1b)] p-4 shadow-[0_40px_90px_rgba(0,0,0,0.45)] lg:block">
-      <div className="absolute inset-0 rounded-[2rem] bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent_22%)]" />
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#eef6f3] text-black">
-        <div className="flex items-center justify-between border-b border-black/8 bg-white px-5 py-3">
-          <div className="flex items-center gap-3">
-            <Image src="/mindfullailogo.svg" alt="MindfulAI" width={28} height={28} />
-            <div>
-              <div className="text-sm font-semibold text-black">MindfulAI</div>
-              <div className="text-xs text-black/45">веб-панель</div>
-            </div>
-          </div>
-          <div className="rounded-full bg-[#74AA9C]/10 px-3 py-1 text-xs font-semibold text-[#5d9088]">
-            Онлайн сегодня
-          </div>
-        </div>
-
-        <div className="grid gap-5 p-5 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <div className="rounded-[1.4rem] bg-white p-5 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#5d9088]">
-                Дневник состояния
-              </div>
-              <div className="mt-3 text-2xl font-semibold text-black">Настроение, сон и мысли</div>
-              <div className="mt-2 text-sm leading-relaxed text-black/60">
-                Ежедневные записи, ABC-разбор и аккуратная аналитика в одном месте.
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <MiniStat value="5.8" label="среднее настроение" />
-                <MiniStat value="3ч 29м" label="средний сон" />
-                <MiniStat value="6" label="записей" />
-              </div>
-            </div>
-
-            <div className="rounded-[1.4rem] bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-black">Последняя рекомендация</div>
-                  <div className="mt-1 text-xs text-black/50">На основе заметок и переписки</div>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#74AA9C]/10">
-                  <Brain className="h-5 w-5 text-[#5d9088]" />
-                </div>
-              </div>
-              <div className="mt-4 rounded-2xl bg-[#f5faf8] p-4 text-sm leading-relaxed text-black/70">
-                Сегодня полезно сделать короткий check-in, зафиксировать мысль и сравнить реакцию
-                с тем, как ты видел ситуацию вчера.
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="rounded-[1.4rem] bg-[#10362f] p-5 text-white shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#a9e2d6]">
-                AI-анализ
-              </div>
-              <div className="mt-3 text-lg font-semibold">Паттерны недели</div>
-              <div className="mt-3 space-y-3 text-sm text-white/78">
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                  Тревога усиливается в учебные дни
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                  Сон ниже 6 часов влияет на настроение
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                  ABC-записи помогают снизить напряжение
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[1.4rem] bg-white p-5 shadow-sm">
-              <div className="text-sm font-semibold text-black">Прогресс по неделе</div>
-              <div className="mt-4 flex h-28 items-end gap-3">
-                {[42, 78, 56, 88, 64, 92, 73].map((h, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 rounded-t-2xl bg-[linear-gradient(180deg,#9fd9cb,#74AA9C)]"
-                    style={{ height: `${h}%` }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="rounded-xl bg-[#10362f] p-3 text-white">
+      <div className="text-[8px] font-semibold uppercase tracking-wider text-[#a9e2d6]">
+        AI-анализ
       </div>
-
-      <div className="absolute -bottom-5 left-[10%] h-10 w-[80%] rounded-full bg-black/35 blur-2xl" />
+      <div className={`mt-1 font-semibold ${compact ? "text-[10px]" : "text-xs"}`}>
+        Паттерны недели
+      </div>
+      <div className="mt-1.5 space-y-1">
+        <InsightLine text="Тревога в учебные дни" />
+        <InsightLine text="Сон менее 6 ч → настроение" />
+        {!compact && <InsightLine text="ABC снижает напряжение" />}
+      </div>
     </div>
   );
 }
 
-function MiniStat({ value, label }) {
+function InsightLine({ text }) {
   return (
-    <div className="rounded-2xl border border-black/8 bg-[#f8fbfa] px-3 py-3">
-      <div className="text-base font-semibold text-[#5d9088]">{value}</div>
-      <div className="mt-1 text-[11px] leading-tight text-black/45">{label}</div>
+    <div className="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[8px] text-white/78">
+      {text}
+    </div>
+  );
+}
+
+function ProgressCard({ compact, tall }) {
+  return (
+    <div className="rounded-xl bg-white p-3 shadow-sm">
+      <div className={`font-semibold text-black ${compact ? "text-[10px]" : "text-xs"}`}>
+        Прогресс по неделе
+      </div>
+      <div
+        className={`mt-2 flex items-end gap-1 ${tall ? "h-20" : compact ? "h-10" : "h-14"}`}
+      >
+        {[42, 78, 56, 88, 64, 92, 73].map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t-md bg-[linear-gradient(180deg,#9fd9cb,#74AA9C)]"
+            style={{ height: `${h}%` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RecommendationStrip({ compact }) {
+  return (
+    <div className="flex items-start gap-2 rounded-xl bg-white p-2.5 shadow-sm">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#74AA9C]/10">
+        <Brain className="h-3.5 w-3.5 text-[#5d9088]" />
+      </div>
+      <div>
+        <div className={`font-semibold text-black ${compact ? "text-[9px]" : "text-[10px]"}`}>
+          Рекомендация дня
+        </div>
+        <p className="mt-0.5 text-[8px] leading-snug text-black/60 sm:text-[9px]">
+          Короткий check-in и заметка помогут снизить напряжение сегодня.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TabletMiniStat({ value, label }) {
+  return (
+    <div className="rounded-lg border border-black/6 bg-[#f8fbfa] px-1.5 py-1.5 text-center">
+      <div className="text-[10px] font-semibold text-[#5d9088]">{value}</div>
+      <div className="text-[6px] text-black/45">{label}</div>
     </div>
   );
 }
 
 function PhoneMock() {
   return (
-    <div className="relative z-10 mt-6 w-[280px] max-w-[88vw] sm:w-[300px] lg:absolute lg:right-4 lg:top-14 lg:mt-0 lg:w-[320px] lg:max-w-[94vw] lg:rotate-[6deg]">
-      <div className="relative rounded-[2.45rem] border border-white/20 bg-[linear-gradient(180deg,#1b2122,#101415)] p-3 shadow-[0_40px_90px_rgba(0,0,0,0.52)]">
-        <div className="absolute right-0 top-[18%] h-[28%] w-1.5 rounded-r-xl bg-white/12" />
-        <div className="absolute left-1/2 top-2 h-1.5 w-20 -translate-x-1/2 rounded-full bg-white/12" />
-        <div className="overflow-hidden rounded-[1.9rem]">
-          <Image
-            src="/phone_mockup.jpg"
-            alt="MindfulAI в Telegram"
-            width={600}
-            height={1300}
-            className="w-full object-cover"
-          />
-        </div>
-      </div>
+    <div className="relative z-20 mt-8 w-[280px] max-w-[88vw] sm:w-[300px] lg:absolute lg:right-0 lg:top-12 lg:mt-0 lg:w-[300px] lg:rotate-[6deg] xl:w-[320px]">
+      <Image
+        src="/phone_mockup_3d.png"
+        alt="MindfulAI в Telegram"
+        width={900}
+        height={1800}
+        className="w-full drop-shadow-[0_40px_90px_rgba(0,0,0,0.52)]"
+        priority
+      />
       <div className="absolute -bottom-5 left-[14%] h-10 w-[72%] rounded-full bg-black/40 blur-2xl" />
     </div>
   );

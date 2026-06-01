@@ -4,10 +4,14 @@ function cn(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function TestCard({ test }) {
+export default function TestCard({ test, recommendationId }) {
+  const href = recommendationId
+    ? `/exercises/${test.key}?rec=${recommendationId}`
+    : `/exercises/${test.key}`;
+
   return (
     <Link
-      href={`/exercises/${test.key}`}
+      href={href}
       className="group relative h-full overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-sm shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-white/40"
     >
       {/* gradient accent */}

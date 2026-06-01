@@ -54,7 +54,7 @@ export default function PsychologySection() {
         <div className="relative flex min-h-[300px] items-end justify-center overflow-hidden sm:min-h-[360px] lg:min-h-full">
           <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-[#10211f]/70 via-[#10211f]/20 to-transparent" />
           <Image
-            src="/mind.png"
+            src="/xxx.png"
             alt="Психология разума"
             fill
             className="object-cover object-center"

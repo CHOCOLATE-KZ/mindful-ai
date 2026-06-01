@@ -31,7 +31,6 @@ export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
         .from("ai_messages")
         .select("role, content, created_at")
         .eq("user_id", uid)
-        .eq("source", "web")
         .order("created_at", { ascending: true })
         .limit(80);
 
@@ -57,17 +56,6 @@ export function useChatHistory({ supabase, getUserId, onHistoryCleared }) {
 
     const ok = confirm("Очистить историю чата? Это действие нельзя отменить.");
     if (!ok) return;
-
-    const { error } = await supabase
-      .from("ai_messages")
-      .delete()
-      .eq("user_id", uid)
-      .eq("source", "web");
-    if (error) {
-      console.error(error);
-      alert("Не удалось очистить чат");
-      return;
-    }
 
     setMessages([WELCOME_MESSAGE]);
     writeCrisisTopicModeToStorage(null);

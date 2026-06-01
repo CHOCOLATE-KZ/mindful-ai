@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { getTestByKeyFromJSON, getAvailableTestKeysFromJSON } from "@/lib/loadTestsAndExercises";
 import { ArrowLeft, X, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
@@ -10,6 +10,8 @@ import { ArrowLeft, X, TrendingUp, Sparkles, CheckCircle2 } from "lucide-react";
 export default function TestRunner({ testKey: rawTestKey }) {
   const supabase = useMemo(() => supabaseBrowser(), []);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const recommendationId = searchParams?.get("rec") || null;
 
   // Валидируем и нормализуем testKey
   const testKey = rawTestKey ? rawTestKey.toLowerCase().trim() : null;
@@ -65,7 +67,6 @@ export default function TestRunner({ testKey: rawTestKey }) {
     return null;
   };
 
-  // Получить пользователя при загрузке
   useEffect(() => {
     (async () => {
       try {
@@ -109,7 +110,6 @@ export default function TestRunner({ testKey: rawTestKey }) {
     );
   }
 
-  // Тест не найден
   if (!test) {
     const availableKeys = getAvailableTestKeysFromJSON();
     return (
@@ -404,6 +404,17 @@ export default function TestRunner({ testKey: rawTestKey }) {
 
       if (error) {
         throw new Error(error.message || "Ошибка при сохранении результатов");
+      }
+
+      if (recommendationId) {
+        try {
+          await fetch(`/api/tests/recommendation/${recommendationId}/complete`, {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch (e) {
+          console.warn("recommendation complete:", e);
+        }
       }
 
       setMsgType("success");

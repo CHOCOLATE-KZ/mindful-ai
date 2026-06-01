@@ -33,10 +33,11 @@ console.log('🤖 Инициализируем Telegram бот...');
       handleStats,
       handleAnalyze,
       handleRemind,
+      handleClearChat,
       handleMessage,
       handleNoteInput,
       handleReminderInput,
-      handleCallbackQuery,
+      handleCrisisCallback,
     } = await import('./src/lib/telegram/handlers.js');
     const { createClient } = await import('@supabase/supabase-js');
 
@@ -69,9 +70,9 @@ console.log('🤖 Инициализируем Telegram бот...');
     bot.command('stats', handleStats);
     bot.command('analyze', handleAnalyze);
     bot.command('remind', handleRemind);
-    
-    // Обработчик для callback кнопок (inline keyboard)
-    bot.on('callback_query', handleCallbackQuery);
+    bot.command('clear', handleClearChat);
+
+    bot.on('callback_query', handleCrisisCallback);
     
     // Обработчик для сообщений (проверяем если это ввод для заметки или напоминания)
     bot.on('message', async (ctx) => {
