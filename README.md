@@ -1,10 +1,10 @@
-# 🧠 IITU Psychology AI Assistant
+#  IITU Psychology AI Assistant
 
 AI-powered mental health support platform with personalized psychological assistance, mood tracking, and evidence-based exercises.
 
-## 🌟 Features
+##  Features
 
-### 💬 AI Chat Assistant
+###  AI Chat Assistant
 - Real-time psychological counseling powered by local LM Studio
 - 3 response modes: LISTENING, ANALYSIS, GUIDANCE (auto-selected per user intent)
 - Safety pipeline: hard-block filters, crisis trigger detection, and response validation
@@ -12,36 +12,36 @@ AI-powered mental health support platform with personalized psychological assist
 - Consent-aware personalization based on profile, recent notes, and message history
 - Voice input support for accessibility
 
-### 📊 Analytics Dashboard
+###  Analytics Dashboard
 - Mood tracking with interactive charts
 - Test results analysis (Beck Depression, Anxiety scales, etc.)
 - Weekly summaries and insights
 - Topic-based emotional analysis
 
-### 📝 Daily Notes & Diary
+###  Daily Notes & Diary
 - Quick mood check-ins
 - Activity tracking and rating
 - Weekly mood calendar visualization
 - AI-powered analysis of emotional patterns
 
-### 🧘 Psychological Exercises
+###  Psychological Exercises
 - Evidence-based tests: Beck Depression Inventory, Hamilton Anxiety Scale, PSS-10
 - Interactive breathing exercises
 - Progressive muscle relaxation guides
 - Personalized recommendations based on results
 
-### 🤖 Telegram Bot Integration
+###  Telegram Bot Integration
 - Daily mood reminders via Telegram
 - Chat directly from Telegram
 - Push notifications for journaling
 - Seamless authentication sync
 
-### 🌐 Multi-language Support
+###  Multi-language Support
 - Russian, English, Kazakh
 - Real-time UI translation
 - Localized content and exercises
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 **Frontend:**
 - Next.js 16.0.1 (App Router)
@@ -67,7 +67,7 @@ AI-powered mental health support platform with personalized psychological assist
 - ESLint (custom config)
 - Git for version control
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -168,7 +168,7 @@ npm run telegram:poll
 
 Open [http://localhost:3000](http://localhost:3000)
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 diplomaproject/
@@ -194,7 +194,7 @@ diplomaproject/
 └── telegram-bot-polling.js  # Telegram bot entry
 ```
 
-## 🔌 API Endpoints
+##  API Endpoints
 
 - `POST /api/chat` - AI chat completion
 - `POST /api/chat/clear` - Clear user chat history
@@ -208,7 +208,7 @@ diplomaproject/
 - `GET /api/profile/stats` - User statistics
 - `GET /api/news` - Psychology news feed
 
-## 📊 Database Schema
+##  Database Schema
 
 **Main Tables:**
 - `profiles` - User profiles
@@ -220,7 +220,7 @@ diplomaproject/
 - `telegram_users` - Telegram integration
 - `psychology_knowledge` - RAG knowledge chunks
 
-## 🧪 Testing
+##  Testing
 
 ```bash
 # Lint code
@@ -233,7 +233,7 @@ npm run build
 node scripts/verify-rag-integration.mjs
 ```
 
-## 📝 Scripts
+##  Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
@@ -241,22 +241,22 @@ node scripts/verify-rag-integration.mjs
 - `npm run lint` - Run ESLint
 - `npm run telegram:poll` - Start Telegram bot
 
-## 🤝 Contributing
+##  Contributing
 
 1. Create feature branch: `git checkout -b feature/amazing-feature`
 2. Commit changes: `git commit -m 'Add amazing feature'`
 3. Push to branch: `git push origin feature/amazing-feature`
 4. Open Pull Request
 
-## 📄 License
+##  License
 
 This project is part of IITU diploma work.
 
-## 👥 Authors
+##  Authors
 
 IITU Psychology AI Team
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Psychology knowledge base compiled from evidence-based resources
 - AI models powered by LM Studio
